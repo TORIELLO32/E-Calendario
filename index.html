@@ -379,6 +379,47 @@
     margin-bottom:2px;
   }
   .panel-item.done .cat{text-decoration:none;}
+  .bell-btn{
+    flex:none;
+    width:30px;
+    background:none;
+    border:none;
+    color:var(--line);
+    cursor:pointer;
+    border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .bell-btn svg{width:15px;height:15px;}
+  .bell-btn.on{color:var(--accent);}
+  .bell-btn:active{background:var(--accent-soft);color:var(--accent);}
+  .rem-tag{
+    display:block;
+    font-size:0.68rem;
+    color:var(--accent);
+    margin-top:3px;
+  }
+  .panel-item.done .rem-tag{color:var(--ink-soft);}
+  .rem-head{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:0.85rem;
+    margin-bottom:8px;
+  }
+  .rem-note{
+    font-size:0.7rem;
+    color:var(--ink-soft);
+    line-height:1.4;
+    margin:-2px 0 9px;
+  }
+  .add-here{
+    width:100%;
+    margin-top:12px;
+    border-style:dashed;
+    color:var(--accent);
+    border-color:var(--accent);
+    background:transparent;
+  }
   .panel-hint{
     font-size:0.72rem;
     color:var(--ink-soft);
@@ -493,6 +534,32 @@
   .sync-dot.error{background:var(--examen);}
   .sync-dot.busy{background:var(--entrega);animation:pulse 1s infinite;}
   .sync-dot.off{background:var(--line);}
+
+  .head-btns{display:flex;gap:7px;flex:none;}
+  .icon-btn.active{background:var(--accent);border-color:var(--accent);color:var(--paper);}
+
+  /* ---------- Selección de rango ---------- */
+  .sel-hint{
+    display:none;
+    font-size:0.78rem;
+    color:var(--accent);
+    background:var(--accent-soft);
+    border-radius:7px;
+    padding:8px 11px;
+    margin-bottom:12px;
+    line-height:1.4;
+  }
+  .sel-hint.show{display:block;}
+  .cell.in-range{background:var(--accent-soft);}
+  .cell.in-range.weekend{background:#33506B2E;}
+  .cell.range-edge{
+    outline:2px solid var(--accent);
+    outline-offset:-2px;
+    border-radius:5px;
+    z-index:2;
+  }
+  .cell.range-edge .daynum{color:var(--accent);font-weight:700;}
+  body.selecting .cell{cursor:pointer;}
 
   /* ---------- Bloques de opciones ---------- */
   .opt-block{
@@ -764,14 +831,21 @@
         <span class="tag">Bitácora · Arquitectura UDEM</span>
         <h1>Semestre agosto–diciembre <span class="year">2026</span></h1>
       </div>
-      <button class="icon-btn" id="optsBtn" aria-label="Opciones">
-        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-      </button>
+      <div class="head-btns">
+        <button class="icon-btn" id="selBtn" aria-label="Seleccionar varios días">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2" stroke-dasharray="3 2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+        </button>
+        <button class="icon-btn" id="optsBtn" aria-label="Opciones">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="timeline" id="timeline"></div>
     <div class="next-event" id="nextEvent"></div>
     <div class="progress" id="progress"></div>
+
+    <div class="sel-hint" id="selHint"></div>
 
     <div class="legend">
       <span class="legend-item"><i class="dot examen"></i>Examen</span>
@@ -840,7 +914,7 @@
 
   <div class="opt-block">
     <div class="opt-title">Pasar al Calendario de Apple</div>
-    <div class="opt-desc">Manda todos tus eventos a la app Calendario. Ahí iCloud los sincroniza solo entre tu iPhone, iPad y Mac, y te avisa con notificaciones.</div>
+    <div class="opt-desc">Manda tus eventos y sus recordatorios a la app Calendario. Ahí llegan las notificaciones y iCloud los pasa a tu iPad solo. Vuelve a exportar cuando agregues o cambies cosas.</div>
     <button class="btn primary" id="btnIcs">Exportar eventos</button>
   </div>
 
@@ -856,6 +930,28 @@
       <button class="btn primary" id="btnPasteGo" style="margin-top:8px;">Restaurar</button>
     </div>
     <div class="opt-msg" id="optsMsg"></div>
+  </div>
+</div>
+
+<div class="overlay" id="rangeOverlay"></div>
+<div class="agent" id="rangeSheet" role="dialog" aria-modal="true">
+  <div class="panel-head">
+    <span class="panel-date" id="rangeTitle">Días seleccionados</span>
+    <button class="panel-close" id="rangeClose">Cerrar</button>
+  </div>
+  <div class="opt-desc" id="rangeCount"></div>
+  <div class="edit-form">
+    <input type="text" id="rgTitle" placeholder="¿Qué vas a poner en estos días?">
+    <select id="rgType">
+      <option value="otro">Otro</option>
+      <option value="examen">Examen</option>
+      <option value="entrega">Entrega</option>
+      <option value="vacacion">Vacaciones</option>
+    </select>
+    <div class="prev-actions">
+      <button class="btn" id="rgCancel">Cancelar</button>
+      <button class="btn primary" id="rgGo">Agregar</button>
+    </div>
   </div>
 </div>
 
@@ -882,8 +978,8 @@
 // Usa EXACTAMENTE el mismo bloque en el iPhone y en el iPad.
 // ══════════════════════════════════════════════════════════════
 const SYNC = {
-  url: 'https://kihqoosqmephlzpiwdqw.supabase.co',   // ej. 'https://abcdefgh.supabase.co'
-  key: 'sb_publishable_7tTQz5-agbULcGSRN87dhg_FE0FcNVZ',   // la llave "anon public"
+  url: 'https://kihqoosqmephlzpiwdqw.supabase.co',
+  key: 'sb_publishable_7tTQz5-agbULcGSRN87dhg_FE0FcNVZ',
 };
 
 
@@ -1196,11 +1292,30 @@ function snapshot(){
 
 // Todo lo que viene de la nube o de un respaldo pasa por aquí.
 // Se recorta, se valida el tipo y se descarta cualquier cosa rara.
+// Recordatorios: -1 = ninguno, 0 = solo ese día,
+// N = desde N días antes y todos los días hasta el evento.
+const REM_OPCIONES = [
+  { v: -1, label: 'Sin recordatorio' },
+  { v: 0,  label: 'El mismo día' },
+  { v: 1,  label: '1 día antes' },
+  { v: 3,  label: '3 días antes, y diario' },
+  { v: 7,  label: '7 días antes, y diario' },
+  { v: 14, label: '14 días antes, y diario' },
+];
+function safeRem(r){
+  const n = Number(r);
+  return (Number.isInteger(n) && n >= -1 && n <= 30) ? n : -1;
+}
+function remLabel(r){
+  const o = REM_OPCIONES.find(x => x.v === safeRem(r));
+  return o ? o.label : 'Sin recordatorio';
+}
+
 function sanitizeEvent(e){
   if(!e || typeof e !== 'object') return null;
   if(typeof e.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.date)) return null;
   if(typeof e.title !== 'string' || !e.title.trim()) return null;
-  return { date: e.date, title: e.title.trim().slice(0,80), type: safeType(e.type) };
+  return { date: e.date, title: e.title.trim().slice(0,80), type: safeType(e.type), rem: safeRem(e.rem) };
 }
 function sanitizeList(arr){
   if(!Array.isArray(arr)) return [];
@@ -1424,6 +1539,43 @@ async function toggleDone(id){
   await markChanged();
 }
 
+// ---------- Recordatorios ----------
+let remindingId = null;
+
+function startRemAt(i){
+  const ev = panelEvents[i];
+  if(!ev) return;
+  remindingId = evId(ev);
+  editingId = null;
+  addingHere = false;
+  renderPanelBody();
+}
+function cancelRem(){
+  remindingId = null;
+  renderPanelBody();
+}
+async function saveRemAt(i){
+  const ev = panelEvents[i];
+  const sel = document.getElementById('rmSel');
+  if(!ev || !sel){ remindingId = null; renderPanelBody(); return; }
+  const rem = safeRem(sel.value);
+  const id = evId(ev);
+
+  const u = USER_EVENTS.find(x => evId(x) === id);
+  if(u){
+    u.rem = rem;
+  }else{
+    // evento del archivo: se guarda una copia propia con el recordatorio
+    USER_EVENTS.push({ date: ev.date, title: ev.title, type: ev.type, rem });
+  }
+
+  remindingId = null;
+  rebuildEvents();
+  renderMonths();
+  renderPanelBody();
+  await markChanged();
+}
+
 // ---------- Editar un evento ----------
 let editingId = null;
 
@@ -1447,7 +1599,8 @@ async function saveEdit(oldId){
   }
 
   const wasDone = COMPLETED.has(oldId);
-  const nuevo = { date, title: title.slice(0,80), type };
+  const previo = EVENTS.find(e => evId(e) === oldId);
+  const nuevo = { date, title: title.slice(0,80), type, rem: previo ? safeRem(previo.rem) : -1 };
   const newId = evId(nuevo);
 
   // Se retira el original y se guarda la versión editada
@@ -1616,6 +1769,10 @@ function buildMonthCard(y, m, byDate){
     if(isWeekend) classes += ' weekend';
     if(isToday) classes += ' today';
     if(hasEvents) classes += ' has-events';
+    if(selectMode){
+      if(inSelection(iso)) classes += ' in-range';
+      if(iso === rangeStart || iso === rangeEnd) classes += ' range-edge';
+    }
 
     let dotsHtml = '';
     if(hasEvents){
@@ -1625,9 +1782,7 @@ function buildMonthCard(y, m, byDate){
       dotsHtml = `<span class="ev-dots">${dots}${plus}</span>`;
     }
 
-    const tag = hasEvents ? 'button' : 'div';
-    const clickAttr = hasEvents ? `onclick="openPanel('${iso}')"` : '';
-    cells += `<${tag} class="${classes}" ${clickAttr}><span class="daynum">${d}</span>${dotsHtml}</${tag}>`;
+    cells += `<button class="${classes}" onclick="dayTap('${iso}')"><span class="daynum">${d}</span>${dotsHtml}</button>`;
   }
 
   for(let i=0;i<trail;i++) cells += `<div class="cell blank"></div>`;
@@ -1651,6 +1806,105 @@ function renderMonths(){
   const el = document.getElementById('months');
   el.innerHTML = SEMESTER.map(({y,m}) => buildMonthCard(y, m, byDate)).join('');
 }
+
+// ══════════════════════════════════════════════════════════════
+// SELECCIONAR DÍAS — tocar un día para agregar, o marcar un rango
+// ══════════════════════════════════════════════════════════════
+let selectMode = false;
+let rangeStart = null;
+let rangeEnd = null;
+
+function inSelection(iso){
+  if(!rangeStart) return false;
+  const fin = rangeEnd || rangeStart;
+  const a = rangeStart <= fin ? rangeStart : fin;
+  const b = rangeStart <= fin ? fin : rangeStart;
+  return iso >= a && iso <= b;
+}
+
+function selHint(txt){
+  const el = document.getElementById('selHint');
+  el.textContent = txt || '';
+  el.className = 'sel-hint' + (txt ? ' show' : '');
+}
+
+function toggleSelectMode(){
+  selectMode = !selectMode;
+  rangeStart = rangeEnd = null;
+  document.getElementById('selBtn').classList.toggle('active', selectMode);
+  document.body.classList.toggle('selecting', selectMode);
+  selHint(selectMode ? 'Toca el día en que empieza.' : '');
+  renderMonths();
+}
+
+// Un toque en cualquier día del calendario
+function dayTap(iso){
+  if(!selectMode){ openPanel(iso); return; }
+
+  if(!rangeStart || rangeEnd){
+    // empieza una selección nueva
+    rangeStart = iso;
+    rangeEnd = null;
+    selHint('Ahora toca el día en que termina.');
+    renderMonths();
+    return;
+  }
+
+  // segundo toque: cierra el rango
+  rangeEnd = iso;
+  if(rangeEnd < rangeStart){ const t = rangeStart; rangeStart = rangeEnd; rangeEnd = t; }
+  renderMonths();
+  abrirRango();
+}
+
+function diasDelRango(){
+  return datesBetween(rangeStart, rangeEnd || rangeStart);
+}
+
+function abrirRango(){
+  const dias = diasDelRango();
+  const a = parseISO(rangeStart), b = parseISO(rangeEnd || rangeStart);
+  const fmt = d => `${d.getDate()} ${MONTHS_ES[d.getMonth()].slice(0,3)}`;
+  document.getElementById('rangeTitle').textContent = `${fmt(a)} – ${fmt(b)}`;
+  document.getElementById('rangeCount').textContent =
+    dias.length === 1 ? 'Se agregará en 1 día.' : `Se agregará en los ${dias.length} días.`;
+  document.getElementById('rgTitle').value = '';
+  document.getElementById('rgType').value = 'otro';
+  document.getElementById('rangeSheet').classList.add('open');
+  document.getElementById('rangeOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('rgTitle').focus(), 250);
+}
+
+function cerrarRango(){
+  document.getElementById('rangeSheet').classList.remove('open');
+  document.getElementById('rangeOverlay').classList.remove('open');
+}
+
+async function guardarRango(){
+  const title = document.getElementById('rgTitle').value.trim();
+  const type = document.getElementById('rgType').value;
+  if(!title){ document.getElementById('rgTitle').focus(); return; }
+
+  const lista = diasDelRango().map(date => ({ date, title, type }));
+  await addEvents(lista);
+
+  cerrarRango();
+  rangeStart = rangeEnd = null;
+  selectMode = false;
+  document.getElementById('selBtn').classList.remove('active');
+  document.body.classList.remove('selecting');
+  selHint('');
+  renderMonths();
+}
+
+document.getElementById('selBtn').addEventListener('click', toggleSelectMode);
+document.getElementById('rangeClose').addEventListener('click', cerrarRango);
+document.getElementById('rgCancel').addEventListener('click', cerrarRango);
+document.getElementById('rangeOverlay').addEventListener('click', cerrarRango);
+document.getElementById('rgGo').addEventListener('click', guardarRango);
+document.getElementById('rgTitle').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); guardarRango(); }
+});
 
 // ---------- Panel de detalle ----------
 let currentPanelDate = null;
@@ -1689,6 +1943,23 @@ function renderPanelBody(){
     const id = evId(ev);
     const done = COMPLETED.has(id);
 
+    if(remindingId === id){
+      const opts = REM_OPCIONES.map(o =>
+        `<option value="${o.v}" ${safeRem(ev.rem) === o.v ? 'selected' : ''}>${o.label}</option>`
+      ).join('');
+      return `
+        <div class="edit-form">
+          <div class="rem-head">Recordarme…</div>
+          <select id="rmSel">${opts}</select>
+          <div class="rem-note">Los avisos los manda el Calendario de Apple. Después de elegir, exporta desde ⋯</div>
+          <div class="prev-actions">
+            <button class="btn" onclick="cancelRem()">Cancelar</button>
+            <button class="btn primary" onclick="saveRemAt(${i})">Guardar</button>
+          </div>
+        </div>
+      `;
+    }
+
     if(editingId === id){
       return `
         <div class="edit-form">
@@ -1717,7 +1988,11 @@ function renderPanelBody(){
           <span class="txt">
             <span class="cat"><i class="dot ${esc(ev.type)}"></i>${CATEGORY_LABEL[ev.type] || 'Otro'}</span>
             ${esc(ev.title)}
+            ${safeRem(ev.rem) >= 0 ? `<span class="rem-tag">🔔 ${esc(remLabel(ev.rem))}</span>` : ''}
           </span>
+        </button>
+        <button class="bell-btn ${safeRem(ev.rem) >= 0 ? 'on' : ''}" onclick="startRemAt(${i})" aria-label="Recordatorio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
         </button>
         <button class="edit-btn" onclick="startEditAt(${i})" aria-label="Editar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -1730,11 +2005,53 @@ function renderPanelBody(){
   const hint = dayEvents.length
     ? '<div class="panel-hint">Toca el renglón para marcarlo. El lápiz edita, la × borra.</div>'
     : '<div class="panel-hint">No hay nada en este día.</div>';
-  document.getElementById('panelBody').innerHTML = rows + hint;
+
+  const formAdd = addingHere ? `
+    <div class="edit-form">
+      <input type="text" id="adTitle" placeholder="¿Qué vas a poner este día?">
+      <select id="adType">
+        <option value="otro">Otro</option>
+        <option value="examen">Examen</option>
+        <option value="entrega">Entrega</option>
+        <option value="vacacion">Vacaciones</option>
+      </select>
+      <div class="prev-actions">
+        <button class="btn" onclick="cancelAddHere()">Cancelar</button>
+        <button class="btn primary" onclick="saveAddHere()">Agregar</button>
+      </div>
+    </div>
+  ` : `<button class="btn add-here" onclick="startAddHere()">＋ Agregar en este día</button>`;
+
+  document.getElementById('panelBody').innerHTML = rows + hint + formAdd;
+}
+
+// ---------- Agregar directo en un día ----------
+let addingHere = false;
+
+function startAddHere(){
+  addingHere = true;
+  editingId = null;
+  renderPanelBody();
+  setTimeout(() => { const i = document.getElementById('adTitle'); if(i) i.focus(); }, 60);
+}
+function cancelAddHere(){
+  addingHere = false;
+  renderPanelBody();
+}
+async function saveAddHere(){
+  const title = document.getElementById('adTitle').value.trim();
+  const type = document.getElementById('adType').value;
+  if(!title){ document.getElementById('adTitle').focus(); return; }
+  addingHere = false;
+  await addEvents([{ date: currentPanelDate, title, type }]);
+  renderPanelBody();
 }
 
 function openPanel(iso){
   currentPanelDate = iso;
+  addingHere = false;
+  editingId = null;
+  remindingId = null;
   const d = parseISO(iso);
   const weekday = WEEKDAYS_FULL[(d.getDay() + 6) % 7];
   const raw = `${weekday} ${d.getDate()} de ${MONTHS_ES[d.getMonth()]} de ${d.getFullYear()}`;
@@ -1748,6 +2065,9 @@ function openPanel(iso){
 }
 function closePanel(){
   currentPanelDate = null;
+  addingHere = false;
+  editingId = null;
+  remindingId = null;
   document.getElementById('panel').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
 }
@@ -1815,18 +2135,66 @@ function clampToSemester(iso){
   return iso >= SEM_START && iso <= SEM_END;
 }
 
+// Palabras de orden o relleno que no deben quedar en el título.
+// "Agregar el 8 de agosto cita doctor" → "Cita doctor"
+const RELLENO = new Set([
+  'por','favor','porfavor','porfa','me','puedes','podrias','podras','quiero',
+  'necesito','hay','que','tengo','voy','a','al','agrega','agregar','agregame',
+  'agregarme','anade','anadir','añade','añadir','pon','poner','ponme','ponle',
+  'mete','meter','apunta','apuntar','anota','anotar','registra','registrar',
+  'crea','crear','guarda','guardar','marca','marcar','agenda','agendar',
+  'programa','programar','recuerdame','recuérdame','recordar','recordarme',
+  'el','la','los','las','de','del','para','en','mi','un','una','unos','unas',
+  'otra','otro','nueva','nuevo','este','esta','y',
+]);
+
 function cleanTitle(text, removals){
   let t = text;
   removals.forEach(r => { t = t.replace(r, ' '); });
   t = t.replace(/\s+/g,' ').trim();
-  t = t.replace(/^(el|la|los|las|de|del|para|en|mi|una?|tengo que|tengo|hay|voy a)\s+/gi,'');
-  // quitar conectores sueltos al final ("… de láminas el")
-  for(let i=0;i<3;i++){
-    t = t.replace(/\s+(el|la|los|las|de|del|para|en|a|al)$/i,'');
+
+  // Quitar palabras de orden al inicio, una por una
+  let tokens = t.split(' ').filter(Boolean);
+  let guard = 0;
+  while(tokens.length > 1 && RELLENO.has(normalize(tokens[0]).replace(/[^a-z]/g,'')) && guard < 8){
+    tokens.shift();
+    guard++;
   }
-  t = t.replace(/[\s,;.]+$/,'').trim();
+
+  // Quitar cortesía y conectores sueltos al final
+  guard = 0;
+  while(tokens.length > 1 && guard < 8){
+    const ult = normalize(tokens[tokens.length-1]).replace(/[^a-z]/g,'');
+    if(RELLENO.has(ult) || ult === 'gracias' || ult === ''){ tokens.pop(); guard++; }
+    else break;
+  }
+
+  t = tokens.join(' ').replace(/[\s,;.]+$/,'').trim();
   if(!t) return 'Evento';
   return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+// Genera las fechas entre dos ISO, opcionalmente solo un día de la semana
+function datesBetween(startISO, endISO, weekday){
+  const out = [];
+  const d = parseISO(startISO);
+  const end = parseISO(endISO);
+  if(weekday !== null && weekday !== undefined){
+    while(((d.getDay() + 6) % 7) !== weekday) d.setDate(d.getDate() + 1);
+  }
+  let guard = 0;
+  while(d <= end && guard < 500){
+    const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+    if(clampToSemester(iso)) out.push(iso);
+    d.setDate(d.getDate() + (weekday !== null && weekday !== undefined ? 7 : 1));
+    guard++;
+  }
+  return out;
+}
+
+// Primer y último día de un mes de 2026
+function monthBounds(mo){
+  return [ toISO(2026, mo, 1), toISO(2026, mo, daysInMonth(2026, mo)) ];
 }
 
 function localParse(text){
@@ -1834,75 +2202,108 @@ function localParse(text){
   const t = normalize(raw);
   const type = detectType(raw);
   const removals = [];
-  const today = parseISO(todayISO());
-  const year = 2026;
+  const today = todayISO();
+  const M = MONTH_RX;
+  const WD = 'lunes|martes|miercoles|jueves|viernes|sabado|domingo';
 
-  // 1) Rango: "del 20 al 24 de diciembre"
-  let m = t.match(new RegExp('del?\\s+(\\d{1,2})\\s+(?:al|a|hasta el|hasta)\\s+(\\d{1,2})\\s+de\\s+(' + MONTH_RX + ')'));
+  const armar = (fechas) => {
+    const title = cleanTitle(raw, removals);
+    return fechas.map(date => ({ date, title, type }));
+  };
+  const marcar = (frag) => { removals.push(flexRx(frag)); };
+
+  let m;
+
+  // ── 1. Rango entre meses distintos: "del 1 de agosto al 31 de diciembre"
+  m = t.match(new RegExp('del?\\s+(\\d{1,2})\\s+de\\s+(' + M + ')\\s+(?:al|a|hasta el|hasta)\\s+(\\d{1,2})\\s+de\\s+(' + M + ')'));
   if(m){
+    marcar(m[0]);
+    marcar('todos los dias');
+    marcar('todos los días');
+    marcar('diario');
+    const ini = toISO(2026, monthIndex(m[2]), +m[1]);
+    const fin = toISO(2026, monthIndex(m[4]), +m[3]);
+    // si además dice un día de la semana, solo esos días
+    const wdm = t.match(new RegExp('(?:todos los|cada)\\s+(' + WD + ')'));
+    if(wdm){ marcar(wdm[0]); return armar(datesBetween(ini, fin, WD_MAP[wdm[1]])); }
+    return armar(datesBetween(ini, fin));
+  }
+
+  // ── 2. Rango dentro del mismo mes: "del 20 al 24 de diciembre"
+  m = t.match(new RegExp('del?\\s+(\\d{1,2})\\s+(?:al|a|hasta el|hasta)\\s+(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  if(m){
+    marcar(m[0]);
     const mo = monthIndex(m[3]);
-    const out = [];
-    for(let d = +m[1]; d <= +m[2]; d++){
-      const iso = toISO(year, mo, d);
-      if(clampToSemester(iso)) out.push(iso);
-    }
-    removals.push(flexRx(m[0]));
-    const title = cleanTitle(raw, removals);
-    return out.map(date => ({ date, title, type }));
+    return armar(datesBetween(toISO(2026, mo, +m[1]), toISO(2026, mo, +m[2])));
   }
 
-  // 2) Recurrente: "todos los miércoles"
-  m = t.match(/(?:todos los|cada)\s+(lunes|martes|miercoles|jueves|viernes|sabado|domingo)/);
+  // ── 3. Diario o semanal acotado a un mes: "todos los días de agosto",
+  //       "todos los lunes de septiembre"
+  m = t.match(new RegExp('(?:todos los|todas las|cada)\\s+(dias?|d[ií]as?|' + WD + ')\\s+de\\s+(' + M + ')'));
   if(m){
-    const wd = WD_MAP[m[1]];
-    const out = [];
-    const d = new Date(today);
-    while(((d.getDay()+6)%7) !== wd) d.setDate(d.getDate()+1);
-    const end = parseISO(SEM_END);
-    while(d <= end){
-      out.push(toISO(d.getFullYear(), d.getMonth()+1, d.getDate()));
-      d.setDate(d.getDate()+7);
-    }
-    removals.push(flexRx(m[0]));
-    const title = cleanTitle(raw, removals);
-    return out.map(date => ({ date, title, type }));
+    marcar(m[0]);
+    const [ini, fin] = monthBounds(monthIndex(m[2]));
+    const esDia = /^d[ií]as?$/.test(m[1]);
+    return armar(datesBetween(ini, fin, esDia ? null : WD_MAP[m[1]]));
   }
 
-  // 3) "15 de octubre"
-  m = t.match(new RegExp('(\\d{1,2})\\s+de\\s+(' + MONTH_RX + ')'));
+  // ── 4. Diario hasta una fecha: "todos los días hasta el 15 de octubre"
+  m = t.match(new RegExp('(?:todos los|cada)\\s+(dias?|d[ií]as?)\\s+hasta\\s+(?:el\\s+)?(\\d{1,2})\\s+de\\s+(' + M + ')'));
   if(m){
-    const iso = toISO(year, monthIndex(m[2]), +m[1]);
-    removals.push(flexRx('el ' + m[0]));
-    removals.push(flexRx(m[0]));
-    if(clampToSemester(iso)) return [{ date: iso, title: cleanTitle(raw, removals), type }];
-    return [];
+    marcar(m[0]);
+    return armar(datesBetween(today, toISO(2026, monthIndex(m[3]), +m[2])));
   }
 
-  // 4) "15/10" o "15-10" (día/mes)
+  // ── 5. Diario a secas: "todos los días", "diario", "cada día"
+  m = t.match(/(?:todos los|cada)\s+d[ií]as?|\bdiario\b|\bdiariamente\b|\bcada dia\b/);
+  if(m){
+    marcar(m[0]);
+    return armar(datesBetween(today, SEM_END));
+  }
+
+  // ── 6. Semanal a secas: "todos los miércoles"
+  m = t.match(new RegExp('(?:todos los|cada)\\s+(' + WD + ')'));
+  if(m){
+    marcar(m[0]);
+    return armar(datesBetween(today, SEM_END, WD_MAP[m[1]]));
+  }
+
+  // ── 7. Todo un mes: "en agosto", "durante septiembre"
+  m = t.match(new RegExp('(?:todo\\s+)?(?:el\\s+mes\\s+de|durante|en)\\s+(' + M + ')\\b'));
+  if(m && /todo|durante|mes/.test(m[0])){
+    marcar(m[0]);
+    const [ini, fin] = monthBounds(monthIndex(m[1]));
+    return armar(datesBetween(ini, fin));
+  }
+
+  // ── 8. Fecha suelta: "15 de octubre"
+  m = t.match(new RegExp('(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  if(m){
+    marcar('el ' + m[0]); marcar(m[0]);
+    const iso = toISO(2026, monthIndex(m[2]), +m[1]);
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+
+  // ── 9. Formato 15/10 o 15-10 (día/mes)
   m = t.match(/\b(\d{1,2})[\/\-](\d{1,2})\b/);
   if(m){
-    const iso = toISO(year, +m[2], +m[1]);
-    removals.push(flexRx('el ' + m[0]));
-    removals.push(flexRx(m[0]));
-    if(clampToSemester(iso)) return [{ date: iso, title: cleanTitle(raw, removals), type }];
-    return [];
+    marcar('el ' + m[0]); marcar(m[0]);
+    const iso = toISO(2026, +m[2], +m[1]);
+    return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // 5) "próximo viernes" / "este lunes"
-  m = t.match(/(?:proximo|proxima|este|esta|el)\s+(lunes|martes|miercoles|jueves|viernes|sabado|domingo)/);
+  // ── 10. "próximo viernes" / "este lunes"
+  m = t.match(new RegExp('(?:proximo|proxima|este|esta|el)\\s+(' + WD + ')'));
   if(m){
-    const wd = WD_MAP[m[1]];
-    const d = new Date(today);
-    d.setDate(d.getDate()+1);
-    while(((d.getDay()+6)%7) !== wd) d.setDate(d.getDate()+1);
-    removals.push(flexRx('el ' + m[0]));
-    removals.push(flexRx(m[0]));
+    marcar('el ' + m[0]); marcar(m[0]);
+    const d = parseISO(today);
+    d.setDate(d.getDate() + 1);
+    while(((d.getDay() + 6) % 7) !== WD_MAP[m[1]]) d.setDate(d.getDate() + 1);
     const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
-    if(clampToSemester(iso)) return [{ date: iso, title: cleanTitle(raw, removals), type }];
-    return [];
+    return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // 6) hoy / mañana / pasado mañana
+  // ── 11. hoy / mañana / pasado mañana
   const rel = [
     { rx:/pasado\s?manana/, label:'pasado manana', add:2 },
     { rx:/\bmanana\b/, label:'manana', add:1 },
@@ -1910,17 +2311,25 @@ function localParse(text){
   ];
   for(const r of rel){
     if(r.rx.test(t)){
-      const d = new Date(today);
-      d.setDate(d.getDate()+r.add);
-      removals.push(flexRx(r.label));
+      marcar(r.label);
+      const d = parseISO(today);
+      d.setDate(d.getDate() + r.add);
       const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
-      if(clampToSemester(iso)) return [{ date: iso, title: cleanTitle(raw, removals), type }];
-      return [];
+      return clampToSemester(iso) ? armar([iso]) : [];
     }
+  }
+
+  // ── 12. Solo un mes mencionado: "examen en octubre" → primer día del mes
+  m = t.match(new RegExp('\\b(?:en|de)\\s+(' + M + ')\\b'));
+  if(m){
+    marcar(m[0]);
+    const iso = toISO(2026, monthIndex(m[1]), 1);
+    return clampToSemester(iso) ? armar([iso]) : [];
   }
 
   return [];
 }
+
 
 // ---------- Lectura con IA ----------
 async function aiParse(text){
@@ -1932,8 +2341,10 @@ Reglas:
 - Cada evento: {"date":"YYYY-MM-DD","title":"...","type":"..."}
 - type debe ser exactamente uno de: examen, entrega, vacacion, otro
 - examen = exámenes y parciales. entrega = tareas, proyectos, láminas, maquetas. vacacion = vacaciones, viajes, puentes, asuetos. otro = todo lo demás.
-- Si el texto describe un rango de días, genera un evento por cada día.
-- Si dice "todos los X" o "cada X", genera un evento por cada semana hasta el ${SEM_END}.
+- Si el texto describe un rango de días, genera un evento por cada día del rango, aunque cruce de un mes a otro.
+- Si dice "todos los días", "diario" o "cada día", genera un evento por CADA día hasta el ${SEM_END} (o hasta la fecha límite que indique).
+- Si dice "todos los días de <mes>", genera un evento por cada día de ese mes.
+- Si dice "todos los <día de la semana>", genera uno por semana hasta el ${SEM_END}.
 - El título debe ser corto y claro, sin la fecha adentro.
 - Si el año no se menciona, asume 2026.
 - Si no hay fecha identificable, responde [].
@@ -2098,6 +2509,40 @@ function nextDayCompact(iso){
   return toISO(d.getFullYear(), d.getMonth()+1, d.getDate()).replace(/-/g,'');
 }
 
+// Identificador estable por evento: al reexportar, Calendario
+// actualiza el evento en vez de duplicarlo.
+function uidFor(ev){
+  const s = evId(ev);
+  let h1 = 5381, h2 = 52711;
+  for(let i = 0; i < s.length; i++){
+    const ch = s.charCodeAt(i);
+    h1 = ((h1 << 5) + h1 + ch) >>> 0;
+    h2 = ((h2 << 5) + h2 + ch * 3) >>> 0;
+  }
+  return (h1.toString(16) + h2.toString(16));
+}
+
+// Alarmas: una por cada día, desde N días antes hasta el día del evento.
+// El evento es de día completo, así que la hora se cuenta desde medianoche:
+// 9:00 AM = +9 h. Para N días antes: -(N*24) + 9 horas.
+function alarmsFor(ev){
+  const n = safeRem(ev.rem);
+  if(n < 0) return [];
+  const out = [];
+  for(let d = n; d >= 0; d--){
+    const horas = d * 24 - 9;
+    const trigger = horas > 0 ? `-PT${horas}H` : (horas === 0 ? 'PT0S' : `PT${-horas}H`);
+    out.push(
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:' + icsEscape(ev.title),
+      'TRIGGER;RELATED=START:' + trigger,
+      'END:VALARM'
+    );
+  }
+  return out;
+}
+
 function buildICS(){
   const now = new Date();
   const stamp = now.getUTCFullYear()
@@ -2113,15 +2558,16 @@ function buildICS(){
     'X-WR-CALNAME:Semestre Ago-Dic 2026',
   ];
 
-  EVENTS.forEach((ev, i) => {
+  EVENTS.forEach(ev => {
     const start = ev.date.replace(/-/g,'');
     lines.push('BEGIN:VEVENT');
-    lines.push('UID:sem2026-' + i + '-' + start + '@bitacora');
+    lines.push('UID:' + uidFor(ev) + '@bitacora-semestre');
     lines.push('DTSTAMP:' + stamp);
     lines.push('DTSTART;VALUE=DATE:' + start);
     lines.push('DTEND;VALUE=DATE:' + nextDayCompact(ev.date));
     lines.push('SUMMARY:' + icsEscape(ev.title));
     lines.push('CATEGORIES:' + icsEscape(CATEGORY_LABEL[ev.type] || 'Otro'));
+    alarmsFor(ev).forEach(l => lines.push(l));
     lines.push('END:VEVENT');
   });
 
