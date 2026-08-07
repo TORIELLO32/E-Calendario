@@ -156,10 +156,7 @@
   }
   .legend-item{display:flex;align-items:center;gap:6px;}
   .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;}
-  .dot.examen{background:var(--examen);}
-  .dot.entrega{background:var(--entrega);}
-  .dot.vacacion{background:var(--vacacion);}
-  .dot.otro{background:var(--otro);}
+
 
   /* ---------- Month cards ---------- */
   #months{
@@ -259,10 +256,7 @@
     border-radius:50%;
     flex:none;
   }
-  .ev-dot.examen{background:var(--examen);}
-  .ev-dot.entrega{background:var(--entrega);}
-  .ev-dot.vacacion{background:var(--vacacion);}
-  .ev-dot.otro{background:var(--otro);}
+
   .ev-dot.done{opacity:0.28;}
   .ev-plus{
     font-family:var(--font-mono);
@@ -412,6 +406,43 @@
     line-height:1.4;
     margin:-2px 0 9px;
   }
+  .nueva-cat{
+    border:1px dashed var(--accent);
+    border-radius:9px;
+    padding:11px;
+    margin-bottom:9px;
+    background:var(--accent-soft);
+  }
+  .nc-nombre{width:100%;margin-bottom:9px !important;}
+  .swatches{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-bottom:11px;
+  }
+  .swatch{
+    width:28px;height:28px;
+    border-radius:50%;
+    border:2px solid transparent;
+    cursor:pointer;
+    padding:0;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .swatch.sel{
+    border-color:var(--ink);
+    box-shadow:0 0 0 2px var(--paper-card) inset;
+  }
+  .nc-crear{width:100%;}
+  .cat-row{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line-soft);
+    font-size:0.86rem;
+  }
+  .cat-row:last-child{border-bottom:none;}
+  .cat-row span{flex:1;}
   .add-here{
     width:100%;
     margin-top:12px;
@@ -848,10 +879,7 @@
     <div class="sel-hint" id="selHint"></div>
 
     <div class="legend">
-      <span class="legend-item"><i class="dot examen"></i>Examen</span>
-      <span class="legend-item"><i class="dot entrega"></i>Entrega</span>
-      <span class="legend-item"><i class="dot vacacion"></i>Vacaciones</span>
-      <span class="legend-item"><i class="dot otro"></i>Otro</span>
+
     </div>
   </header>
 
@@ -913,6 +941,11 @@
   </div>
 
   <div class="opt-block">
+    <div class="opt-title">Mis categorías</div>
+    <div id="catList"></div>
+  </div>
+
+  <div class="opt-block">
     <div class="opt-title">Pasar al Calendario de Apple</div>
     <div class="opt-desc">Manda tus eventos y sus recordatorios a la app Calendario. Ahí llegan las notificaciones y iCloud los pasa a tu iPad solo. Vuelve a exportar cuando agregues o cambies cosas.</div>
     <button class="btn primary" id="btnIcs">Exportar eventos</button>
@@ -942,12 +975,8 @@
   <div class="opt-desc" id="rangeCount"></div>
   <div class="edit-form">
     <input type="text" id="rgTitle" placeholder="¿Qué vas a poner en estos días?">
-    <select id="rgType">
-      <option value="otro">Otro</option>
-      <option value="examen">Examen</option>
-      <option value="entrega">Entrega</option>
-      <option value="vacacion">Vacaciones</option>
-    </select>
+    <select id="rgType" onchange="checkNueva(this,'rgNueva')"></select>
+    <div id="rgNueva"></div>
     <div class="prev-actions">
       <button class="btn" id="rgCancel">Cancelar</button>
       <button class="btn primary" id="rgGo">Agregar</button>
@@ -1045,7 +1074,52 @@ function isUserEvent(ev){
 const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const WEEKDAYS_SHORT = ['L','M','M','J','V','S','D'];
 const WEEKDAYS_FULL = ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
-const CATEGORY_LABEL = { examen:'Examen', entrega:'Entrega', vacacion:'Vacaciones', otro:'Otro' };
+// ──────────────────────────────────────────────────────────────
+// CATEGORÍAS — las 4 de fábrica más las que tú crees
+// ──────────────────────────────────────────────────────────────
+const CAT_FIJAS = [
+  { id:'examen',   label:'Examen',     color:'#B23A2F' },
+  { id:'entrega',  label:'Entrega',    color:'#C98A2B' },
+  { id:'vacacion', label:'Vacaciones', color:'#3F7A56' },
+  { id:'otro',     label:'Otro',       color:'#5C6478' },
+];
+let CAT_MIAS = [];   // las que agregas tú (se guardan y sincronizan)
+
+// Paleta para elegir color
+const PALETA = ['#33506B','#7B4FA8','#2E7D8F','#C05621','#8A6D3B',
+                '#B2478E','#4A7C2F','#D4A017','#A63D40','#3F5148'];
+
+function categorias(){ return CAT_FIJAS.concat(CAT_MIAS); }
+function catOf(id){
+  return categorias().find(k => k.id === id) || CAT_FIJAS[3];
+}
+function catColor(id){ return catOf(id).color; }
+function catLabel(id){ return catOf(id).label; }
+
+function safeColor(h){
+  return (typeof h === 'string' && /^#[0-9a-fA-F]{6}$/.test(h)) ? h : '#5C6478';
+}
+function sanitizeCats(arr){
+  if(!Array.isArray(arr)) return [];
+  const vistos = new Set(CAT_FIJAS.map(k => k.id));
+  const out = [];
+  arr.forEach(k => {
+    if(!k || typeof k.id !== 'string') return;
+    if(!/^c_[a-z0-9]{1,20}$/.test(k.id)) return;
+    if(vistos.has(k.id)) return;
+    if(typeof k.label !== 'string' || !k.label.trim()) return;
+    vistos.add(k.id);
+    out.push({ id:k.id, label:k.label.trim().slice(0,24), color:safeColor(k.color) });
+  });
+  return out.slice(0, 20);
+}
+
+// <option> para todos los selectores de tipo
+function typeOptions(sel){
+  return categorias().map(k =>
+    `<option value="${k.id}" ${k.id === sel ? 'selected' : ''}>${esc(k.label)}</option>`
+  ).join('') + '<option value="__nueva__">＋ Nueva categoría…</option>';
+}
 const SEMESTER = [ {y:2026,m:8}, {y:2026,m:9}, {y:2026,m:10}, {y:2026,m:11}, {y:2026,m:12} ];
 
 // ---------- Seguridad: nunca insertar texto crudo como HTML ----------
@@ -1286,6 +1360,7 @@ function snapshot(){
     eventos: USER_EVENTS,
     completados: [...COMPLETED],
     eliminados: [...DELETED],
+    categorias: CAT_MIAS,
     stamp: localStamp,
   };
 }
@@ -1330,6 +1405,7 @@ function applySnapshot(o){
   USER_EVENTS = sanitizeList(o.eventos);
   COMPLETED = new Set(sanitizeIds(o.completados));
   DELETED = new Set(sanitizeIds(o.eliminados));
+  CAT_MIAS = sanitizeCats(o.categorias);
   localStamp = typeof o.stamp === 'number' ? o.stamp : 0;
 }
 
@@ -1425,10 +1501,11 @@ let storageMode = 'none';
 
 function evId(ev){ return ev.date + '|' + ev.title; }
 
-// El tipo solo puede ser uno de los cuatro válidos.
-// Si llega cualquier otra cosa (de la nube o de un respaldo), se ignora.
-const TIPOS = ['examen','entrega','vacacion','otro'];
-function safeType(t){ return TIPOS.includes(t) ? t : 'otro'; }
+// El tipo solo puede ser una categoría existente (de fábrica o tuya).
+// Si llega cualquier otra cosa (de la nube o de un respaldo), pasa a "Otro".
+function safeType(t){
+  return categorias().some(k => k.id === t) ? t : 'otro';
+}
 
 function hasClaudeStorage(){
   return typeof window !== 'undefined' && window.storage && typeof window.storage.set === 'function';
@@ -1496,6 +1573,7 @@ async function loadAll(){
       const o = JSON.parse(estadoRaw);
       COMPLETED = new Set(sanitizeIds(o.completados));
       DELETED = new Set(sanitizeIds(o.eliminados));
+      CAT_MIAS = sanitizeCats(o.categorias);
       if(typeof o.stamp === 'number') localStamp = o.stamp;
     }catch(e){}
   }
@@ -1511,6 +1589,7 @@ async function saveEstado(){
   return writeKey(KEY_ESTADO, JSON.stringify({
     completados: [...COMPLETED],
     eliminados: [...DELETED],
+    categorias: CAT_MIAS,
     stamp: localStamp,
   }));
 }
@@ -1632,6 +1711,7 @@ async function saveEdit(oldId){
 // ---------- Agregar / borrar eventos ----------
 function renderAll(){
   rebuildEvents();
+  renderLegend();
   renderTimeline();
   renderNextEvent();
   renderProgress();
@@ -1697,7 +1777,7 @@ function renderTimeline(){
     const tick = document.createElement('div');
     tick.className = 'tl-tick';
     tick.style.left = pct + '%';
-    tick.style.background = `var(--${safeType(ev.type)})`;
+    tick.style.background = catColor(ev.type);
     el.appendChild(tick);
   });
 
@@ -1777,7 +1857,7 @@ function buildMonthCard(y, m, byDate){
     let dotsHtml = '';
     if(hasEvents){
       const shown = dayEvents.slice(0,3);
-      const dots = shown.map(ev => `<i class="ev-dot ${safeType(ev.type)}${COMPLETED.has(evId(ev)) ? ' done' : ''}"></i>`).join('');
+      const dots = shown.map(ev => `<i class="ev-dot${COMPLETED.has(evId(ev)) ? ' done' : ''}" style="background:${catColor(ev.type)}"></i>`).join('');
       const plus = dayEvents.length > 3 ? `<span class="ev-plus">+${dayEvents.length - 3}</span>` : '';
       dotsHtml = `<span class="ev-dots">${dots}${plus}</span>`;
     }
@@ -1869,7 +1949,8 @@ function abrirRango(){
   document.getElementById('rangeCount').textContent =
     dias.length === 1 ? 'Se agregará en 1 día.' : `Se agregará en los ${dias.length} días.`;
   document.getElementById('rgTitle').value = '';
-  document.getElementById('rgType').value = 'otro';
+  document.getElementById('rgType').innerHTML = typeOptions('otro');
+  document.getElementById('rgNueva').innerHTML = '';
   document.getElementById('rangeSheet').classList.add('open');
   document.getElementById('rangeOverlay').classList.add('open');
   setTimeout(() => document.getElementById('rgTitle').focus(), 250);
@@ -1905,6 +1986,105 @@ document.getElementById('rgGo').addEventListener('click', guardarRango);
 document.getElementById('rgTitle').addEventListener('keydown', e => {
   if(e.key === 'Enter'){ e.preventDefault(); guardarRango(); }
 });
+
+// ══════════════════════════════════════════════════════════════
+// CREAR CATEGORÍA — aparece al elegir "＋ Nueva categoría…"
+// ══════════════════════════════════════════════════════════════
+let colorElegido = PALETA[0];
+
+function paletaHTML(){
+  return PALETA.map(h =>
+    `<button type="button" class="swatch ${h === colorElegido ? 'sel' : ''}" style="background:${h}" onclick="pickColor('${h}')"></button>`
+  ).join('');
+}
+
+function pickColor(h){
+  colorElegido = safeColor(h);
+  document.querySelectorAll('.swatch').forEach(b => {
+    b.classList.toggle('sel', b.style.backgroundColor === hexToRgb(h));
+  });
+}
+function hexToRgb(h){
+  const n = parseInt(h.slice(1), 16);
+  return `rgb(${(n>>16)&255}, ${(n>>8)&255}, ${n&255})`;
+}
+
+// Se llama al cambiar cualquier selector de tipo
+function checkNueva(sel, contenedorId){
+  const cont = document.getElementById(contenedorId);
+  if(!cont) return;
+  if(sel.value !== '__nueva__'){ cont.innerHTML = ''; return; }
+  colorElegido = PALETA[0];
+  cont.innerHTML = `
+    <div class="nueva-cat">
+      <input type="text" class="nc-nombre" placeholder="Nombre de la categoría" maxlength="24">
+      <div class="swatches">${paletaHTML()}</div>
+      <button type="button" class="btn primary nc-crear" onclick="crearCategoria('${contenedorId}','${sel.id}')">Crear categoría</button>
+    </div>
+  `;
+  const inp = cont.querySelector('.nc-nombre');
+  if(inp) setTimeout(() => inp.focus(), 50);
+}
+
+async function crearCategoria(contenedorId, selectId){
+  const cont = document.getElementById(contenedorId);
+  const sel = document.getElementById(selectId);
+  const inp = cont.querySelector('.nc-nombre');
+  const nombre = inp.value.trim();
+  if(!nombre){ inp.focus(); return; }
+
+  const nueva = {
+    id: 'c_' + Date.now().toString(36),
+    label: nombre.slice(0,24),
+    color: safeColor(colorElegido),
+  };
+  CAT_MIAS.push(nueva);
+  await markChanged();
+
+  // se recargan las opciones y queda elegida la nueva
+  sel.innerHTML = typeOptions(nueva.id);
+  cont.innerHTML = '';
+  renderLegend();
+  renderMonths();
+}
+
+async function borrarCategoria(id){
+  CAT_MIAS = CAT_MIAS.filter(k => k.id !== id);
+  // los eventos que la usaban pasan a "Otro"
+  USER_EVENTS.forEach(ev => { if(ev.type === id) ev.type = 'otro'; });
+  rebuildEvents();
+  renderLegend();
+  renderMonths();
+  renderPanelBody();
+  renderCatList();
+  await markChanged();
+}
+
+// ---------- Leyenda dinámica ----------
+function renderLegend(){
+  const el = document.querySelector('.legend');
+  if(!el) return;
+  el.innerHTML = categorias().map(k =>
+    `<span class="legend-item"><i class="dot" style="background:${k.color}"></i>${esc(k.label)}</span>`
+  ).join('');
+}
+
+// ---------- Lista de categorías en Opciones ----------
+function renderCatList(){
+  const el = document.getElementById('catList');
+  if(!el) return;
+  if(CAT_MIAS.length === 0){
+    el.innerHTML = '<div class="opt-desc" style="margin:0">Todavía no has creado categorías propias. Se crean desde el selector de tipo al agregar un evento.</div>';
+    return;
+  }
+  el.innerHTML = CAT_MIAS.map(k => `
+    <div class="cat-row">
+      <i class="dot" style="background:${k.color}"></i>
+      <span>${esc(k.label)}</span>
+      <button class="del-btn" onclick="borrarCategoria('${k.id}')" aria-label="Borrar">&times;</button>
+    </div>
+  `).join('');
+}
 
 // ---------- Panel de detalle ----------
 let currentPanelDate = null;
@@ -1966,12 +2146,8 @@ function renderPanelBody(){
           <input type="text" id="edTitle" value="${esc(ev.title)}" placeholder="Nombre del evento">
           <div class="edit-row">
             <input type="date" id="edDate" value="${esc(ev.date)}" min="${SEM_START}" max="${SEM_END}">
-            <select id="edType">
-              <option value="examen" ${ev.type==='examen'?'selected':''}>Examen</option>
-              <option value="entrega" ${ev.type==='entrega'?'selected':''}>Entrega</option>
-              <option value="vacacion" ${ev.type==='vacacion'?'selected':''}>Vacaciones</option>
-              <option value="otro" ${ev.type==='otro'?'selected':''}>Otro</option>
-            </select>
+            <select id="edType" onchange="checkNueva(this,'edNueva')">${typeOptions(ev.type)}</select>
+            <div id="edNueva"></div>
           </div>
           <div class="prev-actions">
             <button class="btn" onclick="cancelEdit()">Cancelar</button>
@@ -1986,7 +2162,7 @@ function renderPanelBody(){
         <button class="panel-row" onclick="toggleDoneAt(${i})">
           <span class="checkbox">${CHECK_SVG}</span>
           <span class="txt">
-            <span class="cat"><i class="dot ${esc(ev.type)}"></i>${CATEGORY_LABEL[ev.type] || 'Otro'}</span>
+            <span class="cat"><i class="dot" style="background:${catColor(ev.type)}"></i>${esc(catLabel(ev.type))}</span>
             ${esc(ev.title)}
             ${safeRem(ev.rem) >= 0 ? `<span class="rem-tag">🔔 ${esc(remLabel(ev.rem))}</span>` : ''}
           </span>
@@ -2009,12 +2185,8 @@ function renderPanelBody(){
   const formAdd = addingHere ? `
     <div class="edit-form">
       <input type="text" id="adTitle" placeholder="¿Qué vas a poner este día?">
-      <select id="adType">
-        <option value="otro">Otro</option>
-        <option value="examen">Examen</option>
-        <option value="entrega">Entrega</option>
-        <option value="vacacion">Vacaciones</option>
-      </select>
+      <select id="adType" onchange="checkNueva(this,'adNueva')">${typeOptions('otro')}</select>
+      <div id="adNueva"></div>
       <div class="prev-actions">
         <button class="btn" onclick="cancelAddHere()">Cancelar</button>
         <button class="btn primary" onclick="saveAddHere()">Agregar</button>
@@ -2125,6 +2297,11 @@ function monthIndex(name){
 
 function detectType(text){
   const t = normalize(text);
+  // Primero: si menciona una categoría tuya por su nombre, gana esa
+  for(const k of CAT_MIAS){
+    const n = normalize(k.label);
+    if(n.length >= 3 && t.includes(n)) return k.id;
+  }
   if(/\bexamen|\bparcial|\bfinal\b|\bquiz\b|\bprueba\b/.test(t)) return 'examen';
   if(/\bentrega|\btarea|\bproyecto|\blamina|\bmaqueta|\breporte|\bensayo|\bavance/.test(t)) return 'entrega';
   if(/\bvacacion|\bviaje|\bpuente\b|\bferiado|\basueto/.test(t)) return 'vacacion';
@@ -2339,8 +2516,10 @@ Convierte el siguiente texto en español a eventos de calendario.
 Reglas:
 - Responde SOLO con un arreglo JSON, sin explicación ni markdown.
 - Cada evento: {"date":"YYYY-MM-DD","title":"...","type":"..."}
-- type debe ser exactamente uno de: examen, entrega, vacacion, otro
-- examen = exámenes y parciales. entrega = tareas, proyectos, láminas, maquetas. vacacion = vacaciones, viajes, puentes, asuetos. otro = todo lo demás.
+- type debe ser exactamente uno de estos identificadores: ${categorias().map(k => k.id).join(', ')}
+- Significado: ${categorias().map(k => k.id + ' = ' + k.label).join('; ')}
+- examen para exámenes y parciales; entrega para tareas, proyectos, láminas y maquetas; vacacion para vacaciones, viajes y puentes; otro para lo demás.
+- Si el texto menciona el nombre de una categoría, usa el identificador de esa.
 - Si el texto describe un rango de días, genera un evento por cada día del rango, aunque cruce de un mes a otro.
 - Si dice "todos los días", "diario" o "cada día", genera un evento por CADA día hasta el ${SEM_END} (o hasta la fecha límite que indique).
 - Si dice "todos los días de <mes>", genera un evento por cada día de ese mes.
@@ -2397,7 +2576,7 @@ function showPreview(list){
   const shown = list.slice(0, 6);
   const rows = shown.map(ev => `
     <div class="prev-row">
-      <i class="dot ${esc(ev.type)}"></i>
+      <i class="dot" style="background:${catColor(ev.type)}"></i>
       <span class="when">${shortDate(ev.date)}</span>
       <span>${esc(ev.title)}</span>
     </div>
@@ -2566,7 +2745,7 @@ function buildICS(){
     lines.push('DTSTART;VALUE=DATE:' + start);
     lines.push('DTEND;VALUE=DATE:' + nextDayCompact(ev.date));
     lines.push('SUMMARY:' + icsEscape(ev.title));
-    lines.push('CATEGORIES:' + icsEscape(CATEGORY_LABEL[ev.type] || 'Otro'));
+    lines.push('CATEGORIES:' + icsEscape(catLabel(ev.type)));
     alarmsFor(ev).forEach(l => lines.push(l));
     lines.push('END:VEVENT');
   });
@@ -2616,6 +2795,7 @@ function buildBackup(){
     eventos: USER_EVENTS,
     completados: [...COMPLETED],
     eliminados: [...DELETED],
+    categorias: CAT_MIAS,
   };
   const json = JSON.stringify(data);
   return btoa(unescape(encodeURIComponent(json)));
@@ -2667,6 +2847,9 @@ async function restoreBackup(){
   });
   sanitizeIds(o.completados).forEach(id => COMPLETED.add(id));
   sanitizeIds(o.eliminados).forEach(id => DELETED.add(id));
+  sanitizeCats(o.categorias).forEach(k => {
+    if(!CAT_MIAS.some(x => x.id === k.id)) CAT_MIAS.push(k);
+  });
 
   renderAll();
   await markChanged();
@@ -2677,6 +2860,7 @@ async function restoreBackup(){
 // ---------- Abrir / cerrar opciones ----------
 function openOpts(){
   optsMsg('', '');
+  renderCatList();
   setSyncState(syncEnabled() ? syncState : 'off');
   document.getElementById('pasteZone').style.display = 'none';
   document.getElementById('opts').classList.add('open');
@@ -2743,6 +2927,7 @@ setInterval(checkDayChange, 60000);
 async function init(){
   // Primer dibujo inmediato
   rebuildEvents();
+  renderLegend();
   renderTimeline();
   renderNextEvent();
   renderProgress();
