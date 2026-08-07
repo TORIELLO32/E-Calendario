@@ -908,9 +908,11 @@
 
   <div class="agent-examples" id="agentExamples">
     <button class="ex-chip">Examen de estructuras el 15 de octubre</button>
-    <button class="ex-chip">Vacaciones del 20 al 24 de diciembre</button>
+    <button class="ex-chip">Vacaciones del 29 de agosto al 7 de septiembre</button>
     <button class="ex-chip">Entrega de láminas el próximo viernes</button>
-    <button class="ex-chip">Todos los lunes gimnasio</button>
+    <button class="ex-chip">Gimnasio todos los lunes y miércoles</button>
+    <button class="ex-chip">Tomar creatina todos los días</button>
+    <button class="ex-chip">Prácticas de lunes a viernes de septiembre</button>
   </div>
 
   <div class="agent-result" id="agentResult"></div>
@@ -2268,7 +2270,7 @@ let apiBroken = false;
 let pendingEvents = [];
 
 // ---------- Lector local de fechas en español ----------
-const MONTH_RX = 'enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre';
+
 const WD_MAP = { 'lunes':0,'martes':1,'miercoles':2,'miércoles':2,'jueves':3,'viernes':4,'sabado':5,'sábado':5,'domingo':6 };
 
 function normalize(s){
@@ -2288,23 +2290,21 @@ function flexRx(normStr, flags){
   return new RegExp(body, flags || 'i');
 }
 
-function monthIndex(name){
-  const n = normalize(name);
-  const list = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  if(n === 'setiembre') return 9;
-  return list.indexOf(n) + 1;
-}
+
 
 function detectType(text){
-  const t = normalize(text);
-  // Primero: si menciona una categoría tuya por su nombre, gana esa
+  let t = normalize(text);
+  // Las frases de fecha no deben confundirse con palabras clave:
+  // "a finales de septiembre" no es un examen final.
+  t = t.replace(/(?:principios|inicios?|comienzos|mediados|finales|fines|fin)\s+de(?:l)?\s+(?:mes\s+de\s+)?[a-z]+/g, ' ');
+  // Si menciona una categoría tuya por su nombre, gana esa
   for(const k of CAT_MIAS){
     const n = normalize(k.label);
     if(n.length >= 3 && t.includes(n)) return k.id;
   }
-  if(/\bexamen|\bparcial|\bfinal\b|\bquiz\b|\bprueba\b/.test(t)) return 'examen';
-  if(/\bentrega|\btarea|\bproyecto|\blamina|\bmaqueta|\breporte|\bensayo|\bavance/.test(t)) return 'entrega';
-  if(/\bvacacion|\bviaje|\bpuente\b|\bferiado|\basueto/.test(t)) return 'vacacion';
+  if(/\bexamen|\bexamenes|\bparcial|\bfinal(?:es)?\b|\bquiz\b|\bprueba|\bevaluacion|\bextraordinario|\bordinario\b|\bteorico\b|\bpractico\b|\bsegundo\s+parcial|\bprimer\s+parcial/.test(t)) return 'examen';
+  if(/\bentrega|\btarea|\bproyecto|\blamina|\bmaqueta|\breporte|\bensayo|\bavance|\bpractica|\bexposicion|\bpresentacion|\bportafolio|\brender|\bplano|\bcroquis|\bboceto|\binvestigacion|\bresumen|\bmapa\s+conceptual|\bcuestionario|\btrabajo\b|\bdeber\b|\bactividad|\bbitacora|\bmemoria\b|\banteproyecto/.test(t)) return 'entrega';
+  if(/\bvacacion|\bviaje|\bpuente\b|\bferiado|\basueto|\bdescanso|\bfestivo|\bdia\s+libre|\bsalida\b|\bplaya\b|\bfin\s+de\s+curso|\bpaseo/.test(t)) return 'vacacion';
   return 'otro';
 }
 
@@ -2315,14 +2315,18 @@ function clampToSemester(iso){
 // Palabras de orden o relleno que no deben quedar en el título.
 // "Agregar el 8 de agosto cita doctor" → "Cita doctor"
 const RELLENO = new Set([
-  'por','favor','porfavor','porfa','me','puedes','podrias','podras','quiero',
-  'necesito','hay','que','tengo','voy','a','al','agrega','agregar','agregame',
-  'agregarme','anade','anadir','añade','añadir','pon','poner','ponme','ponle',
-  'mete','meter','apunta','apuntar','anota','anotar','registra','registrar',
-  'crea','crear','guarda','guardar','marca','marcar','agenda','agendar',
+  'por','favor','porfavor','porfa','porfis','me','puedes','podrias','podras',
+  'quiero','necesito','hay','que','tengo','voy','a','al','ocupo','debo',
+  'agrega','agregar','agregame','agregarme','anade','anadir','añade','añadir',
+  'pon','poner','ponme','ponle','pongan','mete','meter','meteme','metele',
+  'apunta','apuntar','apuntame','anota','anotar','anotame','registra','registrar',
+  'crea','crear','creame','guarda','guardar','marca','marcar','agenda','agendar',
   'programa','programar','recuerdame','recuérdame','recordar','recordarme',
+  'escribe','escribeme','coloca','colocar','haz','hazme','hacer','ayudame',
   'el','la','los','las','de','del','para','en','mi','un','una','unos','unas',
-  'otra','otro','nueva','nuevo','este','esta','y',
+  'otra','otro','nueva','nuevo','este','esta','esos','esas','y','e','o',
+  'hasta','antes','luego','tambien','también','ademas','además','ya','solo','sólo',
+  'gracias','porfin','plis','please',
 ]);
 
 function cleanTitle(text, removals){
@@ -2352,125 +2356,305 @@ function cleanTitle(text, removals){
 }
 
 // Genera las fechas entre dos ISO, opcionalmente solo un día de la semana
-function datesBetween(startISO, endISO, weekday){
+// Genera las fechas entre dos ISO.
+// wds: null = todos los días, o arreglo de días de la semana (0=Lun)
+// ══════════════════════════════════════════════════════════════
+// LECTOR DE FECHAS EN ESPAÑOL
+// Pensado para que entienda cómo escribe la gente de verdad:
+// abreviaturas, números con letra, y muchas formas de decir lo mismo.
+// ══════════════════════════════════════════════════════════════
+
+// Meses: nombres completos y abreviaturas.
+// El (?![a-z]) evita que "mar" se confunda dentro de "martes".
+const MONTH_RX = '(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|ene|feb|mar|abr|may|jun|jul|ago|sept|sep|set|oct|nov|dic)(?![a-z])';
+
+const MES_NUM = {
+  enero:1, ene:1, febrero:2, feb:2, marzo:3, mar:3, abril:4, abr:4,
+  mayo:5, may:5, junio:6, jun:6, julio:7, jul:7, agosto:8, ago:8,
+  septiembre:9, setiembre:9, sept:9, sep:9, set:9,
+  octubre:10, oct:10, noviembre:11, nov:11, diciembre:12, dic:12,
+};
+
+// Números escritos con letra
+const NUM_PAL = {
+  'primero':1, 'uno':1, 'dos':2, 'tres':3, 'cuatro':4, 'cinco':5, 'seis':6,
+  'siete':7, 'ocho':8, 'nueve':9, 'diez':10, 'once':11, 'doce':12, 'trece':13,
+  'catorce':14, 'quince':15, 'dieciseis':16, 'diecisiete':17, 'dieciocho':18,
+  'diecinueve':19, 'veinte':20, 'veintiuno':21, 'veintidos':22, 'veintitres':23,
+  'veinticuatro':24, 'veinticinco':25, 'veintiseis':26, 'veintisiete':27,
+  'veintiocho':28, 'veintinueve':29, 'treinta':30, 'treinta y uno':31,
+};
+
+const WD_LISTA = 'lunes|martes|miercoles|jueves|viernes|sabado|domingo';
+
+// "del", "de el", "desde el", "a partir del", "para el"…
+const PRE  = '(?:(?:desde\\s+el|desde|a\\s*partir\\s+del|a\\s*partir\\s+de|apartir\\s+del|apartir\\s+de|empezando\\s+el|iniciando\\s+el|comenzando\\s+el|arrancando\\s+el)\\s+)?(?:(?:del|de\\s+el|de|el|para\\s+el|para)\\s+)?';
+// "al", "a el", "hasta el", "hasta", "a"
+const HAST = '(?:al|a\\s+el|hasta\\s+el|hasta|a)\\s+(?:el\\s+)?';
+const CADA = '(?:todos\\s+los|todas\\s+las|cada|los|las)';
+
+function monthIndex(name){
+  return MES_NUM[normalize(name)] || 0;
+}
+
+// Convierte "primero de septiembre" en "1 de septiembre"
+function numerosALetra(raw, t){
+  const palabras = Object.keys(NUM_PAL).sort((a,b) => b.length - a.length);
+  let r = raw, n = t;
+  palabras.forEach(w => {
+    const src = flexRx(w).source;
+    r = r.replace(new RegExp('\\b(?:' + src + ')(?=\\s+de\\s+)', 'gi'), String(NUM_PAL[w]));
+    n = n.replace(new RegExp('\\b' + w + '(?=\\s+de\\s+)', 'g'), String(NUM_PAL[w]));
+  });
+  return [r, n];
+}
+
+// Fechas entre dos ISO.
+// wds: null = todos los días, número o arreglo = solo esos días de la semana
+// paso: cada cuántos días (1 por defecto)
+function datesBetween(startISO, endISO, wds, paso){
   const out = [];
   const d = parseISO(startISO);
   const end = parseISO(endISO);
-  if(weekday !== null && weekday !== undefined){
-    while(((d.getDay() + 6) % 7) !== weekday) d.setDate(d.getDate() + 1);
-  }
+  const filtro = Array.isArray(wds) ? wds : (typeof wds === 'number' ? [wds] : null);
+  const salto = (typeof paso === 'number' && paso > 0) ? paso : 1;
   let guard = 0;
   while(d <= end && guard < 500){
     const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
-    if(clampToSemester(iso)) out.push(iso);
-    d.setDate(d.getDate() + (weekday !== null && weekday !== undefined ? 7 : 1));
+    const dow = (d.getDay() + 6) % 7;
+    if(clampToSemester(iso) && (!filtro || filtro.includes(dow))) out.push(iso);
+    d.setDate(d.getDate() + salto);
     guard++;
   }
   return out;
 }
 
-// Primer y último día de un mes de 2026
 function monthBounds(mo){
   return [ toISO(2026, mo, 1), toISO(2026, mo, daysInMonth(2026, mo)) ];
 }
 
 function localParse(text){
-  const raw = text.trim();
-  const t = normalize(raw);
+  let raw = text.trim();
+  let t = normalize(raw);
+  [raw, t] = numerosALetra(raw, t);
+
   const type = detectType(raw);
   const removals = [];
   const today = todayISO();
   const M = MONTH_RX;
-  const WD = 'lunes|martes|miercoles|jueves|viernes|sabado|domingo';
+  const WD = WD_LISTA;
+  const VARIOS_WD = '(?:' + WD + ')(?:\\s*(?:,|y|e)\\s*(?:' + WD + '))*';
 
   const armar = (fechas) => {
+    if(!fechas.length) return [];
     const title = cleanTitle(raw, removals);
-    return fechas.map(date => ({ date, title, type }));
+    return fechas.map(date => ({ date, title, type, rem: -1 }));
   };
   const marcar = (frag) => { removals.push(flexRx(frag)); };
+  const listaWD = (txt) => {
+    const out = [];
+    (txt.match(new RegExp(WD, 'g')) || []).forEach(w => {
+      const v = WD_MAP[w];
+      if(v !== undefined && !out.includes(v)) out.push(v);
+    });
+    return out;
+  };
+  // Quita el día de la semana pegado a una fecha: "el lunes 15 de septiembre"
+  const quitarWDpegado = (frag) => {
+    const mm = t.match(new RegExp('(?:el\\s+)?(?:' + WD + ')\\s+(?:el\\s+)?' + frag.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+    if(mm) marcar(mm[0]);
+  };
+  const wdExtra = () => {
+    const wdm = t.match(new RegExp(CADA + '\\s+(' + VARIOS_WD + ')'));
+    if(wdm){ marcar(wdm[0]); return listaWD(wdm[1]); }
+    return null;
+  };
 
   let m;
 
-  // ── 1. Rango entre meses distintos: "del 1 de agosto al 31 de diciembre"
-  m = t.match(new RegExp('del?\\s+(\\d{1,2})\\s+de\\s+(' + M + ')\\s+(?:al|a|hasta el|hasta)\\s+(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  // ── 1. Rango entre meses: "del 29 de agosto al 7 de septiembre"
+  m = t.match(new RegExp(PRE + '(\\d{1,2})\\s+de\\s+(' + M + ')\\s+' + HAST + '(\\d{1,2})\\s+de\\s+(' + M + ')'));
   if(m){
     marcar(m[0]);
-    marcar('todos los dias');
-    marcar('todos los días');
-    marcar('diario');
     const ini = toISO(2026, monthIndex(m[2]), +m[1]);
     const fin = toISO(2026, monthIndex(m[4]), +m[3]);
-    // si además dice un día de la semana, solo esos días
-    const wdm = t.match(new RegExp('(?:todos los|cada)\\s+(' + WD + ')'));
-    if(wdm){ marcar(wdm[0]); return armar(datesBetween(ini, fin, WD_MAP[wdm[1]])); }
-    return armar(datesBetween(ini, fin));
+    return armar(datesBetween(ini, fin, wdExtra()));
   }
 
-  // ── 2. Rango dentro del mismo mes: "del 20 al 24 de diciembre"
-  m = t.match(new RegExp('del?\\s+(\\d{1,2})\\s+(?:al|a|hasta el|hasta)\\s+(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  // ── 2. Rango en el mismo mes: "del 20 al 24 de diciembre"
+  m = t.match(new RegExp(PRE + '(\\d{1,2})\\s+' + HAST + '(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  if(m){
+    marcar(m[0]);
+    const mo = monthIndex(m[3]);
+    return armar(datesBetween(toISO(2026, mo, +m[1]), toISO(2026, mo, +m[2]), wdExtra()));
+  }
+
+  // ── 3. "entre el 5 y el 9 de octubre"
+  m = t.match(new RegExp('entre\\s+(?:el\\s+)?(\\d{1,2})\\s+y\\s+(?:el\\s+)?(\\d{1,2})\\s+de\\s+(' + M + ')'));
   if(m){
     marcar(m[0]);
     const mo = monthIndex(m[3]);
     return armar(datesBetween(toISO(2026, mo, +m[1]), toISO(2026, mo, +m[2])));
   }
 
-  // ── 3. Diario o semanal acotado a un mes: "todos los días de agosto",
-  //       "todos los lunes de septiembre"
-  m = t.match(new RegExp('(?:todos los|todas las|cada)\\s+(dias?|d[ií]as?|' + WD + ')\\s+de\\s+(' + M + ')'));
+  // ── 4. Dos fechas de meses distintos: "el 15 de octubre y el 3 de noviembre"
+  m = t.match(new RegExp('(\\d{1,2})\\s+de\\s+(' + M + ')\\s+(?:y|e)\\s+(?:el\\s+)?(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  if(m){
+    marcar('el ' + m[0]); marcar(m[0]);
+    const a = toISO(2026, monthIndex(m[2]), +m[1]);
+    const b = toISO(2026, monthIndex(m[4]), +m[3]);
+    return armar([a, b].filter(clampToSemester));
+  }
+
+  // ── 5. Rango de meses: "de agosto a diciembre"
+  m = t.match(new RegExp('(?:de|desde)\\s+(' + M + ')\\s+' + HAST + '(?:mes\\s+de\\s+)?(' + M + ')'));
+  if(m){
+    marcar(m[0]);
+    const [ini] = monthBounds(monthIndex(m[1]));
+    const [, fin] = monthBounds(monthIndex(m[2]));
+    return armar(datesBetween(ini, fin, wdExtra()));
+  }
+
+  // ── 6. Días sueltos del mismo mes: "el 15 y 17 de octubre", "3, 10 y 24 de noviembre"
+  m = t.match(new RegExp('(\\d{1,2}(?:\\s*(?:,|y|e)\\s*\\d{1,2})+)\\s+de\\s+(' + M + ')'));
+  if(m){
+    marcar('los dias ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
+    const mo = monthIndex(m[2]);
+    const dias = (m[1].match(/\d{1,2}/g) || [])
+      .map(n => toISO(2026, mo, +n))
+      .filter(clampToSemester);
+    return armar(dias);
+  }
+
+  // ── 7. Entre semana / de lunes a viernes
+  if(/entre\s+semana|de\s+lunes\s+a\s+viernes|lunes\s+a\s+viernes|dias?\s+habiles/.test(t)){
+    marcar(t.match(/entre\s+semana|de\s+lunes\s+a\s+viernes|lunes\s+a\s+viernes|dias?\s+habiles/)[0]);
+    const mm = t.match(new RegExp('de\\s+(' + M + ')'));
+    let ini = today, fin = SEM_END;
+    if(mm){ marcar(mm[0]); const b = monthBounds(monthIndex(mm[1])); ini = b[0]; fin = b[1]; }
+    return armar(datesBetween(ini, fin, [0,1,2,3,4]));
+  }
+
+  // ── 8. Fines de semana
+  if(/fines?\s+de\s+semana|sabados?\s+y\s+domingos?/.test(t) && !/este\s+fin\s+de\s+semana/.test(t)){
+    const frag = t.match(/fines?\s+de\s+semana|sabados?\s+y\s+domingos?/)[0];
+    marcar('todos los ' + frag); marcar(frag);
+    return armar(datesBetween(today, SEM_END, [5,6]));
+  }
+
+  // ── 9. Cada N días: "cada tercer día", "cada 3 días", "cada dos días"
+  m = t.match(/cada\s+(tercer|cuarto|quinto|\d{1,2}|dos|tres|cuatro|cinco|seis|siete|ocho|diez|quince|treinta)\s*(?:dias?|d[ií]as?)/);
+  if(m){
+    marcar(m[0]);
+    const mapa = { tercer:3, cuarto:4, quinto:5, dos:2, tres:3, cuatro:4, cinco:5,
+                   seis:6, siete:7, ocho:8, diez:10, quince:15, treinta:30 };
+    const paso = mapa[m[1]] || parseInt(m[1], 10) || 1;
+    return armar(datesBetween(today, SEM_END, null, paso));
+  }
+
+  // ── 10. Diario o semanal dentro de un mes
+  m = t.match(new RegExp(CADA + '\\s+(dias?|d[ií]as?|' + VARIOS_WD + ')\\s+de\\s+(' + M + ')'));
   if(m){
     marcar(m[0]);
     const [ini, fin] = monthBounds(monthIndex(m[2]));
     const esDia = /^d[ií]as?$/.test(m[1]);
-    return armar(datesBetween(ini, fin, esDia ? null : WD_MAP[m[1]]));
+    return armar(datesBetween(ini, fin, esDia ? null : listaWD(m[1])));
   }
 
-  // ── 4. Diario hasta una fecha: "todos los días hasta el 15 de octubre"
-  m = t.match(new RegExp('(?:todos los|cada)\\s+(dias?|d[ií]as?)\\s+hasta\\s+(?:el\\s+)?(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  // ── 11. Diario o semanal hasta una fecha
+  m = t.match(new RegExp(CADA + '\\s+(dias?|d[ií]as?|' + VARIOS_WD + ')\\s+' + HAST + '(\\d{1,2})\\s+de\\s+(' + M + ')'));
   if(m){
     marcar(m[0]);
-    return armar(datesBetween(today, toISO(2026, monthIndex(m[3]), +m[2])));
+    const esDia = /^d[ií]as?$/.test(m[1]);
+    const fin = toISO(2026, monthIndex(m[3]), +m[2]);
+    return armar(datesBetween(today, fin, esDia ? null : listaWD(m[1])));
   }
 
-  // ── 5. Diario a secas: "todos los días", "diario", "cada día"
-  m = t.match(/(?:todos los|cada)\s+d[ií]as?|\bdiario\b|\bdiariamente\b|\bcada dia\b/);
+  // ── 12. Varios días de la semana: "todos los lunes y miércoles"
+  m = t.match(new RegExp(CADA + '\\s+(' + VARIOS_WD + ')'));
+  if(m){
+    marcar(m[0]);
+    return armar(datesBetween(today, SEM_END, listaWD(m[1])));
+  }
+
+  // ── 13. Diario a secas / todo el semestre
+  m = t.match(/(?:todos\s+los|cada)\s+d[ií]as?|\bdiario\b|\ba\s+diario\b|\bdiariamente\b|todo\s+el\s+semestre|todos\s+los\s+dias\s+del\s+semestre/);
   if(m){
     marcar(m[0]);
     return armar(datesBetween(today, SEM_END));
   }
 
-  // ── 6. Semanal a secas: "todos los miércoles"
-  m = t.match(new RegExp('(?:todos los|cada)\\s+(' + WD + ')'));
+  // ── 14. Todo un mes: "todo agosto", "durante septiembre", "el mes de octubre"
+  m = t.match(new RegExp('(?:todo\\s+(?:el\\s+mes\\s+de\\s+)?|durante\\s+(?:todo\\s+)?(?:el\\s+mes\\s+de\\s+)?|el\\s+mes\\s+de\\s+)(' + M + ')'));
   if(m){
-    marcar(m[0]);
-    return armar(datesBetween(today, SEM_END, WD_MAP[m[1]]));
-  }
-
-  // ── 7. Todo un mes: "en agosto", "durante septiembre"
-  m = t.match(new RegExp('(?:todo\\s+)?(?:el\\s+mes\\s+de|durante|en)\\s+(' + M + ')\\b'));
-  if(m && /todo|durante|mes/.test(m[0])){
     marcar(m[0]);
     const [ini, fin] = monthBounds(monthIndex(m[1]));
     return armar(datesBetween(ini, fin));
   }
 
-  // ── 8. Fecha suelta: "15 de octubre"
+  // ── 15. Principios / mediados / finales de mes
+  m = t.match(new RegExp('(?:a\\s+)?(principios|inicios?|comienzos|mediados|finales|fines|fin)\\s+de(?:l)?\\s+(?:mes\\s+de\\s+)?(' + M + ')'));
+  if(m){
+    marcar(m[0]);
+    const mo = monthIndex(m[2]);
+    const ultimo = daysInMonth(2026, mo);
+    const dia = /^(principios|inicio|inicios|comienzos)$/.test(m[1]) ? 1
+              : (m[1] === 'mediados' ? 15 : ultimo);
+    const iso = toISO(2026, mo, dia);
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+
+  // ── 16. Fecha suelta: "15 de octubre", "15 de oct"
   m = t.match(new RegExp('(\\d{1,2})\\s+de\\s+(' + M + ')'));
   if(m){
-    marcar('el ' + m[0]); marcar(m[0]);
+    quitarWDpegado(m[0]);
+    marcar('para el ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
     const iso = toISO(2026, monthIndex(m[2]), +m[1]);
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // ── 9. Formato 15/10 o 15-10 (día/mes)
-  m = t.match(/\b(\d{1,2})[\/\-](\d{1,2})\b/);
+  // ── 17. Formato 15/10, 15-10 o 15.10
+  m = t.match(/\b(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.]\d{2,4})?\b/);
   if(m){
+    quitarWDpegado(m[0]);
     marcar('el ' + m[0]); marcar(m[0]);
     const iso = toISO(2026, +m[2], +m[1]);
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // ── 10. "próximo viernes" / "este lunes"
-  m = t.match(new RegExp('(?:proximo|proxima|este|esta|el)\\s+(' + WD + ')'));
+  // ── 18. Este fin de semana
+  if(/este\s+fin\s+de\s+semana|el\s+fin\s+de\s+semana|proximo\s+fin\s+de\s+semana/.test(t)){
+    marcar(t.match(/este\s+fin\s+de\s+semana|el\s+fin\s+de\s+semana|proximo\s+fin\s+de\s+semana/)[0]);
+    const d = parseISO(today);
+    while(((d.getDay()+6)%7) !== 5) d.setDate(d.getDate()+1);
+    const sab = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+    d.setDate(d.getDate()+1);
+    const dom = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+    return armar([sab, dom].filter(clampToSemester));
+  }
+
+  // ── 19. La próxima semana / el próximo mes / fin de mes
+  if(/(?:la\s+)?(?:proxima|siguiente|otra)\s+semana/.test(t)){
+    marcar(t.match(/(?:la\s+)?(?:proxima|siguiente|otra)\s+semana/)[0]);
+    const d = parseISO(today); d.setDate(d.getDate()+7);
+    const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+  if(/(?:el\s+)?(?:proximo|siguiente|otro)\s+mes/.test(t)){
+    marcar(t.match(/(?:el\s+)?(?:proximo|siguiente|otro)\s+mes/)[0]);
+    const d = parseISO(today);
+    const iso = toISO(d.getFullYear(), d.getMonth()+2 > 12 ? 12 : d.getMonth()+2, 1);
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+  if(/fin\s+de\s+mes|fin\s+del\s+mes|final\s+del?\s+mes/.test(t)){
+    marcar(t.match(/fin\s+de\s+mes|fin\s+del\s+mes|final\s+del?\s+mes/)[0]);
+    const d = parseISO(today);
+    const iso = toISO(d.getFullYear(), d.getMonth()+1, daysInMonth(d.getFullYear(), d.getMonth()+1));
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+
+  // ── 20. "próximo viernes" / "este lunes" / "el martes"
+  m = t.match(new RegExp('(?:proximo|proxima|este|esta|el|la|siguiente)\\s+(' + WD + ')'));
   if(m){
     marcar('el ' + m[0]); marcar(m[0]);
     const d = parseISO(today);
@@ -2480,7 +2664,18 @@ function localParse(text){
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // ── 11. hoy / mañana / pasado mañana
+  // ── 21. "en 5 días", "en 2 semanas", "dentro de 3 días"
+  m = t.match(/(?:en|dentro\s+de)\s+(\d{1,2})\s+(dias?|d[ií]as?|semanas?|meses?|mes)/);
+  if(m){
+    marcar(m[0]);
+    const d = parseISO(today);
+    const mult = /semana/.test(m[2]) ? 7 : (/mes/.test(m[2]) ? 30 : 1);
+    d.setDate(d.getDate() + (+m[1]) * mult);
+    const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+
+  // ── 22. hoy / mañana / pasado mañana
   const rel = [
     { rx:/pasado\s?manana/, label:'pasado manana', add:2 },
     { rx:/\bmanana\b/, label:'manana', add:1 },
@@ -2496,8 +2691,8 @@ function localParse(text){
     }
   }
 
-  // ── 12. Solo un mes mencionado: "examen en octubre" → primer día del mes
-  m = t.match(new RegExp('\\b(?:en|de)\\s+(' + M + ')\\b'));
+  // ── 23. Solo se menciona un mes: "examen en octubre"
+  m = t.match(new RegExp('\\b(?:en|de|para|del)\\s+(' + M + ')\\b'));
   if(m){
     marcar(m[0]);
     const iso = toISO(2026, monthIndex(m[1]), 1);
@@ -2520,7 +2715,9 @@ Reglas:
 - Significado: ${categorias().map(k => k.id + ' = ' + k.label).join('; ')}
 - examen para exámenes y parciales; entrega para tareas, proyectos, láminas y maquetas; vacacion para vacaciones, viajes y puentes; otro para lo demás.
 - Si el texto menciona el nombre de una categoría, usa el identificador de esa.
-- Si el texto describe un rango de días, genera un evento por cada día del rango, aunque cruce de un mes a otro.
+- Si el texto describe un rango de días, genera un evento por cada día del rango, aunque cruce de un mes a otro. Reconoce "del X al Y", "de el X al Y", "desde el X hasta el Y", "a partir del X", "entre el X y el Y".
+- "de lunes a viernes" o "entre semana" = solo días hábiles. "fines de semana" = sábados y domingos.
+- Puede haber varios días de la semana juntos: "todos los lunes y miércoles".
 - Si dice "todos los días", "diario" o "cada día", genera un evento por CADA día hasta el ${SEM_END} (o hasta la fecha límite que indique).
 - Si dice "todos los días de <mes>", genera un evento por cada día de ese mes.
 - Si dice "todos los <día de la semana>", genera uno por semana hasta el ${SEM_END}.
