@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Semestre">
 <meta name="theme-color" content="#F6F4EE">
 <link rel="apple-touch-icon" href="icon.png">
-<title>Bitácora del Semestre · Ago–Dic 2026</title>
+<title>Bitácora · Calendario 2026–2050</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -90,10 +90,10 @@
   .tl-segment:last-child{border-right:none;}
   .tl-label{
     position:absolute;
-    left:6px;
+    left:3px;
     bottom:4px;
     font-family:var(--font-mono);
-    font-size:0.64rem;
+    font-size:0.58rem;
     letter-spacing:0.06em;
     color:var(--ink-soft);
     text-transform:uppercase;
@@ -465,6 +465,65 @@
     margin-bottom:12px;
   }
   .progress b{color:var(--accent);font-weight:600;}
+
+  /* ---------- Cuadrícula de años ---------- */
+  #years{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:11px;
+  }
+  @media (min-width:520px){ #years{grid-template-columns:repeat(3,1fr);} }
+  @media (min-width:820px){ #years{grid-template-columns:repeat(4,1fr);} }
+
+  .year-card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 12px 12px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:9px;
+    cursor:pointer;
+    text-align:left;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+    transition:border-color 0.15s ease, transform 0.1s ease;
+  }
+  .year-card:active{transform:scale(0.98);}
+  .year-card:hover{border-color:var(--ink-soft);}
+  .year-card.hoy{
+    border-color:var(--accent);
+    border-width:2px;
+    padding:13px 11px 11px;
+  }
+  .year-num{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.5rem;
+    letter-spacing:-0.02em;
+    color:var(--ink);
+    line-height:1;
+  }
+  .year-card.hoy .year-num{color:var(--accent);}
+  .mes-bars{
+    display:flex;
+    gap:2px;
+    width:100%;
+  }
+  .mes-bar{
+    flex:1;
+    height:14px;
+    border-radius:2px;
+    background:var(--paper-alt);
+    display:block;
+  }
+  .year-count{
+    font-family:var(--font-mono);
+    font-size:0.62rem;
+    letter-spacing:0.04em;
+    color:var(--ink-soft);
+  }
 
   /* ---------- Encabezado con botón de opciones ---------- */
   .top-row{
@@ -861,10 +920,13 @@
   <header class="masthead">
     <div class="top-row">
       <div>
-        <span class="tag">Bitácora · Arquitectura UDEM</span>
-        <h1>Semestre agosto–diciembre <span class="year">2026</span></h1>
+        <span class="tag" id="tagLine">Bitácora · Arquitectura UDEM</span>
+        <h1 id="tituloPrincipal">Calendario <span class="year">2026–2050</span></h1>
       </div>
       <div class="head-btns">
+        <button class="icon-btn" id="backBtn" aria-label="Volver a los años" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
         <button class="icon-btn" id="selBtn" aria-label="Seleccionar varios días">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2" stroke-dasharray="3 2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
         </button>
@@ -885,7 +947,8 @@
     </div>
   </header>
 
-  <main id="months"></main>
+  <main id="years"></main>
+  <main id="months" style="display:none"></main>
 </div>
 
 <div class="overlay" id="overlay"></div>
@@ -916,6 +979,7 @@
     <button class="ex-chip">Tomar creatina todos los días</button>
     <button class="ex-chip">Prácticas de lunes a viernes de septiembre</button>
     <button class="ex-chip">Quítame creatina todos los días</button>
+    <button class="ex-chip">Viaje a Orlando de diciembre 23 a enero 8</button>
   </div>
 
   <div class="agent-result" id="agentResult"></div>
@@ -1125,7 +1189,11 @@ function typeOptions(sel){
     `<option value="${k.id}" ${k.id === sel ? 'selected' : ''}>${esc(k.label)}</option>`
   ).join('') + '<option value="__nueva__">＋ Nueva categoría…</option>';
 }
-const SEMESTER = [ {y:2026,m:8}, {y:2026,m:9}, {y:2026,m:10}, {y:2026,m:11}, {y:2026,m:12} ];
+function mesesDelAnio(){
+  const out = [];
+  for(let m = 1; m <= 12; m++) out.push({ y: ANIO, m });
+  return out;
+}
 
 // ---------- Seguridad: nunca insertar texto crudo como HTML ----------
 function esc(s){
@@ -1717,10 +1785,7 @@ async function saveEdit(oldId){
 function renderAll(){
   rebuildEvents();
   renderLegend();
-  renderTimeline();
-  renderNextEvent();
-  renderProgress();
-  renderMonths();
+  renderVista();
   renderPanelBody();
 }
 
@@ -1763,21 +1828,21 @@ function eventsByDate(){
 // ---------- Timeline del semestre ----------
 function renderTimeline(){
   const el = document.getElementById('timeline');
-  const start = new Date(2026, 7, 1);   // 1 ago 2026
-  const end   = new Date(2026, 11, 31); // 31 dic 2026
+  const start = new Date(ANIO, 0, 1);
+  const end   = new Date(ANIO, 11, 31);
   const totalMs = end - start;
 
   const pctFor = (d) => Math.min(100, Math.max(0, ((d - start) / totalMs) * 100));
 
   let html = '';
-  SEMESTER.forEach(({y,m}) => {
-    const label = MONTHS_ES[m-1].slice(0,3);
+  mesesDelAnio().forEach(({y,m}) => {
+    const label = MONTHS_ES[m-1].slice(0,1).toUpperCase();
     html += `<div class="tl-segment"><span class="tl-label">${label}</span></div>`;
   });
   el.innerHTML = html;
 
-  // Ticks de eventos
-  EVENTS.forEach(ev => {
+  // Ticks de eventos de este año
+  EVENTS.filter(ev => +ev.date.slice(0,4) === ANIO).forEach(ev => {
     const pct = pctFor(parseISO(ev.date));
     const tick = document.createElement('div');
     tick.className = 'tl-tick';
@@ -1889,7 +1954,7 @@ function buildMonthCard(y, m, byDate){
 function renderMonths(){
   const byDate = eventsByDate();
   const el = document.getElementById('months');
-  el.innerHTML = SEMESTER.map(({y,m}) => buildMonthCard(y, m, byDate)).join('');
+  el.innerHTML = mesesDelAnio().map(({y,m}) => buildMonthCard(y, m, byDate)).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1983,6 +2048,7 @@ async function guardarRango(){
   renderMonths();
 }
 
+document.getElementById('backBtn').addEventListener('click', volverAnios);
 document.getElementById('selBtn').addEventListener('click', toggleSelectMode);
 document.getElementById('rangeClose').addEventListener('click', cerrarRango);
 document.getElementById('rgCancel').addEventListener('click', cerrarRango);
@@ -2091,6 +2157,83 @@ function renderCatList(){
   `).join('');
 }
 
+// ══════════════════════════════════════════════════════════════
+// VISTA DE AÑOS — cuadrícula 2026–2050; tocas uno y se abre
+// ══════════════════════════════════════════════════════════════
+function renderYears(){
+  const el = document.getElementById('years');
+  if(!el) return;
+
+  const porAnio = {};
+  EVENTS.forEach(ev => {
+    const y = +ev.date.slice(0,4);
+    const mo = +ev.date.slice(5,7);
+    if(!porAnio[y]) porAnio[y] = { total:0, meses:new Array(12).fill(0), color:{} };
+    porAnio[y].total++;
+    porAnio[y].meses[mo-1]++;
+    if(!porAnio[y].color[mo-1]) porAnio[y].color[mo-1] = catColor(ev.type);
+  });
+
+  const hoyY = anioDeHoy();
+  let html = '';
+  for(let y = ANIO_MIN; y <= ANIO_MAX; y++){
+    const d = porAnio[y] || { total:0, meses:new Array(12).fill(0), color:{} };
+    const barras = d.meses.map((n, i) =>
+      n ? `<i class="mes-bar" style="background:${d.color[i]}"></i>` : '<i class="mes-bar"></i>'
+    ).join('');
+    const cuenta = d.total ? (d.total === 1 ? '1 evento' : d.total + ' eventos') : 'sin eventos';
+    html += `
+      <button class="year-card ${y === hoyY ? 'hoy' : ''}" onclick="abrirAnio(${y})">
+        <span class="year-num">${y}</span>
+        <span class="mes-bars">${barras}</span>
+        <span class="year-count">${cuenta}</span>
+      </button>
+    `;
+  }
+  el.innerHTML = html;
+}
+
+function abrirAnio(y){
+  ANIO = y;
+  vista = 'anio';
+  if(selectMode) toggleSelectMode();
+  renderVista();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function volverAnios(){
+  vista = 'anios';
+  if(selectMode) toggleSelectMode();
+  renderVista();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// Ajusta encabezado, botones y qué se muestra
+function renderVista(){
+  const enAnio = vista === 'anio';
+  document.getElementById('years').style.display = enAnio ? 'none' : '';
+  document.getElementById('months').style.display = enAnio ? '' : 'none';
+  document.getElementById('backBtn').style.display = enAnio ? '' : 'none';
+  document.getElementById('selBtn').style.display = enAnio ? '' : 'none';
+  document.getElementById('timeline').style.display = enAnio ? '' : 'none';
+
+  document.getElementById('tituloPrincipal').innerHTML = enAnio
+    ? `Año <span class="year">${ANIO}</span>`
+    : `Calendario <span class="year">${ANIO_MIN}–${ANIO_MAX}</span>`;
+  document.getElementById('tagLine').textContent = enAnio
+    ? 'Bitácora · Arquitectura UDEM'
+    : 'Bitácora · toca un año para abrirlo';
+
+  if(enAnio){
+    renderTimeline();
+    renderMonths();
+  }else{
+    renderYears();
+  }
+  renderNextEvent();
+  renderProgress();
+}
+
 // ---------- Panel de detalle ----------
 let currentPanelDate = null;
 let panelEvents = [];
@@ -2150,7 +2293,7 @@ function renderPanelBody(){
         <div class="edit-form">
           <input type="text" id="edTitle" value="${esc(ev.title)}" placeholder="Nombre del evento">
           <div class="edit-row">
-            <input type="date" id="edDate" value="${esc(ev.date)}" min="${SEM_START}" max="${SEM_END}">
+            <input type="date" id="edDate" value="${esc(ev.date)}" min="${ANIO_MIN}-01-01" max="${ANIO_MAX}-12-31">
             <select id="edType" onchange="checkNueva(this,'edNueva')">${typeOptions(ev.type)}</select>
             <div id="edNueva"></div>
           </div>
@@ -2258,7 +2401,7 @@ function renderEmptyNote(){
   const note = document.createElement('div');
   note.className = 'empty-note';
   note.id = 'emptyNote';
-  note.textContent = 'Aún no hay eventos registrados. Dime en el chat qué exámenes, entregas o vacaciones quieres anotar (con fecha) y los voy agregando aquí.';
+  note.textContent = 'Aún no hay eventos. Toca un año para abrirlo, o usa el botón + para agregar.';
   header.insertBefore(note, document.querySelector('.legend'));
 }
 
@@ -2267,8 +2410,21 @@ function renderEmptyNote(){
 // Intenta primero con IA; si no hay conexión (por ejemplo al
 // abrirlo desde GitHub Pages) usa el lector local de fechas.
 // ══════════════════════════════════════════════════════════════
-const SEM_START = '2026-08-01';
-const SEM_END = '2026-12-31';
+const ANIO_MIN = 2026;
+const ANIO_MAX = 2050;
+const SEM_START = ANIO_MIN + '-01-01';
+const SEM_END = ANIO_MAX + '-12-31';
+
+// Año que se está viendo. Las fechas sin año se entienden en este.
+let ANIO = 2026;
+let vista = 'anios';   // 'anios' = cuadrícula de años, 'anio' = 12 meses
+
+function anioDeHoy(){ return new Date().getFullYear(); }
+function finDeAnio(a){ return a + '-12-31'; }
+// De dónde arranca una repetición abierta ("todos los días")
+function inicioRecurrencia(a){
+  return a === anioDeHoy() ? todayISO() : a + '-01-01';
+}
 let apiBroken = false;
 let pendingEvents = [];
 let pendingDelete = [];
@@ -2424,7 +2580,7 @@ function datesBetween(startISO, endISO, wds, paso){
   const filtro = Array.isArray(wds) ? wds : (typeof wds === 'number' ? [wds] : null);
   const salto = (typeof paso === 'number' && paso > 0) ? paso : 1;
   let guard = 0;
-  while(d <= end && guard < 500){
+  while(d <= end && guard < 1200){
     const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
     const dow = (d.getDay() + 6) % 7;
     if(clampToSemester(iso) && (!filtro || filtro.includes(dow))) out.push(iso);
@@ -2434,8 +2590,9 @@ function datesBetween(startISO, endISO, wds, paso){
   return out;
 }
 
-function monthBounds(mo){
-  return [ toISO(2026, mo, 1), toISO(2026, mo, daysInMonth(2026, mo)) ];
+function monthBounds(mo, a){
+  const y = a || ANIO;
+  return [ toISO(y, mo, 1), toISO(y, mo, daysInMonth(y, mo)) ];
 }
 
 function localParse(text){
@@ -2445,14 +2602,46 @@ function localParse(text){
 
   const type = detectType(raw);
   const removals = [];
+
+  // Año por omisión: el que se está viendo
+  const anio = ANIO;
+  const HAY_ANIO = /\b(?:20[2-4]\d|2050)\b/.test(t);
+
   const today = todayISO();
   const M = MONTH_RX;
   const WD = WD_LISTA;
   const VARIOS_WD = '(?:' + WD + ')(?:\\s*(?:,|y|e)\\s*(?:' + WD + '))*';
+  const DIA = '\\b(\\d{1,2})(?!\\d)';                       // no confundir con un año
+  const ANO = '(?:\\s*(?:de|del)?\\s*(20[2-4]\\d|2050))?';  // año opcional
+
+  const enRango = a => Math.min(Math.max(a, ANIO_MIN), ANIO_MAX);
+
+  // Decide los años de un rango cuando no vienen escritos.
+  // Si el mes final es anterior al inicial, se asume el año siguiente.
+  function resolverAnios(mo1, mo2, y1, y2){
+    let a1 = y1 ? +y1 : null;
+    let a2 = y2 ? +y2 : null;
+    if(a1 === null && a2 === null){
+      a1 = anio;
+      a2 = (mo2 < mo1) ? anio + 1 : anio;
+    }else if(a1 === null){
+      a1 = (mo2 < mo1) ? a2 - 1 : a2;
+    }else if(a2 === null){
+      a2 = (mo2 < mo1) ? a1 + 1 : a1;
+    }
+    return [enRango(a1), enRango(a2)];
+  }
+
+  // Recurrencias abiertas: arrancan hoy si es el año en curso
+  const inicioRec = (a) => (a === anioDeHoy() ? today : a + '-01-01');
 
   const armar = (fechas) => {
     if(!fechas.length) return [];
-    const title = cleanTitle(raw, removals);
+    // Primero se quita la frase de fecha completa (que puede incluir el
+    // año) y hasta el final se barren los años que hayan sobrado.
+    const rem = removals.slice();
+    if(HAY_ANIO) rem.push(/\s*\b(?:de\s+|del\s+)?(?:20[2-4]\d|2050)\b/gi);
+    const title = cleanTitle(raw, rem);
     return fechas.map(date => ({ date, title, type, rem: -1 }));
   };
   const marcar = (frag) => { removals.push(flexRx(frag)); };
@@ -2464,7 +2653,6 @@ function localParse(text){
     });
     return out;
   };
-  // Quita el día de la semana pegado a una fecha: "el lunes 15 de septiembre"
   const quitarWDpegado = (frag) => {
     const mm = t.match(new RegExp('(?:el\\s+)?(?:' + WD + ')\\s+(?:el\\s+)?' + frag.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
     if(mm) marcar(mm[0]);
@@ -2477,157 +2665,204 @@ function localParse(text){
 
   let m;
 
-  // ── 1. Rango entre meses: "del 29 de agosto al 7 de septiembre"
-  m = t.match(new RegExp(PRE + '(\\d{1,2})\\s+de\\s+(' + M + ')\\s+' + HAST + '(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  // ── 1. Rango, orden día-mes: "del 23 de diciembre de 2026 al 8 de enero de 2027"
+  m = t.match(new RegExp(PRE + DIA + '\\s+(?:de\\s+)?(' + M + ')' + ANO + '\\s+' + HAST + DIA + '\\s+(?:de\\s+)?(' + M + ')' + ANO));
   if(m){
     marcar(m[0]);
-    const ini = toISO(2026, monthIndex(m[2]), +m[1]);
-    const fin = toISO(2026, monthIndex(m[4]), +m[3]);
-    return armar(datesBetween(ini, fin, wdExtra()));
+    const mo1 = monthIndex(m[2]), mo2 = monthIndex(m[5]);
+    const [a1, a2] = resolverAnios(mo1, mo2, m[3], m[6]);
+    return armar(datesBetween(toISO(a1, mo1, +m[1]), toISO(a2, mo2, +m[4]), wdExtra()));
   }
 
-  // ── 2. Rango en el mismo mes: "del 20 al 24 de diciembre"
-  m = t.match(new RegExp(PRE + '(\\d{1,2})\\s+' + HAST + '(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  // ── 2. Rango, orden mes-día: "de diciembre 23 del 2026 a enero 8 del 2027"
+  m = t.match(new RegExp(PRE + '(' + M + ')\\s+' + DIA + ANO + '\\s+' + HAST + '(' + M + ')\\s+' + DIA + ANO));
+  if(m){
+    marcar(m[0]);
+    const mo1 = monthIndex(m[1]), mo2 = monthIndex(m[4]);
+    const [a1, a2] = resolverAnios(mo1, mo2, m[3], m[6]);
+    return armar(datesBetween(toISO(a1, mo1, +m[2]), toISO(a2, mo2, +m[5]), wdExtra()));
+  }
+
+  // ── 3. Rango con barras: "del 23/12/2026 al 8/01/2027"
+  m = t.match(new RegExp(PRE + '(\\d{1,2})[\\/\\-.](\\d{1,2})(?:[\\/\\-.](20\\d\\d))?\\s+' + HAST + '(\\d{1,2})[\\/\\-.](\\d{1,2})(?:[\\/\\-.](20\\d\\d))?'));
+  if(m){
+    marcar(m[0]);
+    const mo1 = +m[2], mo2 = +m[5];
+    const [a1, a2] = resolverAnios(mo1, mo2, m[3], m[6]);
+    return armar(datesBetween(toISO(a1, mo1, +m[1]), toISO(a2, mo2, +m[4])));
+  }
+
+  // ── 4. Rango en el mismo mes: "del 20 al 24 de diciembre de 2027"
+  m = t.match(new RegExp(PRE + DIA + '\\s+' + HAST + DIA + '\\s+de\\s+(' + M + ')' + ANO));
   if(m){
     marcar(m[0]);
     const mo = monthIndex(m[3]);
-    return armar(datesBetween(toISO(2026, mo, +m[1]), toISO(2026, mo, +m[2]), wdExtra()));
+    const a = m[4] ? enRango(+m[4]) : anio;
+    return armar(datesBetween(toISO(a, mo, +m[1]), toISO(a, mo, +m[2]), wdExtra()));
   }
 
-  // ── 3. "entre el 5 y el 9 de octubre"
-  m = t.match(new RegExp('entre\\s+(?:el\\s+)?(\\d{1,2})\\s+y\\s+(?:el\\s+)?(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  // ── 5. "entre el 5 y el 9 de octubre"
+  m = t.match(new RegExp('entre\\s+(?:el\\s+)?' + DIA + '\\s+y\\s+(?:el\\s+)?' + DIA + '\\s+de\\s+(' + M + ')' + ANO));
   if(m){
     marcar(m[0]);
     const mo = monthIndex(m[3]);
-    return armar(datesBetween(toISO(2026, mo, +m[1]), toISO(2026, mo, +m[2])));
+    const a = m[4] ? enRango(+m[4]) : anio;
+    return armar(datesBetween(toISO(a, mo, +m[1]), toISO(a, mo, +m[2])));
   }
 
-  // ── 4. Dos fechas de meses distintos: "el 15 de octubre y el 3 de noviembre"
-  m = t.match(new RegExp('(\\d{1,2})\\s+de\\s+(' + M + ')\\s+(?:y|e)\\s+(?:el\\s+)?(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  // ── 6. Dos fechas sueltas: "el 30 de diciembre y el 2 de enero"
+  m = t.match(new RegExp(DIA + '\\s+de\\s+(' + M + ')' + ANO + '\\s+(?:y|e)\\s+(?:el\\s+)?' + DIA + '\\s+de\\s+(' + M + ')' + ANO));
   if(m){
     marcar('del ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
-    const a = toISO(2026, monthIndex(m[2]), +m[1]);
-    const b = toISO(2026, monthIndex(m[4]), +m[3]);
-    return armar([a, b].filter(clampToSemester));
+    const mo1 = monthIndex(m[2]), mo2 = monthIndex(m[5]);
+    const [a1, a2] = resolverAnios(mo1, mo2, m[3], m[6]);
+    return armar([toISO(a1, mo1, +m[1]), toISO(a2, mo2, +m[4])].filter(clampToSemester));
   }
 
-  // ── 5. Rango de meses: "de agosto a diciembre"
-  m = t.match(new RegExp('(?:de|desde)\\s+(' + M + ')\\s+' + HAST + '(?:mes\\s+de\\s+)?(' + M + ')'));
+  // ── 7. Rango de meses: "de diciembre de 2026 a enero de 2027"
+  m = t.match(new RegExp('(?:de|desde)\\s+(' + M + ')' + ANO + '\\s+' + HAST + '(?:mes\\s+de\\s+)?(' + M + ')' + ANO));
   if(m){
     marcar(m[0]);
-    const [ini] = monthBounds(monthIndex(m[1]));
-    const [, fin] = monthBounds(monthIndex(m[2]));
+    const mo1 = monthIndex(m[1]), mo2 = monthIndex(m[3]);
+    const [a1, a2] = resolverAnios(mo1, mo2, m[2], m[4]);
+    const ini = toISO(a1, mo1, 1);
+    const fin = toISO(a2, mo2, daysInMonth(a2, mo2));
     return armar(datesBetween(ini, fin, wdExtra()));
   }
 
-  // ── 6. Días sueltos del mismo mes: "el 15 y 17 de octubre", "3, 10 y 24 de noviembre"
-  m = t.match(new RegExp('(\\d{1,2}(?:\\s*(?:,|y|e)\\s*\\d{1,2})+)\\s+de\\s+(' + M + ')'));
+  // ── 8. Días sueltos del mismo mes: "el 15 y 17 de octubre"
+  m = t.match(new RegExp('(\\d{1,2}(?:\\s*(?:,|y|e)\\s*\\d{1,2})+)\\s+de\\s+(' + M + ')' + ANO));
   if(m){
     marcar('los dias ' + m[0]); marcar('del ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
     const mo = monthIndex(m[2]);
+    const a = m[3] ? enRango(+m[3]) : anio;
     const dias = (m[1].match(/\d{1,2}/g) || [])
-      .map(n => toISO(2026, mo, +n))
+      .map(n => toISO(a, mo, +n))
       .filter(clampToSemester);
     return armar(dias);
   }
 
-  // ── 7. Entre semana / de lunes a viernes
+  // ── 9. Entre semana / de lunes a viernes
   if(/entre\s+semana|de\s+lunes\s+a\s+viernes|lunes\s+a\s+viernes|dias?\s+habiles/.test(t)){
     marcar(t.match(/entre\s+semana|de\s+lunes\s+a\s+viernes|lunes\s+a\s+viernes|dias?\s+habiles/)[0]);
-    const mm = t.match(new RegExp('de\\s+(' + M + ')'));
-    let ini = today, fin = SEM_END;
-    if(mm){ marcar(mm[0]); const b = monthBounds(monthIndex(mm[1])); ini = b[0]; fin = b[1]; }
+    const mm = t.match(new RegExp('de\\s+(' + M + ')' + ANO));
+    let ini = inicioRec(anio), fin = finDeAnio(anio);
+    if(mm){
+      const a = mm[2] ? enRango(+mm[2]) : anio;
+      marcar(mm[0]);
+      const b = monthBounds(monthIndex(mm[1]), a); ini = b[0]; fin = b[1];
+    }
     return armar(datesBetween(ini, fin, [0,1,2,3,4]));
   }
 
-  // ── 8. Fines de semana
+  // ── 10. Fines de semana
   if(/fines?\s+de\s+semana|sabados?\s+y\s+domingos?/.test(t) && !/este\s+fin\s+de\s+semana/.test(t)){
     const frag = t.match(/fines?\s+de\s+semana|sabados?\s+y\s+domingos?/)[0];
     marcar('todos los ' + frag); marcar(frag);
-    return armar(datesBetween(today, SEM_END, [5,6]));
+    return armar(datesBetween(inicioRec(anio), finDeAnio(anio), [5,6]));
   }
 
-  // ── 9. Cada N días: "cada tercer día", "cada 3 días", "cada dos días"
+  // ── 11. Cada N días
   m = t.match(/cada\s+(tercer|cuarto|quinto|\d{1,2}|dos|tres|cuatro|cinco|seis|siete|ocho|diez|quince|treinta)\s*(?:dias?|d[ií]as?)/);
   if(m){
     marcar(m[0]);
     const mapa = { tercer:3, cuarto:4, quinto:5, dos:2, tres:3, cuatro:4, cinco:5,
                    seis:6, siete:7, ocho:8, diez:10, quince:15, treinta:30 };
     const paso = mapa[m[1]] || parseInt(m[1], 10) || 1;
-    return armar(datesBetween(today, SEM_END, null, paso));
+    return armar(datesBetween(inicioRec(anio), finDeAnio(anio), null, paso));
   }
 
-  // ── 10. Diario o semanal dentro de un mes
-  m = t.match(new RegExp(CADA + '\\s+(dias?|d[ií]as?|' + VARIOS_WD + ')\\s+de\\s+(' + M + ')'));
+  // ── 12. Diario o semanal dentro de un mes
+  m = t.match(new RegExp(CADA + '\\s+(dias?|d[ií]as?|' + VARIOS_WD + ')\\s+de\\s+(' + M + ')' + ANO));
   if(m){
     marcar(m[0]);
-    const [ini, fin] = monthBounds(monthIndex(m[2]));
+    const a = m[3] ? enRango(+m[3]) : anio;
+    const [ini, fin] = monthBounds(monthIndex(m[2]), a);
     const esDia = /^d[ií]as?$/.test(m[1]);
     return armar(datesBetween(ini, fin, esDia ? null : listaWD(m[1])));
   }
 
-  // ── 11. Diario o semanal hasta una fecha
-  m = t.match(new RegExp(CADA + '\\s+(dias?|d[ií]as?|' + VARIOS_WD + ')\\s+' + HAST + '(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  // ── 13. Diario o semanal hasta una fecha
+  m = t.match(new RegExp(CADA + '\\s+(dias?|d[ií]as?|' + VARIOS_WD + ')\\s+' + HAST + DIA + '\\s+de\\s+(' + M + ')' + ANO));
   if(m){
     marcar(m[0]);
     const esDia = /^d[ií]as?$/.test(m[1]);
-    const fin = toISO(2026, monthIndex(m[3]), +m[2]);
-    return armar(datesBetween(today, fin, esDia ? null : listaWD(m[1])));
+    const a = m[4] ? enRango(+m[4]) : anio;
+    const fin = toISO(a, monthIndex(m[3]), +m[2]);
+    return armar(datesBetween(inicioRec(anio), fin, esDia ? null : listaWD(m[1])));
   }
 
-  // ── 12. Varios días de la semana: "todos los lunes y miércoles"
+  // ── 14. Varios días de la semana: "todos los lunes y miércoles"
   m = t.match(new RegExp(CADA + '\\s+(' + VARIOS_WD + ')'));
   if(m){
     marcar(m[0]);
-    return armar(datesBetween(today, SEM_END, listaWD(m[1])));
+    return armar(datesBetween(inicioRec(anio), finDeAnio(anio), listaWD(m[1])));
   }
 
-  // ── 13. Diario a secas / todo el semestre
-  m = t.match(/(?:todos\s+los|cada)\s+d[ií]as?|\bdiario\b|\ba\s+diario\b|\bdiariamente\b|todo\s+el\s+semestre|todos\s+los\s+dias\s+del\s+semestre/);
+  // ── 15. Diario a secas / todo el año
+  m = t.match(/(?:todos\s+los|cada)\s+d[ií]as?|\bdiario\b|\ba\s+diario\b|\bdiariamente\b|todo\s+el\s+(?:semestre|ano|año)|todos\s+los\s+dias\s+del\s+(?:semestre|ano|año)/);
   if(m){
     marcar(m[0]);
-    return armar(datesBetween(today, SEM_END));
+    return armar(datesBetween(inicioRec(anio), finDeAnio(anio)));
   }
 
-  // ── 14. Todo un mes: "todo agosto", "durante septiembre", "el mes de octubre"
-  m = t.match(new RegExp('(?:todo\\s+(?:el\\s+mes\\s+de\\s+)?|durante\\s+(?:todo\\s+)?(?:el\\s+mes\\s+de\\s+)?|el\\s+mes\\s+de\\s+)(' + M + ')'));
+  // ── 16. Todo un mes: "todo agosto", "durante septiembre"
+  m = t.match(new RegExp('(?:todo\\s+(?:el\\s+mes\\s+de\\s+)?|durante\\s+(?:todo\\s+)?(?:el\\s+mes\\s+de\\s+)?|el\\s+mes\\s+de\\s+)(' + M + ')' + ANO));
   if(m){
     marcar(m[0]);
-    const [ini, fin] = monthBounds(monthIndex(m[1]));
+    const a = m[2] ? enRango(+m[2]) : anio;
+    const [ini, fin] = monthBounds(monthIndex(m[1]), a);
     return armar(datesBetween(ini, fin));
   }
 
-  // ── 15. Principios / mediados / finales de mes
-  m = t.match(new RegExp('(?:a\\s+)?(principios|inicios?|comienzos|mediados|finales|fines|fin)\\s+de(?:l)?\\s+(?:mes\\s+de\\s+)?(' + M + ')'));
+  // ── 17. Principios / mediados / finales de mes
+  m = t.match(new RegExp('(?:a\\s+)?(principios|inicios?|comienzos|mediados|finales|fines|fin)\\s+de(?:l)?\\s+(?:mes\\s+de\\s+)?(' + M + ')' + ANO));
   if(m){
     marcar(m[0]);
     const mo = monthIndex(m[2]);
-    const ultimo = daysInMonth(2026, mo);
+    const a = m[3] ? enRango(+m[3]) : anio;
+    const ultimo = daysInMonth(a, mo);
     const dia = /^(principios|inicio|inicios|comienzos)$/.test(m[1]) ? 1
               : (m[1] === 'mediados' ? 15 : ultimo);
-    const iso = toISO(2026, mo, dia);
+    const iso = toISO(a, mo, dia);
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // ── 16. Fecha suelta: "15 de octubre", "15 de oct"
-  m = t.match(new RegExp('(\\d{1,2})\\s+de\\s+(' + M + ')'));
+  // ── 18. Fecha suelta, orden día-mes: "15 de octubre de 2028"
+  m = t.match(new RegExp(DIA + '\\s+(?:de\\s+)?(' + M + ')' + ANO));
   if(m){
     quitarWDpegado(m[0]);
     marcar('para el ' + m[0]); marcar('del ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
-    const iso = toISO(2026, monthIndex(m[2]), +m[1]);
+    const a = m[3] ? enRango(+m[3]) : anio;
+    const iso = toISO(a, monthIndex(m[2]), +m[1]);
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // ── 17. Formato 15/10, 15-10 o 15.10
-  m = t.match(/\b(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.]\d{2,4})?\b/);
+  // ── 19. Fecha suelta, orden mes-día: "octubre 15", "diciembre 23 del 2026"
+  m = t.match(new RegExp('(' + M + ')\\s+' + DIA + ANO));
+  if(m){
+    quitarWDpegado(m[0]);
+    marcar('el ' + m[0]); marcar(m[0]);
+    const a = m[3] ? enRango(+m[3]) : anio;
+    const iso = toISO(a, monthIndex(m[1]), +m[2]);
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+
+  // ── 20. Formato 15/10 o 15/10/2028
+  m = t.match(/\b(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?\b/);
   if(m){
     quitarWDpegado(m[0]);
     marcar('del ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
-    const iso = toISO(2026, +m[2], +m[1]);
+    let a = anio;
+    if(m[3]){
+      const n = +m[3];
+      a = enRango(n < 100 ? 2000 + n : n);
+    }
+    const iso = toISO(a, +m[2], +m[1]);
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // ── 18. Este fin de semana
+  // ── 21. Este fin de semana
   if(/este\s+fin\s+de\s+semana|el\s+fin\s+de\s+semana|proximo\s+fin\s+de\s+semana/.test(t)){
     marcar(t.match(/este\s+fin\s+de\s+semana|el\s+fin\s+de\s+semana|proximo\s+fin\s+de\s+semana/)[0]);
     const d = parseISO(today);
@@ -2638,7 +2873,7 @@ function localParse(text){
     return armar([sab, dom].filter(clampToSemester));
   }
 
-  // ── 19. La próxima semana / el próximo mes / fin de mes
+  // ── 22. La próxima semana / el próximo mes / fin de mes
   if(/(?:la\s+)?(?:proxima|siguiente|otra)\s+semana/.test(t)){
     marcar(t.match(/(?:la\s+)?(?:proxima|siguiente|otra)\s+semana/)[0]);
     const d = parseISO(today); d.setDate(d.getDate()+7);
@@ -2647,8 +2882,13 @@ function localParse(text){
   }
   if(/(?:el\s+)?(?:proximo|siguiente|otro)\s+mes/.test(t)){
     marcar(t.match(/(?:el\s+)?(?:proximo|siguiente|otro)\s+mes/)[0]);
-    const d = parseISO(today);
-    const iso = toISO(d.getFullYear(), d.getMonth()+2 > 12 ? 12 : d.getMonth()+2, 1);
+    const d = parseISO(today); d.setMonth(d.getMonth()+1, 1);
+    const iso = toISO(d.getFullYear(), d.getMonth()+1, 1);
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+  if(/(?:el\s+)?(?:proximo|siguiente|otro)\s+(?:ano|año)/.test(t)){
+    marcar(t.match(/(?:el\s+)?(?:proximo|siguiente|otro)\s+(?:ano|año)/)[0]);
+    const iso = toISO(enRango(anioDeHoy()+1), 1, 1);
     return clampToSemester(iso) ? armar([iso]) : [];
   }
   if(/fin\s+de\s+mes|fin\s+del\s+mes|final\s+del?\s+mes/.test(t)){
@@ -2658,7 +2898,7 @@ function localParse(text){
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // ── 20. "próximo viernes" / "este lunes" / "el martes"
+  // ── 23. "próximo viernes" / "este lunes" / "el martes"
   m = t.match(new RegExp('(?:proximo|proxima|este|esta|el|la|siguiente)\\s+(' + WD + ')'));
   if(m){
     marcar('el ' + m[0]); marcar(m[0]);
@@ -2669,7 +2909,7 @@ function localParse(text){
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // ── 21. "en 5 días", "en 2 semanas", "dentro de 3 días"
+  // ── 24. "en 5 días", "dentro de 3 días", "en 2 semanas"
   m = t.match(/(?:en|dentro\s+de)\s+(\d{1,2})\s+(dias?|d[ií]as?|semanas?|meses?|mes)/);
   if(m){
     marcar(m[0]);
@@ -2680,7 +2920,7 @@ function localParse(text){
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
-  // ── 22. hoy / mañana / pasado mañana
+  // ── 25. hoy / mañana / pasado mañana
   const rel = [
     { rx:/pasado\s?manana/, label:'pasado manana', add:2 },
     { rx:/\bmanana\b/, label:'manana', add:1 },
@@ -2696,11 +2936,19 @@ function localParse(text){
     }
   }
 
-  // ── 23. Solo se menciona un mes: "examen en octubre"
-  m = t.match(new RegExp('\\b(?:en|de|para|del)\\s+(' + M + ')\\b'));
+  // ── 26. Solo se menciona un mes: "examen en octubre"
+  m = t.match(new RegExp('\\b(?:en|de|para|del)\\s+(' + M + ')' + ANO));
   if(m){
     marcar(m[0]);
-    const iso = toISO(2026, monthIndex(m[1]), 1);
+    const a = m[2] ? enRango(+m[2]) : anio;
+    const iso = toISO(a, monthIndex(m[1]), 1);
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+
+  // ── 27. Solo se menciona un año: "viaje en 2029"
+  if(HAY_ANIO){
+    const my = t.match(/\b(20[2-4]\d|2050)\b/);
+    const iso = toISO(enRango(+my[1]), 1, 1);
     return clampToSemester(iso) ? armar([iso]) : [];
   }
 
@@ -2710,7 +2958,8 @@ function localParse(text){
 
 // ---------- Lectura con IA ----------
 async function aiParse(text){
-  const prompt = `Hoy es ${todayISO()}. El semestre va del ${SEM_START} al ${SEM_END}.
+  const prompt = `Hoy es ${todayISO()}. El usuario está viendo el año ${ANIO}.
+Si no se menciona un año, asume ${ANIO}. Rango válido: ${SEM_START} a ${SEM_END}.
 Convierte el siguiente texto en español a eventos de calendario.
 
 Reglas:
@@ -2720,14 +2969,17 @@ Reglas:
 - Significado: ${categorias().map(k => k.id + ' = ' + k.label).join('; ')}
 - examen para exámenes y parciales; entrega para tareas, proyectos, láminas y maquetas; vacacion para vacaciones, viajes y puentes; otro para lo demás.
 - Si el texto menciona el nombre de una categoría, usa el identificador de esa.
-- Si el texto describe un rango de días, genera un evento por cada día del rango, aunque cruce de un mes a otro. Reconoce "del X al Y", "de el X al Y", "desde el X hasta el Y", "a partir del X", "entre el X y el Y".
+- Si el texto describe un rango de días, genera un evento por cada día del rango, aunque cruce de un mes o de un AÑO a otro.
+- Cada fecha puede traer su propio año: "del 23 de diciembre de 2026 al 8 de enero de 2027".
+- Si no traen año y el mes final es anterior al inicial (diciembre → enero), el final es del año siguiente.
+- Acepta los dos órdenes: "23 de diciembre" y "diciembre 23". Reconoce "del X al Y", "de el X al Y", "desde el X hasta el Y", "a partir del X", "entre el X y el Y".
 - "de lunes a viernes" o "entre semana" = solo días hábiles. "fines de semana" = sábados y domingos.
 - Puede haber varios días de la semana juntos: "todos los lunes y miércoles".
-- Si dice "todos los días", "diario" o "cada día", genera un evento por CADA día hasta el ${SEM_END} (o hasta la fecha límite que indique).
+- Si dice "todos los días", "diario" o "cada día", genera un evento por CADA día hasta el 31 de diciembre de ${ANIO} (o hasta la fecha límite que indique).
 - Si dice "todos los días de <mes>", genera un evento por cada día de ese mes.
-- Si dice "todos los <día de la semana>", genera uno por semana hasta el ${SEM_END}.
+- Si dice "todos los <día de la semana>", genera uno por semana hasta el 31 de diciembre de ${ANIO}.
 - El título debe ser corto y claro, sin la fecha adentro.
-- Si el año no se menciona, asume 2026.
+- Si el año no se menciona, asume ${ANIO}.
 - Si no hay fecha identificable, responde [].
 
 Texto: ${text}`;
@@ -2874,7 +3126,9 @@ function mesCompleto(resto){
   if(!m) return null;
   const mo = monthIndex(m[1]);
   if(!mo) return null;
-  const [ini, fin] = monthBounds(mo);
+  const my = t.match(/\b(20[2-4]\d|2050)\b/);
+  const a = my ? +my[1] : ANIO;
+  const [ini, fin] = monthBounds(mo, a);
   return datesBetween(ini, fin);
 }
 
@@ -3026,7 +3280,7 @@ async function agentSubmit(){
   }
   const valid = list.filter(ev => ev && /^\d{4}-\d{2}-\d{2}$/.test(ev.date) && clampToSemester(ev.date));
   if(valid.length === 0){
-    agentSetResult('<div class="agent-msg err">Esa fecha queda fuera del semestre (agosto–diciembre 2026).</div>');
+    agentSetResult('<div class="agent-msg err">Esa fecha queda fuera del rango (2026–2050).</div>');
     return;
   }
   showPreview(valid);
@@ -3127,7 +3381,7 @@ function buildICS(){
     'PRODID:-//Bitacora Semestre 2026//ES',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:Semestre Ago-Dic 2026',
+    'X-WR-CALNAME:Mi Calendario',
   ];
 
   EVENTS.forEach(ev => {
@@ -3321,10 +3575,8 @@ async function init(){
   // Primer dibujo inmediato
   rebuildEvents();
   renderLegend();
-  renderTimeline();
-  renderNextEvent();
-  renderProgress();
-  renderMonths();
+  ANIO = Math.min(Math.max(anioDeHoy(), ANIO_MIN), ANIO_MAX);
+  renderVista();
   renderEmptyNote();
 
   // Luego se cargan palomitas y eventos guardados
