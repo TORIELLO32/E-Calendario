@@ -815,6 +815,8 @@
     color:var(--accent);
     flex:none;
   }
+  .prev-card.borrar{border-color:var(--examen);background:#B23A2F0D;}
+  .btn.peligro{background:var(--examen);border-color:var(--examen);color:var(--paper);}
   .prev-actions{display:flex;gap:8px;margin-top:10px;}
   .btn{
     font-family:var(--font-body);
@@ -913,6 +915,7 @@
     <button class="ex-chip">Gimnasio todos los lunes y miércoles</button>
     <button class="ex-chip">Tomar creatina todos los días</button>
     <button class="ex-chip">Prácticas de lunes a viernes de septiembre</button>
+    <button class="ex-chip">Quítame creatina todos los días</button>
   </div>
 
   <div class="agent-result" id="agentResult"></div>
@@ -2268,6 +2271,7 @@ const SEM_START = '2026-08-01';
 const SEM_END = '2026-12-31';
 let apiBroken = false;
 let pendingEvents = [];
+let pendingDelete = [];
 
 // ---------- Lector local de fechas en español ----------
 
@@ -2325,6 +2329,7 @@ const RELLENO = new Set([
   'escribe','escribeme','coloca','colocar','haz','hazme','hacer','ayudame',
   'el','la','los','las','de','del','para','en','mi','un','una','unos','unas',
   'otra','otro','nueva','nuevo','este','esta','esos','esas','y','e','o',
+  'todo','todos','toda','todas',
   'hasta','antes','luego','tambien','también','ademas','además','ya','solo','sólo',
   'gracias','porfin','plis','please',
 ]);
@@ -2351,7 +2356,7 @@ function cleanTitle(text, removals){
   }
 
   t = tokens.join(' ').replace(/[\s,;.]+$/,'').trim();
-  if(!t) return 'Evento';
+  if(t.length <= 2) return 'Evento';
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
@@ -2500,7 +2505,7 @@ function localParse(text){
   // ── 4. Dos fechas de meses distintos: "el 15 de octubre y el 3 de noviembre"
   m = t.match(new RegExp('(\\d{1,2})\\s+de\\s+(' + M + ')\\s+(?:y|e)\\s+(?:el\\s+)?(\\d{1,2})\\s+de\\s+(' + M + ')'));
   if(m){
-    marcar('el ' + m[0]); marcar(m[0]);
+    marcar('del ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
     const a = toISO(2026, monthIndex(m[2]), +m[1]);
     const b = toISO(2026, monthIndex(m[4]), +m[3]);
     return armar([a, b].filter(clampToSemester));
@@ -2518,7 +2523,7 @@ function localParse(text){
   // ── 6. Días sueltos del mismo mes: "el 15 y 17 de octubre", "3, 10 y 24 de noviembre"
   m = t.match(new RegExp('(\\d{1,2}(?:\\s*(?:,|y|e)\\s*\\d{1,2})+)\\s+de\\s+(' + M + ')'));
   if(m){
-    marcar('los dias ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
+    marcar('los dias ' + m[0]); marcar('del ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
     const mo = monthIndex(m[2]);
     const dias = (m[1].match(/\d{1,2}/g) || [])
       .map(n => toISO(2026, mo, +n))
@@ -2608,7 +2613,7 @@ function localParse(text){
   m = t.match(new RegExp('(\\d{1,2})\\s+de\\s+(' + M + ')'));
   if(m){
     quitarWDpegado(m[0]);
-    marcar('para el ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
+    marcar('para el ' + m[0]); marcar('del ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
     const iso = toISO(2026, monthIndex(m[2]), +m[1]);
     return clampToSemester(iso) ? armar([iso]) : [];
   }
@@ -2617,7 +2622,7 @@ function localParse(text){
   m = t.match(/\b(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.]\d{2,4})?\b/);
   if(m){
     quitarWDpegado(m[0]);
-    marcar('el ' + m[0]); marcar(m[0]);
+    marcar('del ' + m[0]); marcar('el ' + m[0]); marcar(m[0]);
     const iso = toISO(2026, +m[2], +m[1]);
     return clampToSemester(iso) ? armar([iso]) : [];
   }
@@ -2803,6 +2808,170 @@ async function confirmAdd(){
   document.getElementById('agentInput').value = '';
 }
 
+// ══════════════════════════════════════════════════════════════
+// QUITAR EVENTOS CON EL AGENTE
+// "quítame tomar creatina todos los días", "borra el examen del 15",
+// "elimina todo del 20 de octubre", "ya no quiero el gym los lunes"
+// ══════════════════════════════════════════════════════════════
+const VERBOS_BORRAR = [
+  'quitame','quítame','quitamelo','quita','quitar','quitalo','quítalo','quitale',
+  'borrame','bórrame','borra','borrar','borralo','bórralo','borrame',
+  'elimina','eliminar','eliminame','elimíname','eliminalo',
+  'cancela','cancelar','cancelame','anula','anular',
+  'olvida','olvidate','olvídate','deshaz','deshacer',
+];
+const COMODINES = new Set(['todo','todos','toda','todas','evento','eventos','nada','cosa','cosas','']);
+
+// ¿La frase pide borrar? Devuelve el resto sin el verbo.
+function intentoBorrar(text){
+  const t = normalize(text).trim();
+
+  // "ya no quiero…", "ya no…"
+  const yaNo = t.match(/^(?:ya\s+no\s+quiero|ya\s+no\s+necesito|ya\s+no|no\s+quiero)\s+/);
+  if(yaNo){
+    return { es:true, resto: text.trim().slice(yaNo[0].length) };
+  }
+
+  // Se saltan cortesías ("porfavor", "me puedes"…) y la primera
+  // palabra con contenido debe ser el verbo de borrar.
+  const tokens = t.split(/\s+/);
+  let i = 0;
+  while(i < tokens.length && i < 4 && RELLENO.has(tokens[i]) && !VERBOS_BORRAR.includes(tokens[i])) i++;
+  if(i < tokens.length && VERBOS_BORRAR.includes(tokens[i])){
+    const partes = text.trim().split(/\s+/);
+    return { es:true, resto: partes.slice(i + 1).join(' ') };
+  }
+  return { es:false, resto: text };
+}
+
+// Reduce plural y acentos para comparar palabras
+function raiz(w){
+  const n = normalize(w).replace(/[^a-z0-9]/g,'');
+  return n.length > 3 ? n.replace(/(es|s)$/,'') : n;
+}
+function palabrasClave(txt){
+  return normalize(txt).split(/\s+/)
+    .filter(w => w && !RELLENO.has(w) && w.length > 1)
+    .map(raiz)
+    .filter(Boolean);
+}
+
+// ¿El título del evento coincide con lo que pidió el usuario?
+function coincideTitulo(tituloEvento, consulta){
+  const a = palabrasClave(tituloEvento);
+  const b = palabrasClave(consulta);
+  if(!a.length || !b.length) return false;
+  const enA = w => a.includes(w);
+  const enB = w => b.includes(w);
+  return b.every(enA) || a.every(enB);
+}
+
+// Si solo se menciona un mes (sin día), el alcance es el mes completo
+function mesCompleto(resto){
+  const t = normalize(resto);
+  if(/\d/.test(t)) return null;
+  const m = t.match(new RegExp('\\b(?:de|del|en|para)\\s+(' + MONTH_RX + ')\\b'));
+  if(!m) return null;
+  const mo = monthIndex(m[1]);
+  if(!mo) return null;
+  const [ini, fin] = monthBounds(mo);
+  return datesBetween(ini, fin);
+}
+
+// Busca en el calendario lo que hay que quitar
+function buscarParaBorrar(objetivo, resto){
+  let fechas = null;
+  let consulta = null;
+
+  const mes = mesCompleto(resto);
+  if(mes){
+    fechas = new Set(mes);
+    consulta = cleanTitle(resto, [flexRx(normalize(resto).match(new RegExp('\\b(?:de|del|en|para)\\s+(' + MONTH_RX + ')\\b'))[0])]);
+  }else if(objetivo && objetivo.length){
+    fechas = new Set(objetivo.map(e => e.date));
+    consulta = objetivo[0].title;
+  }else{
+    consulta = cleanTitle(resto, []);
+  }
+
+  if(consulta && COMODINES.has(normalize(consulta).trim())) consulta = null;
+  if(consulta === 'Evento') consulta = null;
+
+  // Demasiado vago: ni fecha ni nombre
+  if(!fechas && !consulta) return { lista: [], vago: true };
+
+  const lista = EVENTS.filter(ev =>
+    (!fechas || fechas.has(ev.date)) &&
+    (!consulta || coincideTitulo(ev.title, consulta))
+  );
+  return { lista, vago: false };
+}
+
+async function confirmarBorrado(){
+  const n = pendingDelete.length;
+  pendingDelete.forEach(ev => {
+    const id = evId(ev);
+    DELETED.add(id);
+    COMPLETED.delete(id);
+  });
+  const ids = new Set(pendingDelete.map(evId));
+  USER_EVENTS = USER_EVENTS.filter(ev => !ids.has(evId(ev)));
+  pendingDelete = [];
+
+  renderAll();
+  await markChanged();
+  agentSetResult(`<div class="agent-msg ok">Listo — se ${n === 1 ? 'quitó 1 evento' : 'quitaron ' + n + ' eventos'}.</div>`);
+  document.getElementById('agentInput').value = '';
+}
+
+function cancelarBorrado(){
+  pendingDelete = [];
+  agentSetResult('');
+}
+
+function showPreviewBorrar(lista){
+  pendingDelete = lista;
+  const shown = lista.slice(0, 6);
+  const rows = shown.map(ev => `
+    <div class="prev-row">
+      <i class="dot" style="background:${catColor(ev.type)}"></i>
+      <span class="when">${shortDate(ev.date)}</span>
+      <span>${esc(ev.title)}</span>
+    </div>
+  `).join('');
+  const extra = lista.length > 6 ? `<div class="agent-msg">…y ${lista.length - 6} más</div>` : '';
+  agentSetResult(`
+    <div class="prev-card borrar">
+      <div class="prev-head">Se va a quitar ${lista.length === 1 ? '1 evento' : lista.length + ' eventos'}</div>
+      ${rows}${extra}
+      <div class="prev-actions">
+        <button class="btn" onclick="cancelarBorrado()">Cancelar</button>
+        <button class="btn peligro" onclick="confirmarBorrado()">Quitar</button>
+      </div>
+    </div>
+  `);
+}
+
+// Si pidió "quitar X" pero no existe, se le ofrece agregarlo
+let textoPendiente = '';
+async function agregarEnSuLugar(){
+  const list = (await interpretar(textoPendiente)).filter(ev =>
+    ev && /^\d{4}-\d{2}-\d{2}$/.test(ev.date) && clampToSemester(ev.date));
+  textoPendiente = '';
+  if(list.length) showPreview(list);
+}
+
+// ---------- Interpretación compartida (IA o lector local) ----------
+async function interpretar(texto){
+  let list = null;
+  if(!apiBroken){
+    try{ list = await aiParse(texto); }
+    catch(e){ apiBroken = true; }
+  }
+  if(list === null) list = localParse(texto);
+  return list || [];
+}
+
 async function agentSubmit(){
   const input = document.getElementById('agentInput');
   const text = input.value.trim();
@@ -2812,17 +2981,43 @@ async function agentSubmit(){
   sendBtn.disabled = true;
   agentSetResult('<div class="thinking"><i></i><i></i><i></i> Leyendo…</div>');
 
-  let list = null;
+  const intento = intentoBorrar(text);
 
-  if(!apiBroken){
-    try{
-      list = await aiParse(text);
-    }catch(e){
-      apiBroken = true;
+  // ── Camino de borrado ──
+  if(intento.es){
+    let objetivo = [];
+    if(intento.resto.trim()) objetivo = await interpretar(intento.resto);
+    const { lista, vago } = buscarParaBorrar(objetivo, intento.resto);
+    sendBtn.disabled = false;
+
+    if(vago){
+      agentSetResult('<div class="agent-msg err">Dime qué quitar con más detalle: el nombre o la fecha. Por ejemplo “quita creatina todos los días”.</div>');
+      return;
     }
+    if(lista.length === 0){
+      // Puede que en realidad quisiera AGREGAR algo que empieza con
+      // "quitar…" (p. ej. "quitar pintura el 8 de septiembre").
+      const conFecha = (await interpretar(text)).filter(ev =>
+        ev && /^\d{4}-\d{2}-\d{2}$/.test(ev.date) && clampToSemester(ev.date));
+      if(conFecha.length){
+        textoPendiente = text;
+        agentSetResult(`
+          <div class="agent-msg">No encontré nada que quitar con ese nombre.</div>
+          <button class="btn primary" style="width:100%;margin-top:8px" onclick="agregarEnSuLugar()">
+            Agregarlo como evento nuevo
+          </button>
+        `);
+        return;
+      }
+      agentSetResult('<div class="agent-msg err">No encontré nada que coincida en tu calendario.</div>');
+      return;
+    }
+    showPreviewBorrar(lista);
+    return;
   }
-  if(list === null) list = localParse(text);
 
+  // ── Camino de agregar ──
+  const list = await interpretar(text);
   sendBtn.disabled = false;
 
   if(!list || list.length === 0){
@@ -2849,6 +3044,7 @@ function closeAgent(){
   document.getElementById('agent').classList.remove('open');
   document.getElementById('agentOverlay').classList.remove('open');
   cancelAdd();
+  pendingDelete = [];
 }
 
 document.getElementById('fab').addEventListener('click', openAgent);
