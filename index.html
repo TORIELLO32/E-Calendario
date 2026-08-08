@@ -24,7 +24,7 @@
     --accent:#33506B;
     --accent-soft:#33506B22;
     --examen:#B23A2F;
-    --examen-bg:#B23A2F1A;
+    --examen-bg:var(--peligro-suave);
     --entrega:#C98A2B;
     --entrega-bg:#C98A2B1A;
     --vacacion:#3F7A56;
@@ -35,14 +35,61 @@
     --font-display:'Space Grotesk',sans-serif;
     --font-body:'Inter',sans-serif;
     --font-mono:'IBM Plex Mono',monospace;
+    --grid:#00000006;
+    --month-code:#B8C4CE;
+    --velo:rgba(20,22,26,0.4);
+    --sombra:rgba(20,22,26,0.28);
+    --rango-fin:#33506B2E;
+    --peligro-suave:#B23A2F1A;
+    --peligro-tenue:#B23A2F0D;
+    --brillo-punto:none;
   }
+
+  /* ---------- Modo oscuro ---------- */
+  [data-tema="oscuro"]{
+    --paper:#14171C;
+    --paper-card:#1B1F26;
+    --paper-alt:#242A32;
+    --line:#3A424E;
+    --line-soft:#2A303A;
+    --ink:#E9E7E1;
+    --ink-soft:#98A2AE;
+    --accent:#7FA8D4;
+    --accent-soft:#7FA8D426;
+    --examen:#E0705F;
+    --examen-bg:#E0705F1F;
+    --entrega:#E3AC55;
+    --entrega-bg:#E3AC551F;
+    --vacacion:#6FB68B;
+    --vacacion-bg:#6FB68B1F;
+    --otro:#98A2B4;
+    --otro-bg:#98A2B41F;
+    --grid:#FFFFFF08;
+    --month-code:#7E8B99;
+    --velo:rgba(0,0,0,0.55);
+    --sombra:rgba(0,0,0,0.5);
+    --rango-fin:#7FA8D43D;
+    --peligro-suave:#E0705F26;
+    --peligro-tenue:#E0705F14;
+    /* Los colores de las categorías los eliges tú, así que en vez de
+       cambiarlos se aclaran para que se vean bien sobre el fondo. */
+    --brillo-punto:saturate(1.25) brightness(1.3);
+  }
+
+  [data-tema="oscuro"] .dot,
+  [data-tema="oscuro"] .ev-dot,
+  [data-tema="oscuro"] .mes-bar,
+  [data-tema="oscuro"] .tl-tick{ filter:var(--brillo-punto); }
+
+  [data-tema="oscuro"] .month-head{ background:#0E1116; }
+  [data-tema="oscuro"] .cell.weekend{ background:#1F242B; }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     background:var(--paper);
     background-image:
-      repeating-linear-gradient(0deg, transparent, transparent 27px, #00000006 28px),
-      repeating-linear-gradient(90deg, transparent, transparent 27px, #00000006 28px);
+      repeating-linear-gradient(0deg, transparent, transparent 27px, var(--grid) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, var(--grid) 28px);
     color:var(--ink);
     font-family:var(--font-body);
     -webkit-font-smoothing:antialiased;
@@ -186,7 +233,7 @@
     font-family:var(--font-mono);
     font-size:0.72rem;
     letter-spacing:0.08em;
-    color:#B8C4CE;
+    color:var(--month-code);
   }
   .month-name{
     font-family:var(--font-display);
@@ -268,7 +315,7 @@
   /* ---------- Detail panel ---------- */
   .overlay{
     position:fixed;inset:0;
-    background:rgba(20,22,26,0.4);
+    background:var(--velo);
     opacity:0;pointer-events:none;
     transition:opacity 0.2s ease;
     z-index:10;
@@ -553,8 +600,8 @@
     inset:0;
     background:var(--paper);
     background-image:
-      repeating-linear-gradient(0deg, transparent, transparent 27px, #00000006 28px),
-      repeating-linear-gradient(90deg, transparent, transparent 27px, #00000006 28px);
+      repeating-linear-gradient(0deg, transparent, transparent 27px, var(--grid) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, var(--grid) 28px);
     z-index:50;
     display:none;
     align-items:center;
@@ -641,7 +688,7 @@
   }
   .sel-hint.show{display:block;}
   .cell.in-range{background:var(--accent-soft);}
-  .cell.in-range.weekend{background:#33506B2E;}
+  .cell.in-range.weekend{background:var(--rango-fin);}
   .cell.range-edge{
     outline:2px solid var(--accent);
     outline-offset:-2px;
@@ -670,6 +717,13 @@
     margin-bottom:10px;
   }
   .opt-actions{display:flex;gap:8px;}
+  .tema-btns{display:flex;gap:7px;}
+  .tema-btn.activo{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:var(--paper-card);
+    font-weight:600;
+  }
   .opt-msg{
     font-size:0.78rem;
     margin-top:9px;
@@ -717,7 +771,7 @@
     border-radius:6px;
     -webkit-tap-highlight-color:transparent;
   }
-  .del-btn:active{background:#B23A2F1A;color:var(--examen);}
+  .del-btn:active{background:var(--peligro-suave);color:var(--examen);}
 
   .edit-btn{
     flex:none;
@@ -765,7 +819,7 @@
     border:none;
     background:var(--accent);
     color:var(--paper);
-    box-shadow:0 4px 14px rgba(20,22,26,0.28);
+    box-shadow:0 4px 14px var(--sombra);
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;
     z-index:9;
@@ -874,8 +928,44 @@
     color:var(--accent);
     flex:none;
   }
-  .prev-card.borrar{border-color:var(--examen);background:#B23A2F0D;}
+  .prev-card.borrar{border-color:var(--examen);background:var(--peligro-tenue);}
   .btn.peligro{background:var(--examen);border-color:var(--examen);color:var(--paper);}
+  .resp-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    width:100%;
+    padding:9px 2px;
+    background:none;
+    border:none;
+    border-bottom:1px solid var(--line-soft);
+    font-family:inherit;
+    font-size:0.83rem;
+    color:var(--ink);
+    text-align:left;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .resp-row:last-of-type{border-bottom:none;}
+  .resp-row:active{background:var(--accent-soft);}
+  .resp-row .when{
+    font-family:var(--font-mono);
+    font-size:0.68rem;
+    color:var(--accent);
+    flex:none;
+    width:46px;
+  }
+  .resp-txt{flex:1;line-height:1.3;}
+  .resp-falta{
+    font-family:var(--font-mono);
+    font-size:0.62rem;
+    color:var(--ink-soft);
+    flex:none;
+  }
+  .resp-row.hecho .resp-txt{
+    color:var(--ink-soft);
+    text-decoration:line-through;
+  }
   .prev-actions{display:flex;gap:8px;margin-top:10px;}
   .btn{
     font-family:var(--font-body);
@@ -980,12 +1070,15 @@
     <button class="ex-chip">Prácticas de lunes a viernes de septiembre</button>
     <button class="ex-chip">Quítame creatina todos los días</button>
     <button class="ex-chip">Viaje a Orlando de diciembre 23 a enero 8</button>
+    <button class="ex-chip">¿Qué entrego la próxima semana?</button>
+    <button class="ex-chip">¿Cuáles son mis vacaciones próximas?</button>
+    <button class="ex-chip">¿Qué tengo pendiente este mes?</button>
   </div>
 
   <div class="agent-result" id="agentResult"></div>
 
   <div class="agent-input-row">
-    <textarea id="agentInput" rows="2" placeholder="Escribe qué quieres agregar…"></textarea>
+    <textarea id="agentInput" rows="2" maxlength="400" placeholder="Escribe qué quieres agregar…"></textarea>
     <button class="agent-send" id="agentSend" aria-label="Enviar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
     </button>
@@ -1010,6 +1103,16 @@
   </div>
 
   <div class="opt-block">
+    <div class="opt-title">Apariencia</div>
+    <div class="opt-desc">El modo automático sigue lo que tenga tu teléfono.</div>
+    <div class="tema-btns">
+      <button class="btn tema-btn" data-tema-val="auto">Automático</button>
+      <button class="btn tema-btn" data-tema-val="claro">Claro</button>
+      <button class="btn tema-btn" data-tema-val="oscuro">Oscuro</button>
+    </div>
+  </div>
+
+  <div class="opt-block">
     <div class="opt-title">Mis categorías</div>
     <div id="catList"></div>
   </div>
@@ -1028,7 +1131,7 @@
       <button class="btn" id="btnPasteOpen">Pegar respaldo</button>
     </div>
     <div id="pasteZone" style="display:none;margin-top:10px;">
-      <textarea id="pasteInput" rows="3" placeholder="Pega aquí el código…"></textarea>
+      <textarea id="pasteInput" rows="3" maxlength="400000" placeholder="Pega aquí el código…"></textarea>
       <button class="btn primary" id="btnPasteGo" style="margin-top:8px;">Restaurar</button>
     </div>
     <div class="opt-msg" id="optsMsg"></div>
@@ -1043,7 +1146,7 @@
   </div>
   <div class="opt-desc" id="rangeCount"></div>
   <div class="edit-form">
-    <input type="text" id="rgTitle" placeholder="¿Qué vas a poner en estos días?">
+    <input type="text" id="rgTitle" maxlength="80" placeholder="¿Qué vas a poner en estos días?">
     <select id="rgType" onchange="checkNueva(this,'rgNueva')"></select>
     <div id="rgNueva"></div>
     <div class="prev-actions">
@@ -1057,8 +1160,8 @@
   <div class="auth-box">
     <span class="tag">Bitácora del Semestre</span>
     <h2 class="auth-title" id="authTitle">Entrar</h2>
-    <input type="email" id="authEmail" placeholder="Correo" autocomplete="username" inputmode="email">
-    <input type="password" id="authPass" placeholder="Contraseña" autocomplete="current-password">
+    <input type="email" id="authEmail" maxlength="120" placeholder="Correo" autocomplete="username" inputmode="email">
+    <input type="password" id="authPass" maxlength="128" placeholder="Contraseña" autocomplete="current-password">
     <button class="btn primary auth-main" id="authGo">Entrar</button>
     <div class="auth-msg" id="authMsg"></div>
     <button class="auth-switch" id="authSwitch">¿No tienes cuenta? Crear una</button>
@@ -1165,6 +1268,34 @@ function catOf(id){
 function catColor(id){ return catOf(id).color; }
 function catLabel(id){ return catOf(id).label; }
 
+// ══════════════════════════════════════════════════════════════
+// LÍMITES Y LIMPIEZA DE ENTRADAS
+// Todo lo que venga de fuera (nube, respaldo, teclado) pasa por aquí.
+// ══════════════════════════════════════════════════════════════
+const MAX_EVENTOS   = 2000;   // eventos guardados en total
+const MAX_TITULO    = 80;     // caracteres por título
+const MAX_ETIQUETA  = 24;     // caracteres por categoría
+const MAX_CATS      = 20;     // categorías propias
+const MAX_IDS       = 6000;   // palomitas + borrados
+const MAX_TEXTO     = 400;    // texto que se le escribe al agente
+const MAX_RESPALDO  = 400000; // caracteres del código de respaldo
+const MAX_PAYLOAD   = 4000000;// bytes que se suben de un jalón
+
+// Quita caracteres de control, invisibles y de dirección de texto,
+// que sirven para disfrazar contenido o romper la interfaz.
+function limpiarTexto(s, tope){
+  return String(s)
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, tope);
+}
+
+function numeroSeguro(n, porOmision){
+  return Number.isFinite(n) ? n : porOmision;
+}
+
 function safeColor(h){
   return (typeof h === 'string' && /^#[0-9a-fA-F]{6}$/.test(h)) ? h : '#5C6478';
 }
@@ -1176,11 +1307,13 @@ function sanitizeCats(arr){
     if(!k || typeof k.id !== 'string') return;
     if(!/^c_[a-z0-9]{1,20}$/.test(k.id)) return;
     if(vistos.has(k.id)) return;
-    if(typeof k.label !== 'string' || !k.label.trim()) return;
+    if(typeof k.label !== 'string') return;
+    const label = limpiarTexto(k.label, MAX_ETIQUETA);
+    if(!label) return;
     vistos.add(k.id);
-    out.push({ id:k.id, label:k.label.trim().slice(0,24), color:safeColor(k.color) });
+    out.push({ id:k.id, label, color:safeColor(k.color) });
   });
-  return out.slice(0, 20);
+  return out.slice(0, MAX_CATS);
 }
 
 // <option> para todos los selectores de tipo
@@ -1247,7 +1380,8 @@ async function cargarSesion(){
   if(!raw) return null;
   try{
     const s = JSON.parse(raw);
-    if(s && s.access_token && s.refresh_token && s.user_id) return s;
+    if(s && typeof s.access_token === 'string' && typeof s.refresh_token === 'string'
+       && typeof s.user_id === 'string' && RX_UUID.test(s.user_id)) return s;
   }catch(e){}
   return null;
 }
@@ -1257,12 +1391,20 @@ async function borrarSesion(){
   await writeKey(KEY_SESION, '');
 }
 
+const RX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function guardarDatosSesion(data){
+  const uid = (data.user && typeof data.user.id === 'string') ? data.user.id
+            : (sesion ? sesion.user_id : null);
+  if(uid && !RX_UUID.test(uid)) throw new Error('Respuesta de sesión inválida');
+  if(typeof data.access_token !== 'string' || typeof data.refresh_token !== 'string'){
+    throw new Error('Respuesta de sesión inválida');
+  }
   sesion = {
     access_token: data.access_token,
     refresh_token: data.refresh_token,
-    expira: Date.now() + ((data.expires_in || 3600) * 1000) - 60000,
-    user_id: data.user && data.user.id ? data.user.id : (sesion ? sesion.user_id : null),
+    expira: Date.now() + (numeroSeguro(data.expires_in, 3600) * 1000) - 60000,
+    user_id: uid,
   };
 }
 
@@ -1347,11 +1489,13 @@ function alternarModo(){
 }
 
 async function accionAuth(){
-  const email = document.getElementById('authEmail').value.trim();
+  const email = limpiarTexto(document.getElementById('authEmail').value, 120).toLowerCase();
   const pass = document.getElementById('authPass').value;
   const btn = document.getElementById('authGo');
 
   if(!email || !pass){ authMsg('Escribe tu correo y contraseña.', 'err'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ authMsg('Ese correo no tiene un formato válido.', 'err'); return; }
+  if(pass.length > 128){ authMsg('La contraseña es demasiado larga.', 'err'); return; }
   if(modoRegistro && pass.length < 8){ authMsg('La contraseña necesita al menos 8 caracteres.', 'err'); return; }
 
   btn.disabled = true;
@@ -1460,18 +1604,43 @@ function remLabel(r){
 }
 
 function sanitizeEvent(e){
-  if(!e || typeof e !== 'object') return null;
+  if(!e || typeof e !== 'object' || Array.isArray(e)) return null;
   if(typeof e.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.date)) return null;
-  if(typeof e.title !== 'string' || !e.title.trim()) return null;
-  return { date: e.date, title: e.title.trim().slice(0,80), type: safeType(e.type), rem: safeRem(e.rem) };
+  // La fecha debe existir de verdad (rechaza 2026-02-31) y estar en rango
+  const [yy, mm, dd] = e.date.split('-').map(Number);
+  if(mm < 1 || mm > 12 || dd < 1 || dd > daysInMonth(yy, mm)) return null;
+  if(e.date < SEM_START || e.date > SEM_END) return null;
+  if(typeof e.title !== 'string') return null;
+  const title = limpiarTexto(e.title, MAX_TITULO);
+  if(!title) return null;
+  return { date: e.date, title, type: safeType(e.type), rem: safeRem(e.rem) };
 }
 function sanitizeList(arr){
   if(!Array.isArray(arr)) return [];
-  return arr.map(sanitizeEvent).filter(Boolean).slice(0,600);
+  const vistos = new Set();
+  const out = [];
+  for(const e of arr){
+    if(out.length >= MAX_EVENTOS) break;
+    const limpio = sanitizeEvent(e);
+    if(!limpio) continue;
+    const id = limpio.date + '|' + limpio.title;
+    if(vistos.has(id)) continue;   // sin duplicados
+    vistos.add(id);
+    out.push(limpio);
+  }
+  return out;
 }
 function sanitizeIds(arr){
   if(!Array.isArray(arr)) return [];
-  return arr.filter(x => typeof x === 'string' && x.length < 120).slice(0,2000);
+  const out = [];
+  for(const x of arr){
+    if(out.length >= MAX_IDS) break;
+    if(typeof x !== 'string') continue;
+    if(x.length < 3 || x.length > 120) continue;
+    if(!/^\d{4}-\d{2}-\d{2}\|/.test(x)) continue;  // debe verse como fecha|título
+    out.push(x);
+  }
+  return out;
 }
 
 function applySnapshot(o){
@@ -1479,7 +1648,7 @@ function applySnapshot(o){
   COMPLETED = new Set(sanitizeIds(o.completados));
   DELETED = new Set(sanitizeIds(o.eliminados));
   CAT_MIAS = sanitizeCats(o.categorias);
-  localStamp = typeof o.stamp === 'number' ? o.stamp : 0;
+  localStamp = numeroSeguro(o.stamp, 0);
 }
 
 function setSyncState(s){
@@ -1536,6 +1705,7 @@ async function syncPush(){
   setSyncState('busy');
   try{
     const body = JSON.stringify([{ user_id: sesion.user_id, datos: snapshot() }]);
+    if(body.length > MAX_PAYLOAD){ setSyncState('error'); return; }
     const r = await fetch(`${SYNC.url}/rest/v1/calendario`, {
       method: 'POST',
       headers: { ...syncHeaders(), 'Prefer': 'resolution=merge-duplicates,return=minimal' },
@@ -1612,6 +1782,10 @@ async function readKey(key){
 
 // Escribe una llave: Claude → navegador → aviso
 async function writeKey(key, payload){
+  if(typeof payload === 'string' && payload.length > MAX_PAYLOAD){
+    console.warn('Carga demasiado grande, no se guarda.');
+    return false;
+  }
   if(hasClaudeStorage() && !claudeStorageBroken){
     try{
       await window.storage.set(key, payload, false);
@@ -1647,7 +1821,7 @@ async function loadAll(){
       COMPLETED = new Set(sanitizeIds(o.completados));
       DELETED = new Set(sanitizeIds(o.eliminados));
       CAT_MIAS = sanitizeCats(o.categorias);
-      if(typeof o.stamp === 'number') localStamp = o.stamp;
+      localStamp = numeroSeguro(o.stamp, localStamp);
     }catch(e){}
   }
   const eventosRaw = await readKey(KEY_EVENTOS);
@@ -1740,7 +1914,7 @@ function cancelEdit(){
   renderPanelBody();
 }
 async function saveEdit(oldId){
-  const title = document.getElementById('edTitle').value.trim();
+  const title = limpiarTexto(document.getElementById('edTitle').value, MAX_TITULO);
   const date = document.getElementById('edDate').value;
   const type = document.getElementById('edType').value;
 
@@ -1792,6 +1966,7 @@ function renderAll(){
 async function addEvents(list){
   let added = 0;
   list.forEach(raw => {
+    if(USER_EVENTS.length >= MAX_EVENTOS) return;
     const clean = sanitizeEvent(raw);
     if(!clean) return;
     const id = evId(clean);
@@ -2032,7 +2207,7 @@ function cerrarRango(){
 }
 
 async function guardarRango(){
-  const title = document.getElementById('rgTitle').value.trim();
+  const title = limpiarTexto(document.getElementById('rgTitle').value, MAX_TITULO);
   const type = document.getElementById('rgType').value;
   if(!title){ document.getElementById('rgTitle').focus(); return; }
 
@@ -2101,12 +2276,12 @@ async function crearCategoria(contenedorId, selectId){
   const cont = document.getElementById(contenedorId);
   const sel = document.getElementById(selectId);
   const inp = cont.querySelector('.nc-nombre');
-  const nombre = inp.value.trim();
+  const nombre = limpiarTexto(inp.value, MAX_ETIQUETA);
   if(!nombre){ inp.focus(); return; }
 
   const nueva = {
     id: 'c_' + Date.now().toString(36),
-    label: nombre.slice(0,24),
+    label: nombre,
     color: safeColor(colorElegido),
   };
   CAT_MIAS.push(nueva);
@@ -2136,7 +2311,7 @@ function renderLegend(){
   const el = document.querySelector('.legend');
   if(!el) return;
   el.innerHTML = categorias().map(k =>
-    `<span class="legend-item"><i class="dot" style="background:${k.color}"></i>${esc(k.label)}</span>`
+    `<span class="legend-item"><i class="dot" style="background:${safeColor(k.color)}"></i>${esc(k.label)}</span>`
   ).join('');
 }
 
@@ -2150,7 +2325,7 @@ function renderCatList(){
   }
   el.innerHTML = CAT_MIAS.map(k => `
     <div class="cat-row">
-      <i class="dot" style="background:${k.color}"></i>
+      <i class="dot" style="background:${safeColor(k.color)}"></i>
       <span>${esc(k.label)}</span>
       <button class="del-btn" onclick="borrarCategoria('${k.id}')" aria-label="Borrar">&times;</button>
     </div>
@@ -2179,7 +2354,7 @@ function renderYears(){
   for(let y = ANIO_MIN; y <= ANIO_MAX; y++){
     const d = porAnio[y] || { total:0, meses:new Array(12).fill(0), color:{} };
     const barras = d.meses.map((n, i) =>
-      n ? `<i class="mes-bar" style="background:${d.color[i]}"></i>` : '<i class="mes-bar"></i>'
+      n ? `<i class="mes-bar" style="background:${safeColor(d.color[i])}"></i>` : '<i class="mes-bar"></i>'
     ).join('');
     const cuenta = d.total ? (d.total === 1 ? '1 evento' : d.total + ' eventos') : 'sin eventos';
     html += `
@@ -2291,7 +2466,7 @@ function renderPanelBody(){
     if(editingId === id){
       return `
         <div class="edit-form">
-          <input type="text" id="edTitle" value="${esc(ev.title)}" placeholder="Nombre del evento">
+          <input type="text" id="edTitle" maxlength="80" value="${esc(ev.title)}" placeholder="Nombre del evento">
           <div class="edit-row">
             <input type="date" id="edDate" value="${esc(ev.date)}" min="${ANIO_MIN}-01-01" max="${ANIO_MAX}-12-31">
             <select id="edType" onchange="checkNueva(this,'edNueva')">${typeOptions(ev.type)}</select>
@@ -2332,7 +2507,7 @@ function renderPanelBody(){
 
   const formAdd = addingHere ? `
     <div class="edit-form">
-      <input type="text" id="adTitle" placeholder="¿Qué vas a poner este día?">
+      <input type="text" id="adTitle" maxlength="80" placeholder="¿Qué vas a poner este día?">
       <select id="adType" onchange="checkNueva(this,'adNueva')">${typeOptions('otro')}</select>
       <div id="adNueva"></div>
       <div class="prev-actions">
@@ -2359,7 +2534,7 @@ function cancelAddHere(){
   renderPanelBody();
 }
 async function saveAddHere(){
-  const title = document.getElementById('adTitle').value.trim();
+  const title = limpiarTexto(document.getElementById('adTitle').value, MAX_TITULO);
   const type = document.getElementById('adType').value;
   if(!title){ document.getElementById('adTitle').focus(); return; }
   addingHere = false;
@@ -3215,6 +3390,188 @@ async function agregarEnSuLugar(){
   if(list.length) showPreview(list);
 }
 
+// ══════════════════════════════════════════════════════════════
+// PREGUNTAS AL AGENTE
+// "¿cuáles son mis vacaciones próximas?", "qué entrego la semana
+// que entra", "qué tengo hoy", "cuándo es mi próximo examen"
+// ══════════════════════════════════════════════════════════════
+
+// Arranca con palabra de pregunta, o termina en "?"
+function esPregunta(text){
+  const t = normalize(text).trim().replace(/[¿?]/g,' ').trim();
+  if(/[?]/.test(text)) return true;
+  if(/^(cual|cuales|cuando|cuanto|cuantos|cuantas|dime|dame|muestrame|ensename|lista|listame|listar|ver|revisa|consulta|checa|enlista)\b/.test(t)) return true;
+  if(/^(que|qué)\s+(tengo|hay|falta|me\s+falta|viene|sigue|queda|quedan|tareas?|examen|examenes|entregas?|vacaciones|eventos?|pendientes?|dias?|cosas?|actividades?)\b/.test(t)) return true;
+  if(/^(tengo|hay)\s+(algo|alguna|algun)\b/.test(t)) return true;
+  if(/^como\s+(voy|va)\b/.test(t)) return true;
+  return false;
+}
+
+// Qué categoría pregunta, o null si no menciona ninguna
+function tipoDePregunta(t){
+  for(const k of CAT_MIAS){
+    const n = normalize(k.label);
+    if(n.length >= 3 && t.includes(n)) return k.id;
+  }
+  // Raíces, para que también entienda "entrego", "entregas", "entregar"
+  if(/vacacion|viaj|puente|descans|feriad|asuet|festiv|salid/.test(t)) return 'vacacion';
+  if(/examen|examin|parcial|prueb|evaluac|extraordinar/.test(t)) return 'examen';
+  if(/entreg|tarea|proyect|lamina|maquet|trabaj|practic|exposic|reporte|ensayo|portafoli/.test(t)) return 'entrega';
+  return null;
+}
+
+// Lunes de la semana de una fecha
+function lunesDe(iso){
+  const d = parseISO(iso);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+}
+function masDias(iso, n){
+  const d = parseISO(iso);
+  d.setDate(d.getDate() + n);
+  return toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+}
+
+// Devuelve { ini, fin, etiqueta } según el periodo que se pregunte
+function periodoDePregunta(t, texto){
+  const hoy = todayISO();
+  const M = MONTH_RX;
+  const ANO = '(?:\\s*(?:de|del)?\\s*(20[2-4]\\d|2050))?';
+
+  if(/\bhoy\b/.test(t)) return { ini:hoy, fin:hoy, etiqueta:'hoy' };
+  if(/pasado\s?manana/.test(t)) return { ini:masDias(hoy,2), fin:masDias(hoy,2), etiqueta:'pasado mañana' };
+  if(/\bmanana\b/.test(t)) return { ini:masDias(hoy,1), fin:masDias(hoy,1), etiqueta:'mañana' };
+
+  if(/(proxima|siguiente|que\s+entra|que\s+viene|entrante)\s+semana|semana\s+(que\s+entra|que\s+viene|proxima|siguiente|entrante)/.test(t)){
+    const lun = masDias(lunesDe(hoy), 7);
+    return { ini:lun, fin:masDias(lun,6), etiqueta:'la próxima semana' };
+  }
+  if(/esta\s+semana|de\s+la\s+semana|semana\s+actual/.test(t)){
+    const lun = lunesDe(hoy);
+    return { ini:hoy > lun ? hoy : lun, fin:masDias(lun,6), etiqueta:'esta semana' };
+  }
+  if(/(proximo|siguiente)\s+mes|mes\s+(que\s+entra|proximo|siguiente)/.test(t)){
+    const d = parseISO(hoy); d.setMonth(d.getMonth()+1, 1);
+    const y = d.getFullYear(), mo = d.getMonth()+1;
+    return { ini:toISO(y,mo,1), fin:toISO(y,mo,daysInMonth(y,mo)), etiqueta:'el próximo mes' };
+  }
+  if(/este\s+mes|del\s+mes/.test(t)){
+    const d = parseISO(hoy);
+    const y = d.getFullYear(), mo = d.getMonth()+1;
+    return { ini:hoy, fin:toISO(y,mo,daysInMonth(y,mo)), etiqueta:'este mes' };
+  }
+  const prox = t.match(/proximos?\s+(\d{1,3})\s+dias?/);
+  if(prox) return { ini:hoy, fin:masDias(hoy, +prox[1]), etiqueta:`los próximos ${prox[1]} días` };
+
+  // Un día concreto gana sobre el mes completo:
+  // "qué tengo el 15 de octubre" no es "todo octubre"
+  if(new RegExp('\\d{1,2}\\s+(?:de\\s+)?(' + M + ')').test(t) ||
+     new RegExp('(' + M + ')\\s+\\d{1,2}').test(t) ||
+     /\d{1,2}[\/\-.]\d{1,2}/.test(t)){
+    const f = localParse(texto);
+    if(f.length && f.length <= 40){
+      const d = parseISO(f[0].date);
+      const d2 = parseISO(f[f.length-1].date);
+      const et = f.length === 1
+        ? `el ${d.getDate()} de ${MONTHS_ES[d.getMonth()]}`
+        : `del ${d.getDate()} de ${MONTHS_ES[d.getMonth()]} al ${d2.getDate()} de ${MONTHS_ES[d2.getMonth()]}`;
+      return { ini:f[0].date, fin:f[f.length-1].date, etiqueta:et };
+    }
+  }
+
+  const mes = t.match(new RegExp('\\b(?:en|de|del|para)\\s+(' + M + ')' + ANO));
+  if(mes){
+    const mo = monthIndex(mes[1]);
+    const a = mes[2] ? +mes[2] : ANIO;
+    const [ini, fin] = monthBounds(mo, a);
+    return { ini, fin, etiqueta:`${MONTHS_ES[mo-1]} de ${a}` };
+  }
+  const anioSolo = t.match(/\b(20[2-4]\d|2050)\b/);
+  if(anioSolo) return { ini:anioSolo[1]+'-01-01', fin:anioSolo[1]+'-12-31', etiqueta:'en ' + anioSolo[1] };
+
+  // Una fecha concreta: "qué tengo el 15 de octubre"
+  const f = localParse(texto);
+  if(f.length && f.length <= 40){
+    return { ini:f[0].date, fin:f[f.length-1].date, etiqueta:null };
+  }
+
+  return { ini:hoy, fin:SEM_END, etiqueta:'de aquí en adelante' };
+}
+
+function responderPregunta(texto){
+  const t = normalize(texto);
+  const { ini, fin, etiqueta } = periodoDePregunta(t, texto);
+  const tipo = tipoDePregunta(t);
+  const soloPendientes = /pendiente|me\s+falta|falta|sin\s+hacer|no\s+he\s+hecho|por\s+hacer/.test(t);
+  const soloHechos = /\bhechos?\b|complet|termina|acabad|ya\s+hice/.test(t);
+
+  let lista = EVENTS.filter(ev => {
+    if(ev.date < ini || ev.date > fin) return false;
+    if(tipo && ev.type !== tipo) return false;
+    const done = COMPLETED.has(evId(ev));
+    if(soloPendientes && done) return false;
+    if(soloHechos && !done) return false;
+    return true;
+  });
+
+  // Solo el más próximo si pregunta "cuándo es mi próximo…"
+  const soloUno = /\bproximo\b|\bproxima\b|\bsiguiente\b/.test(t) && /^cuando/.test(t.trim());
+  if(soloUno) lista = lista.slice(0, 1);
+
+  const partes = [];
+  if(tipo) partes.push(catLabel(tipo).toLowerCase());
+  else partes.push('eventos');
+  if(soloPendientes) partes.push('pendientes');
+  if(soloHechos) partes.push('ya hechos');
+  let encabezado = partes.join(' ');
+  if(etiqueta) encabezado += ' ' + etiqueta;
+
+  return { lista, encabezado, ini, fin };
+}
+
+// Abre el día desde la respuesta
+function verDia(iso){
+  closeAgent();
+  openPanel(iso);
+}
+
+function mostrarRespuesta(res){
+  const { lista, encabezado } = res;
+
+  if(lista.length === 0){
+    agentSetResult(`<div class="agent-msg">No tienes ${esc(encabezado)}.</div>`);
+    return;
+  }
+
+  const tope = 14;
+  const filas = lista.slice(0, tope).map(ev => {
+    const done = COMPLETED.has(evId(ev));
+    const d = parseISO(ev.date);
+    const cuando = `${d.getDate()} ${MONTHS_ES[d.getMonth()].slice(0,3)}`;
+    const dias = diffDays(parseISO(ev.date), parseISO(todayISO()));
+    const falta = dias === 0 ? 'hoy' : (dias === 1 ? 'mañana' : (dias > 0 ? 'en ' + dias + ' d' : 'pasó'));
+    return `
+      <button class="resp-row ${done ? 'hecho' : ''}" onclick="verDia('${ev.date}')">
+        <i class="dot" style="background:${safeColor(catColor(ev.type))}"></i>
+        <span class="when">${cuando}</span>
+        <span class="resp-txt">${esc(ev.title)}</span>
+        <span class="resp-falta">${falta}</span>
+      </button>
+    `;
+  }).join('');
+
+  const extra = lista.length > tope
+    ? `<div class="agent-msg">…y ${lista.length - tope} más</div>` : '';
+  const total = lista.length === 1 ? '1 evento' : lista.length + ' eventos';
+
+  agentSetResult(`
+    <div class="prev-card">
+      <div class="prev-head">${esc(encabezado)} · ${total}</div>
+      ${filas}${extra}
+    </div>
+  `);
+}
+
 // ---------- Interpretación compartida (IA o lector local) ----------
 async function interpretar(texto){
   let list = null;
@@ -3228,12 +3585,19 @@ async function interpretar(texto){
 
 async function agentSubmit(){
   const input = document.getElementById('agentInput');
-  const text = input.value.trim();
+  const text = limpiarTexto(input.value, MAX_TEXTO);
   if(!text) return;
 
   const sendBtn = document.getElementById('agentSend');
   sendBtn.disabled = true;
   agentSetResult('<div class="thinking"><i></i><i></i><i></i> Leyendo…</div>');
+
+  // ── Camino de pregunta ──
+  if(esPregunta(text)){
+    mostrarRespuesta(responderPregunta(text));
+    sendBtn.disabled = false;
+    return;
+  }
 
   const intento = intentoBorrar(text);
 
@@ -3326,7 +3690,8 @@ function optsMsg(text, cls){
 
 // ---------- Exportar a .ics ----------
 function icsEscape(s){
-  return String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+  return limpiarTexto(s, 200)
+    .replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,');
 }
 
 function nextDayCompact(iso){
@@ -3450,8 +3815,11 @@ function buildBackup(){
 
 function readBackup(code){
   const json = decodeURIComponent(escape(atob(code.trim())));
+  if(json.length > MAX_RESPALDO) throw new Error('demasiado grande');
   const o = JSON.parse(json);
-  if(!o || typeof o !== 'object') throw new Error('formato');
+  if(!o || typeof o !== 'object' || Array.isArray(o)) throw new Error('formato');
+  // No se acepta nada que intente tocar el prototipo del objeto
+  if(Object.prototype.hasOwnProperty.call(o, '__proto__')) throw new Error('formato');
   return o;
 }
 
@@ -3473,8 +3841,10 @@ async function copyBackup(){
 }
 
 async function restoreBackup(){
-  const code = document.getElementById('pasteInput').value;
-  if(!code.trim()){ optsMsg('Pega primero el código.', 'err'); return; }
+  const code = document.getElementById('pasteInput').value.trim();
+  if(!code){ optsMsg('Pega primero el código.', 'err'); return; }
+  if(code.length > MAX_RESPALDO){ optsMsg('Ese código es demasiado grande.', 'err'); return; }
+  if(!/^[A-Za-z0-9+/=\s]+$/.test(code)){ optsMsg('Ese código tiene caracteres que no corresponden.', 'err'); return; }
 
   let o;
   try{
@@ -3508,6 +3878,7 @@ async function restoreBackup(){
 function openOpts(){
   optsMsg('', '');
   renderCatList();
+  aplicarTema();
   setSyncState(syncEnabled() ? syncState : 'off');
   document.getElementById('pasteZone').style.display = 'none';
   document.getElementById('opts').classList.add('open');
@@ -3544,6 +3915,51 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
   optsMsg(syncState === 'ok' ? 'Listo, ya está al día.' : 'No se pudo conectar.', syncState === 'ok' ? 'ok' : 'err');
 });
 
+// ══════════════════════════════════════════════════════════════
+// TEMA CLARO / OSCURO
+// Se guarda solo en este dispositivo: puedes tenerlo oscuro en el
+// teléfono y claro en el iPad sin que se pisen.
+// ══════════════════════════════════════════════════════════════
+const KEY_TEMA = 'semestre2026:tema';
+let temaElegido = 'auto';   // auto | claro | oscuro
+
+function temaDelSistema(){
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    ? 'oscuro' : 'claro';
+}
+
+function aplicarTema(){
+  const real = temaElegido === 'auto' ? temaDelSistema() : temaElegido;
+  document.documentElement.setAttribute('data-tema', real);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute('content', real === 'oscuro' ? '#14171C' : '#F6F4EE');
+  document.querySelectorAll('.tema-btn').forEach(b => {
+    b.classList.toggle('activo', b.getAttribute('data-tema-val') === temaElegido);
+  });
+}
+
+async function elegirTema(v){
+  temaElegido = ['auto','claro','oscuro'].includes(v) ? v : 'auto';
+  aplicarTema();
+  await writeKey(KEY_TEMA, temaElegido);
+}
+
+async function cargarTema(){
+  const raw = await readKey(KEY_TEMA);
+  if(raw && ['auto','claro','oscuro'].includes(raw)) temaElegido = raw;
+  aplicarTema();
+}
+
+document.querySelectorAll('.tema-btn').forEach(b => {
+  b.addEventListener('click', () => elegirTema(b.getAttribute('data-tema-val')));
+});
+if(window.matchMedia){
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const alCambiar = () => { if(temaElegido === 'auto') aplicarTema(); };
+  if(mq.addEventListener) mq.addEventListener('change', alCambiar);
+  else if(mq.addListener) mq.addListener(alCambiar);
+}
+
 // ---------- Cambio de día automático ----------
 // El calendario lee el reloj del dispositivo (no necesita internet).
 // Esto refresca la marca de HOY al pasar la medianoche o al volver
@@ -3572,6 +3988,8 @@ setInterval(checkDayChange, 60000);
 
 // ---------- Inicio ----------
 async function init(){
+  await cargarTema();
+
   // Primer dibujo inmediato
   rebuildEvents();
   renderLegend();
