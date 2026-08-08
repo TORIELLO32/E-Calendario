@@ -493,6 +493,69 @@
     background:var(--accent-soft);
   }
   .nc-nombre{width:100%;margin-bottom:9px !important;}
+  .nc-titulo{
+    font-family:var(--font-mono);
+    font-size:0.62rem;
+    letter-spacing:0.07em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:2px 0 7px;
+  }
+  .cat-sugs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:12px;
+  }
+  .cat-sug{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:var(--font-body);
+    font-size:0.74rem;
+    color:var(--ink);
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:5px 10px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .cat-sug:active{background:var(--accent-soft);border-color:var(--accent);}
+  .prev-cat{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-top:11px;
+    padding-top:11px;
+    border-top:1px solid var(--line-soft);
+  }
+  .crear-pedida{
+    width:100%;
+    margin-top:9px;
+    border-style:dashed;
+    border-color:var(--accent);
+    color:var(--accent);
+    background:transparent;
+  }
+  .prev-cat-lbl{
+    font-family:var(--font-mono);
+    font-size:0.62rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    flex:none;
+  }
+  .prev-cat select{
+    flex:1;
+    font-family:var(--font-body);
+    font-size:16px;
+    color:var(--ink);
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+  }
   .swatches{
     display:flex;
     flex-wrap:wrap;
@@ -1329,6 +1392,27 @@ function numeroSeguro(n, porOmision){
   return Number.isFinite(n) ? n : porOmision;
 }
 
+// Catálogo listo para usar. Al elegir una, se agrega a tus categorías
+// con su color y sus palabras clave (para que el agente la reconozca).
+const CAT_SUGERIDAS = [
+  { id:'c_gym',      label:'Gimnasio',   color:'#7B4FA8', palabras:['gym','gimnasio','pesas','entrenar','rutina','cardio'] },
+  { id:'c_deporte',  label:'Deporte',    color:'#2E7D8F', palabras:['futbol','partido','basquet','tenis','correr','natacion','box'] },
+  { id:'c_comida',   label:'Comidas',    color:'#C05621', palabras:['comida','cena','desayuno','almuerzo','cocinar','restaurante','reservacion'] },
+  { id:'c_trabajo',  label:'Trabajo',    color:'#3F5148', palabras:['trabajo','junta','reunion','cliente','oficina','turno','entrevista'] },
+  { id:'c_salud',    label:'Salud',      color:'#B2478E', palabras:['doctor','dentista','medico','consulta','analisis','vacuna','terapia','cita medica'] },
+  { id:'c_clases',   label:'Clases',     color:'#33506B', palabras:['clase','materia','laboratorio','taller','curso','asesoria'] },
+  { id:'c_estudio',  label:'Estudio',    color:'#4A7C2F', palabras:['estudiar','repasar','leer','investigar','biblioteca'] },
+  { id:'c_pagos',    label:'Pagos',      color:'#8A6D3B', palabras:['pago','pagar','colegiatura','renta','recibo','mensualidad','deposito'] },
+  { id:'c_familia',  label:'Familia',    color:'#A63D40', palabras:['familia','mama','papa','abuela','abuelo','hermano','hermana','primo'] },
+  { id:'c_amigos',   label:'Amigos',     color:'#D4A017', palabras:['amigos','fiesta','salida','reunion con','carne asada','antro'] },
+  { id:'c_cumple',   label:'Cumpleaños', color:'#E0705F', palabras:['cumpleanos','cumple','aniversario','festejo'] },
+  { id:'c_compras',  label:'Compras',    color:'#6B7A8F', palabras:['comprar','compras','super','mandado','pedido','material'] },
+  { id:'c_casa',     label:'Casa',       color:'#7A6A55', palabras:['casa','limpieza','lavar','reparar','mantenimiento','mudanza'] },
+  { id:'c_viaje',    label:'Viajes',     color:'#2F8F6B', palabras:['vuelo','avion','hotel','maleta','aeropuerto','checkin'] },
+  { id:'c_mascota',  label:'Mascota',    color:'#9A6B3F', palabras:['perro','gato','veterinario','mascota','bano del perro'] },
+  { id:'c_personal', label:'Personal',   color:'#5C6478', palabras:['corte de pelo','barberia','tramite','banco','licencia','pasaporte'] },
+];
+
 function safeColor(h){
   return (typeof h === 'string' && /^#[0-9a-fA-F]{6}$/.test(h)) ? h : '#5C6478';
 }
@@ -1344,7 +1428,10 @@ function sanitizeCats(arr){
     const label = limpiarTexto(k.label, MAX_ETIQUETA);
     if(!label) return;
     vistos.add(k.id);
-    out.push({ id:k.id, label, color:safeColor(k.color) });
+    const palabras = Array.isArray(k.palabras)
+      ? k.palabras.map(w => limpiarTexto(w, 24).toLowerCase()).filter(Boolean).slice(0, 12)
+      : [];
+    out.push({ id:k.id, label, color:safeColor(k.color), palabras });
   });
   return out.slice(0, MAX_CATS);
 }
@@ -2295,15 +2382,50 @@ function checkNueva(sel, contenedorId){
   if(!cont) return;
   if(sel.value !== '__nueva__'){ cont.innerHTML = ''; return; }
   colorElegido = PALETA[0];
+  const yaTengo = new Set(CAT_MIAS.map(k => k.id));
+  const sugeridas = CAT_SUGERIDAS.filter(k => !yaTengo.has(k.id));
+  const chips = sugeridas.map(k =>
+    `<button type="button" class="cat-sug" onclick="usarSugerida('${k.id}','${contenedorId}','${sel.id}')">
+       <i class="dot" style="background:${k.color}"></i>${esc(k.label)}
+     </button>`
+  ).join('');
+
   cont.innerHTML = `
     <div class="nueva-cat">
+      ${sugeridas.length ? `<div class="nc-titulo">Listas para usar</div><div class="cat-sugs">${chips}</div><div class="nc-titulo">O crea la tuya</div>` : ''}
       <input type="text" class="nc-nombre" placeholder="Nombre de la categoría" maxlength="24">
       <div class="swatches">${paletaHTML()}</div>
       <button type="button" class="btn primary nc-crear" onclick="crearCategoria('${contenedorId}','${sel.id}')">Crear categoría</button>
     </div>
   `;
-  const inp = cont.querySelector('.nc-nombre');
-  if(inp) setTimeout(() => inp.focus(), 50);
+}
+
+// Agrega una del catálogo con su color y palabras clave
+async function usarSugerida(id, contenedorId, selectId){
+  const base = CAT_SUGERIDAS.find(k => k.id === id);
+  if(!base) return;
+  if(!CAT_MIAS.some(k => k.id === base.id)){
+    if(CAT_MIAS.length >= MAX_CATS) return;
+    CAT_MIAS.push({ id:base.id, label:base.label, color:base.color, palabras:base.palabras.slice() });
+    await markChanged();
+  }
+  aplicarCategoriaNueva(base.id, contenedorId, selectId);
+}
+
+// Deja elegida la categoría recién agregada, donde sea que se esté usando
+function aplicarCategoriaNueva(id, contenedorId, selectId){
+  const cont = document.getElementById(contenedorId);
+  const sel = document.getElementById(selectId);
+  if(sel) sel.innerHTML = typeOptions(id);
+  if(cont) cont.innerHTML = '';
+  renderLegend();
+  renderVista();
+  renderCatList();
+  // Si viene de la vista previa del agente, se aplica a esos eventos
+  if(selectId === 'prevType' && pendingEvents.length){
+    pendingEvents = pendingEvents.map(ev => ({ ...ev, type:id }));
+    showPreview(pendingEvents);
+  }
 }
 
 async function crearCategoria(contenedorId, selectId){
@@ -2318,14 +2440,13 @@ async function crearCategoria(contenedorId, selectId){
     label: nombre,
     color: safeColor(colorElegido),
   };
+  if(CAT_MIAS.length >= MAX_CATS){
+    cont.innerHTML = '<div class="agent-msg err">Ya tienes el máximo de categorías.</div>';
+    return;
+  }
   CAT_MIAS.push(nueva);
   await markChanged();
-
-  // se recargan las opciones y queda elegida la nueva
-  sel.innerHTML = typeOptions(nueva.id);
-  cont.innerHTML = '';
-  renderLegend();
-  renderMonths();
+  aplicarCategoriaNueva(nueva.id, contenedorId, selectId);
 }
 
 async function borrarCategoria(id){
@@ -2712,10 +2833,16 @@ function detectType(text){
   // Las frases de fecha no deben confundirse con palabras clave:
   // "a finales de septiembre" no es un examen final.
   t = t.replace(/(?:principios|inicios?|comienzos|mediados|finales|fines|fin)\s+de(?:l)?\s+(?:mes\s+de\s+)?[a-z]+/g, ' ');
-  // Si menciona una categoría tuya por su nombre, gana esa
+  // Si menciona una categoría tuya por su nombre o por una de sus
+  // palabras clave, gana esa
   for(const k of CAT_MIAS){
     const n = normalize(k.label);
     if(n.length >= 3 && t.includes(n)) return k.id;
+    if(Array.isArray(k.palabras)){
+      for(const w of k.palabras){
+        if(w.length >= 3 && t.includes(normalize(w))) return k.id;
+      }
+    }
   }
   if(/\bexamen|\bexamenes|\bparcial|\bfinal(?:es)?\b|\bquiz\b|\bprueba|\bevaluacion|\bextraordinario|\bordinario\b|\bteorico\b|\bpractico\b|\bsegundo\s+parcial|\bprimer\s+parcial/.test(t)) return 'examen';
   if(/\bentrega|\btarea|\bproyecto|\blamina|\bmaqueta|\breporte|\bensayo|\bavance|\bpractica|\bexposicion|\bpresentacion|\bportafolio|\brender|\bplano|\bcroquis|\bboceto|\binvestigacion|\bresumen|\bmapa\s+conceptual|\bcuestionario|\btrabajo\b|\bdeber\b|\bactividad|\bbitacora|\bmemoria\b|\banteproyecto/.test(t)) return 'entrega';
@@ -2850,13 +2977,67 @@ function monthBounds(mo, a){
   return [ toISO(y, mo, 1), toISO(y, mo, daysInMonth(y, mo)) ];
 }
 
+// Busca una categoría dicha a propósito: "como examen", "tipo gym",
+// "categoría trabajo", "en la categoría salud", o "#gym".
+// Nombre de categoría que pidió el usuario y todavía no existe
+let ultimaCatPedida = null;
+
+// Busca una categoría por su nombre O por una de sus palabras clave
+function buscarCategoria(nombre){
+  const n = normalize(nombre).trim();
+  if(n.length < 2) return null;
+  return categorias().find(k => {
+    const l = normalize(k.label);
+    if(l === n || raiz(l) === raiz(n)) return true;
+    if(Array.isArray(k.palabras)){
+      return k.palabras.some(w => {
+        const p = normalize(w);
+        return p === n || raiz(p) === raiz(n);
+      });
+    }
+    return false;
+  }) || null;
+}
+
+function categoriaExplicita(t){
+  // Las tres primeras son marcas inequívocas: aunque la categoría no
+  // exista, el texto se quita del título y se ofrece crearla.
+  const patrones = [
+    { rx:/(?:en\s+la\s+|de\s+la\s+)?categoria\s+(?:de\s+)?([a-z0-9ñ ]{2,24})/, firme:true },
+    { rx:/\btipo\s+(?:de\s+)?([a-z0-9ñ ]{2,24})/, firme:true },
+    { rx:/#([a-z0-9ñ]{2,24})/, firme:true },
+    { rx:/\bcomo\s+([a-z0-9ñ ]{2,24})/, firme:false },
+  ];
+  for(const { rx, firme } of patrones){
+    const m = t.match(rx);
+    if(!m) continue;
+    const bruto = m[1].trim();
+    const intentos = [bruto].concat(bruto.split(/\s+/));
+    for(const cand of intentos){
+      const k = buscarCategoria(cand);
+      if(k){
+        const pos = m[0].indexOf(cand);
+        const frag = pos >= 0 ? m[0].slice(0, pos + cand.length) : m[0];
+        return { id:k.id, frag, pedida:null };
+      }
+    }
+    // Marca firme pero categoría inexistente: se limpia y se ofrece crearla
+    if(firme) return { id:null, frag:m[0], pedida:bruto };
+  }
+  return null;
+}
+
 function localParse(text){
   let raw = text.trim();
   let t = normalize(raw);
   [raw, t] = numerosALetra(raw, t);
 
-  const type = detectType(raw);
+  // ¿Dijo la categoría a propósito? "como examen", "categoría gym", "#gym"
+  const explicita = categoriaExplicita(t);
+  ultimaCatPedida = (explicita && explicita.pedida) ? explicita.pedida : null;
+  const type = (explicita && explicita.id) ? explicita.id : detectType(raw);
   const removals = [];
+  if(explicita) removals.push(flexRx(explicita.frag));
 
   // Año por omisión: el que se está viendo
   const anio = ANIO;
@@ -3280,21 +3461,61 @@ function shortDate(iso){
   return `${d.getDate()} ${MONTHS_ES[d.getMonth()].slice(0,3)}`;
 }
 
+// Cambia la categoría de todo lo que se va a agregar
+function cambiarTipoPreview(v){
+  if(v === '__nueva__'){
+    checkNueva({ value:'__nueva__', id:'prevType' }, 'prevNueva');
+    return;
+  }
+  const t = safeType(v);
+  pendingEvents = pendingEvents.map(ev => ({ ...ev, type:t }));
+  showPreview(pendingEvents);
+}
+
+// Crea la categoría que nombraste y no existía
+async function crearPedida(){
+  const nombre = limpiarTexto(ultimaCatPedida || '', MAX_ETIQUETA);
+  if(!nombre || CAT_MIAS.length >= MAX_CATS) return;
+  const nueva = {
+    id: 'c_' + Date.now().toString(36),
+    label: nombre.charAt(0).toUpperCase() + nombre.slice(1),
+    color: PALETA[CAT_MIAS.length % PALETA.length],
+    palabras: [normalize(nombre)],
+  };
+  CAT_MIAS.push(nueva);
+  ultimaCatPedida = null;
+  await markChanged();
+  renderLegend();
+  renderVista();
+  renderCatList();
+  pendingEvents = pendingEvents.map(ev => ({ ...ev, type:nueva.id }));
+  showPreview(pendingEvents);
+}
+
 function showPreview(list){
   pendingEvents = list;
   const shown = list.slice(0, 6);
   const rows = shown.map(ev => `
     <div class="prev-row">
-      <i class="dot" style="background:${catColor(ev.type)}"></i>
+      <i class="dot" style="background:${safeColor(catColor(ev.type))}"></i>
       <span class="when">${shortDate(ev.date)}</span>
       <span>${esc(ev.title)}</span>
     </div>
   `).join('');
   const extra = list.length > 6 ? `<div class="agent-msg">…y ${list.length - 6} más</div>` : '';
+  const tipoActual = list[0] ? safeType(list[0].type) : 'otro';
+  const pedirCat = (ultimaCatPedida && !buscarCategoria(ultimaCatPedida)) ? ultimaCatPedida : null;
+
   agentSetResult(`
     <div class="prev-card">
       <div class="prev-head">Se va a agregar ${list.length === 1 ? '1 evento' : list.length + ' eventos'}</div>
       ${rows}${extra}
+      <div class="prev-cat">
+        <span class="prev-cat-lbl">Categoría</span>
+        <select id="prevType" onchange="cambiarTipoPreview(this.value)">${typeOptions(tipoActual)}</select>
+      </div>
+      ${pedirCat ? `<button class="btn crear-pedida" onclick="crearPedida()">＋ Crear la categoría «${esc(pedirCat)}»</button>` : ''}
+      <div id="prevNueva"></div>
       <div class="prev-actions">
         <button class="btn" onclick="cancelAdd()">Cancelar</button>
         <button class="btn primary" onclick="confirmAdd()">Agregar</button>
@@ -3492,6 +3713,7 @@ function tipoDePregunta(t){
   for(const k of CAT_MIAS){
     const n = normalize(k.label);
     if(n.length >= 3 && t.includes(n)) return k.id;
+    if(Array.isArray(k.palabras) && k.palabras.some(w => w.length >= 3 && t.includes(normalize(w)))) return k.id;
   }
   // Raíces, para que también entienda "entrego", "entregas", "entregar"
   if(/vacacion|viaj|puente|descans|feriad|asuet|festiv|salid/.test(t)) return 'vacacion';
