@@ -197,11 +197,43 @@
   .legend{
     display:flex;
     flex-wrap:wrap;
-    gap:14px;
+    gap:7px;
+  }
+  .legend-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:var(--font-body);
     font-size:0.76rem;
     color:var(--ink-soft);
+    background:var(--paper-card);
+    border:1px solid var(--line-soft);
+    border-radius:20px;
+    padding:5px 11px;
+    cursor:pointer;
+    transition:opacity 0.15s ease, border-color 0.15s ease;
+    -webkit-tap-highlight-color:transparent;
   }
-  .legend-item{display:flex;align-items:center;gap:6px;}
+  .legend-item b{
+    font-family:var(--font-mono);
+    font-size:0.66rem;
+    font-weight:500;
+    color:var(--ink-soft);
+    opacity:0.75;
+  }
+  .legend-item:active{transform:scale(0.96);}
+  .legend-item.activo{
+    border-color:var(--accent);
+    color:var(--ink);
+    background:var(--accent-soft);
+  }
+  .legend-item.activo b{color:var(--accent);}
+  .legend-item.apagado{opacity:0.4;}
+  .legend-item.limpiar{
+    border-style:dashed;
+    border-color:var(--accent);
+    color:var(--accent);
+  }
   .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;}
 
 
@@ -1031,6 +1063,7 @@
     <div class="progress" id="progress"></div>
 
     <div class="sel-hint" id="selHint"></div>
+    <div class="sel-hint" id="filtroVacio">Con ese filtro no hay nada aquí. Toca «Ver todo» para quitarlo.</div>
 
     <div class="legend">
 
@@ -1993,7 +2026,7 @@ async function deleteEvent(id){
 // ---------- Agrupar eventos por fecha ----------
 function eventsByDate(){
   const map = {};
-  EVENTS.forEach(ev => {
+  eventosVisibles().forEach(ev => {
     if(!map[ev.date]) map[ev.date] = [];
     map[ev.date].push(ev);
   });
@@ -2017,7 +2050,7 @@ function renderTimeline(){
   el.innerHTML = html;
 
   // Ticks de eventos de este año
-  EVENTS.filter(ev => +ev.date.slice(0,4) === ANIO).forEach(ev => {
+  eventosVisibles().filter(ev => +ev.date.slice(0,4) === ANIO).forEach(ev => {
     const pct = pctFor(parseISO(ev.date));
     const tick = document.createElement('div');
     tick.className = 'tl-tick';
@@ -2049,7 +2082,7 @@ function renderNextEvent(){
     return;
   }
 
-  const upcoming = EVENTS
+  const upcoming = eventosVisibles()
     .filter(ev => ev.date >= tISO && !COMPLETED.has(evId(ev)))
     .sort((a,b) => a.date.localeCompare(b.date));
 
@@ -2067,9 +2100,10 @@ function renderNextEvent(){
 // ---------- Contador de progreso ----------
 function renderProgress(){
   const el = document.getElementById('progress');
-  if(EVENTS.length === 0){ el.textContent = ''; return; }
-  const done = EVENTS.filter(ev => COMPLETED.has(evId(ev))).length;
-  el.innerHTML = `Completados: <b>${done}</b> / ${EVENTS.length}`;
+  const vis = eventosVisibles();
+  if(vis.length === 0){ el.textContent = ''; return; }
+  const done = vis.filter(ev => COMPLETED.has(evId(ev))).length;
+  el.innerHTML = `Completados: <b>${done}</b> / ${vis.length}`;
 }
 
 // ---------- Meses ----------
@@ -2296,6 +2330,7 @@ async function crearCategoria(contenedorId, selectId){
 
 async function borrarCategoria(id){
   CAT_MIAS = CAT_MIAS.filter(k => k.id !== id);
+  filtros.delete(id);
   // los eventos que la usaban pasan a "Otro"
   USER_EVENTS.forEach(ev => { if(ev.type === id) ev.type = 'otro'; });
   rebuildEvents();
@@ -2306,13 +2341,51 @@ async function borrarCategoria(id){
   await markChanged();
 }
 
-// ---------- Leyenda dinámica ----------
+// ══════════════════════════════════════════════════════════════
+// FILTROS POR CATEGORÍA
+// Vacío = se ve todo. Con una o más, solo esas.
+// Es un filtro de vista: no borra nada y se reinicia al recargar.
+// ══════════════════════════════════════════════════════════════
+let filtros = new Set();
+
+// Lo que el calendario debe dibujar en este momento
+function eventosVisibles(){
+  if(filtros.size === 0) return EVENTS;
+  return EVENTS.filter(ev => filtros.has(ev.type));
+}
+
+function toggleFiltro(id){
+  if(filtros.has(id)) filtros.delete(id);
+  else filtros.add(id);
+  renderLegend();
+  renderVista();
+}
+
+function limpiarFiltros(){
+  filtros.clear();
+  renderLegend();
+  renderVista();
+}
+
+// ---------- Leyenda: es también el filtro ----------
 function renderLegend(){
   const el = document.querySelector('.legend');
   if(!el) return;
-  el.innerHTML = categorias().map(k =>
-    `<span class="legend-item"><i class="dot" style="background:${safeColor(k.color)}"></i>${esc(k.label)}</span>`
-  ).join('');
+  const hayFiltro = filtros.size > 0;
+
+  let html = categorias().map(k => {
+    const activo = filtros.has(k.id);
+    const clases = 'legend-item' + (activo ? ' activo' : (hayFiltro ? ' apagado' : ''));
+    const n = EVENTS.filter(ev => ev.type === k.id).length;
+    return `<button class="${clases}" onclick="toggleFiltro('${k.id}')" aria-pressed="${activo}">
+      <i class="dot" style="background:${safeColor(k.color)}"></i>${esc(k.label)}${n ? ` <b>${n}</b>` : ''}
+    </button>`;
+  }).join('');
+
+  if(hayFiltro){
+    html += `<button class="legend-item limpiar" onclick="limpiarFiltros()">Ver todo ✕</button>`;
+  }
+  el.innerHTML = html;
 }
 
 // ---------- Lista de categorías en Opciones ----------
@@ -2340,7 +2413,7 @@ function renderYears(){
   if(!el) return;
 
   const porAnio = {};
-  EVENTS.forEach(ev => {
+  eventosVisibles().forEach(ev => {
     const y = +ev.date.slice(0,4);
     const mo = +ev.date.slice(5,7);
     if(!porAnio[y]) porAnio[y] = { total:0, meses:new Array(12).fill(0), color:{} };
@@ -2405,6 +2478,13 @@ function renderVista(){
   }else{
     renderYears();
   }
+
+  // Si el filtro deja el año sin nada, decirlo en vez de mostrar vacío
+  const aviso = document.getElementById('filtroVacio');
+  const hayEnVista = enAnio
+    ? eventosVisibles().some(ev => +ev.date.slice(0,4) === ANIO)
+    : eventosVisibles().length > 0;
+  if(aviso) aviso.className = (filtros.size > 0 && !hayEnVista) ? 'sel-hint show' : 'sel-hint';
   renderNextEvent();
   renderProgress();
 }
