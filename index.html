@@ -1172,6 +1172,7 @@
     <button class="ex-chip">Prácticas de lunes a viernes de septiembre</button>
     <button class="ex-chip">Quítame creatina todos los días</button>
     <button class="ex-chip">Cambia los partidos de fútbol a Deporte</button>
+    <button class="ex-chip">Partidos fútbol en categoría Deporte</button>
     <button class="ex-chip">Viaje a Orlando de diciembre 23 a enero 8</button>
     <button class="ex-chip">¿Qué entrego la próxima semana?</button>
     <button class="ex-chip">¿Cuáles son mis vacaciones próximas?</button>
@@ -3933,31 +3934,47 @@ function intentoCambiar(text){
   const t = normalize(text).trim();
   const tokens = t.split(/\s+/);
 
-  // El verbo debe ser la primera palabra con contenido
+  // Marcador firme de categoría al final de la frase
+  const RX_DESTINO_FIRME = /\s*(?:(?:en|a|al|para|como|de|hacia)\s+)?(?:la\s+|el\s+)?categoria\s+(?:de\s+)?([a-z0-9ñ ]{2,24})$|\s*#([a-z0-9ñ]{2,24})$/;
+
+  // ── Caso A: viene con verbo ("cambia … a deportes") ──
   let i = 0;
   while(i < tokens.length && i < 4 && RELLENO.has(tokens[i]) && !VERBOS_CAMBIAR.includes(tokens[i])) i++;
-  if(i >= tokens.length || !VERBOS_CAMBIAR.includes(tokens[i])) return { es:false };
+  const conVerbo = i < tokens.length && VERBOS_CAMBIAR.includes(tokens[i]);
 
-  const partes = text.trim().split(/\s+/);
-  const resto0 = partes.slice(i + 1).join(' ');
-  const r = normalize(resto0);
+  if(conVerbo){
+    const partes = text.trim().split(/\s+/);
+    const resto0 = partes.slice(i + 1).join(' ');
+    const r = normalize(resto0);
+    const m = r.match(/\s(?:a|hacia|para|como|en)\s+(?:la\s+|el\s+)?(?:categoria\s+(?:de\s+)?)?([a-z0-9ñ ]{2,24})$/);
+    if(!m) return { es:false };
 
-  // El destino va al final: "… a deportes", "… a la categoría salud"
-  const m = r.match(/\s(?:a|hacia|para|como|en)\s+(?:la\s+|el\s+)?(?:categoria\s+(?:de\s+)?)?([a-z0-9ñ ]{2,24})$/);
-  if(!m) return { es:false };
+    const nombreDestino = m[1].trim();
+    const cat = buscarCategoria(nombreDestino);
+    const destino = cat ? cat.id : null;
+    if(!destino && !/categoria/.test(r)) return { es:false };
 
-  const nombreDestino = m[1].trim();
+    const corte = r.lastIndexOf(m[0]);
+    const resto = corte > 0 ? resto0.slice(0, corte) : resto0;
+    return { es:true, resto, destino, nombreDestino };
+  }
+
+  // ── Caso B: sin verbo ("Partidos futbol en categoría deportes") ──
+  // Solo cuenta si nombra la categoría de forma inequívoca Y no hay
+  // ninguna fecha: sin fecha no se podría agregar nada, así que lo
+  // que quiere es reclasificar lo que ya existe.
+  const mb = t.match(RX_DESTINO_FIRME);
+  if(!mb) return { es:false };
+  if(localParse(text).length > 0) return { es:false };
+
+  const nombreDestino = (mb[1] || mb[2] || '').trim();
+  if(!nombreDestino) return { es:false };
   const cat = buscarCategoria(nombreDestino);
   const destino = cat ? cat.id : null;
-  const mencionaCategoria = /categoria/.test(r);
 
-  // Sin categoría existente y sin la palabra "categoría", no es un cambio
-  // (puede ser "cambia la fecha del examen al 20 de octubre")
-  if(!destino && !mencionaCategoria) return { es:false };
-
-  // Lo que queda antes del destino es la búsqueda
-  const corte = r.lastIndexOf(m[0]);
-  const resto = corte > 0 ? resto0.slice(0, corte) : resto0;
+  const corte = t.lastIndexOf(mb[0]);
+  const resto = corte > 0 ? text.trim().slice(0, corte) : '';
+  if(!resto.trim()) return { es:false };
 
   return { es:true, resto, destino, nombreDestino };
 }
@@ -4129,7 +4146,13 @@ async function agentSubmit(){
   sendBtn.disabled = false;
 
   if(!list || list.length === 0){
-    agentSetResult('<div class="agent-msg err">No encontré una fecha clara. Intenta algo como “examen de estructuras el 15 de octubre”.</div>');
+    agentSetResult(`
+      <div class="agent-msg err">No encontré una fecha.</div>
+      <div class="agent-msg">Para <b>agregar</b>: “examen de estructuras el 15 de octubre”.<br>
+      Para <b>cambiar de categoría</b>: “cambia los partidos de fútbol a deporte”.<br>
+      Para <b>quitar</b>: “quítame la creatina”.<br>
+      Para <b>preguntar</b>: “¿qué entrego la próxima semana?”.</div>
+    `);
     return;
   }
   const valid = list.filter(ev => ev && /^\d{4}-\d{2}-\d{2}$/.test(ev.date) && clampToSemester(ev.date));
