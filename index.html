@@ -1061,6 +1061,12 @@
     color:var(--ink-soft);
     text-decoration:line-through;
   }
+  .prev-row .flecha{
+    font-family:var(--font-mono);
+    font-size:0.75rem;
+    color:var(--ink-soft);
+    flex:none;
+  }
   .prev-actions{display:flex;gap:8px;margin-top:10px;}
   .btn{
     font-family:var(--font-body);
@@ -1165,6 +1171,7 @@
     <button class="ex-chip">Tomar creatina todos los días</button>
     <button class="ex-chip">Prácticas de lunes a viernes de septiembre</button>
     <button class="ex-chip">Quítame creatina todos los días</button>
+    <button class="ex-chip">Cambia los partidos de fútbol a Deporte</button>
     <button class="ex-chip">Viaje a Orlando de diciembre 23 a enero 8</button>
     <button class="ex-chip">¿Qué entrego la próxima semana?</button>
     <button class="ex-chip">¿Cuáles son mis vacaciones próximas?</button>
@@ -3573,9 +3580,13 @@ function intentoBorrar(text){
 }
 
 // Reduce plural y acentos para comparar palabras
+// Reduce una palabra a su raíz para comparar sin importar el plural.
+// Se aplica en dos pasos para que "deportes" y "deporte" coincidan.
 function raiz(w){
-  const n = normalize(w).replace(/[^a-z0-9]/g,'');
-  return n.length > 3 ? n.replace(/(es|s)$/,'') : n;
+  let n = normalize(w).replace(/[^a-z0-9]/g,'');
+  if(n.length > 4) n = n.replace(/(es|s)$/,'');
+  if(n.length > 4) n = n.replace(/e$/,'');
+  return n;
 }
 function palabrasClave(txt){
   return normalize(txt).split(/\s+/)
@@ -3585,13 +3596,16 @@ function palabrasClave(txt){
 }
 
 // ¿El título del evento coincide con lo que pidió el usuario?
+// Tolerante: basta con que compartan la mitad de las palabras
+// importantes, para que "el futbol de otros" encuentre "Partido de fútbol".
 function coincideTitulo(tituloEvento, consulta){
   const a = palabrasClave(tituloEvento);
   const b = palabrasClave(consulta);
   if(!a.length || !b.length) return false;
-  const enA = w => a.includes(w);
-  const enB = w => b.includes(w);
-  return b.every(enA) || a.every(enB);
+  if(b.every(w => a.includes(w)) || a.every(w => b.includes(w))) return true;
+  const comunes = b.filter(w => a.includes(w)).length;
+  if(comunes === 0) return false;
+  return comunes / Math.min(a.length, b.length) >= 0.5;
 }
 
 // Si solo se menciona un mes (sin día), el alcance es el mes completo
@@ -3608,8 +3622,29 @@ function mesCompleto(resto){
   return datesBetween(ini, fin);
 }
 
+// "…de la categoría otros", "…que están en otros"
+// Solo con marcas explícitas, para no confundir "partido DE futbol".
+function origenCategoria(resto){
+  const t = normalize(resto);
+  const patrones = [
+    /(?:de|desde)\s+(?:la\s+)?categoria\s+(?:de\s+)?([a-z0-9ñ ]{2,24})/,
+    /que\s+estan?\s+en\s+(?:la\s+categoria\s+(?:de\s+)?)?([a-z0-9ñ ]{2,24})/,
+    /\bde\s+(otros?)\b/,
+  ];
+  for(const rx of patrones){
+    const m = t.match(rx);
+    if(!m) continue;
+    const bruto = m[1].trim();
+    for(const cand of [bruto].concat(bruto.split(/\s+/))){
+      const k = buscarCategoria(cand);
+      if(k) return { id:k.id, frag:m[0] };
+    }
+  }
+  return null;
+}
+
 // Busca en el calendario lo que hay que quitar
-function buscarParaBorrar(objetivo, resto){
+function buscarEventos(objetivo, resto){
   let fechas = null;
   let consulta = null;
 
@@ -3624,14 +3659,19 @@ function buscarParaBorrar(objetivo, resto){
     consulta = cleanTitle(resto, []);
   }
 
+  // ¿Acotó por categoría de origen?
+  const origen = origenCategoria(resto);
+  if(origen && consulta) consulta = cleanTitle(consulta, [flexRx(origen.frag)]);
+
   if(consulta && COMODINES.has(normalize(consulta).trim())) consulta = null;
   if(consulta === 'Evento') consulta = null;
 
-  // Demasiado vago: ni fecha ni nombre
-  if(!fechas && !consulta) return { lista: [], vago: true };
+  // Demasiado vago: ni fecha, ni nombre, ni categoría
+  if(!fechas && !consulta && !origen) return { lista: [], vago: true };
 
   const lista = EVENTS.filter(ev =>
     (!fechas || fechas.has(ev.date)) &&
+    (!origen || ev.type === origen.id) &&
     (!consulta || coincideTitulo(ev.title, consulta))
   );
   return { lista, vago: false };
@@ -3874,6 +3914,123 @@ function mostrarRespuesta(res){
   `);
 }
 
+// ══════════════════════════════════════════════════════════════
+// CAMBIAR DE CATEGORÍA CON EL AGENTE
+// "cambia todos los de futbol a la categoría deportes"
+// "mueve el gym a salud", "pasa las creatinas a personal"
+// ══════════════════════════════════════════════════════════════
+const VERBOS_CAMBIAR = [
+  'cambia','cambiar','cambiame','cámbiame','cambialos','cámbialos','cambiale','cámbiale',
+  'mueve','mover','muevelos','muévelos','muevelo','muévelo',
+  'pasa','pasar','pasalos','pásalos','pasame','pásame','pasalo','páselo',
+  'convierte','convertir','reclasifica','reasigna','manda','ponles','ponle',
+];
+
+let pendingCambio = null;
+
+// ¿Pide cambiar de categoría? Devuelve el qué y el a-dónde.
+function intentoCambiar(text){
+  const t = normalize(text).trim();
+  const tokens = t.split(/\s+/);
+
+  // El verbo debe ser la primera palabra con contenido
+  let i = 0;
+  while(i < tokens.length && i < 4 && RELLENO.has(tokens[i]) && !VERBOS_CAMBIAR.includes(tokens[i])) i++;
+  if(i >= tokens.length || !VERBOS_CAMBIAR.includes(tokens[i])) return { es:false };
+
+  const partes = text.trim().split(/\s+/);
+  const resto0 = partes.slice(i + 1).join(' ');
+  const r = normalize(resto0);
+
+  // El destino va al final: "… a deportes", "… a la categoría salud"
+  const m = r.match(/\s(?:a|hacia|para|como|en)\s+(?:la\s+|el\s+)?(?:categoria\s+(?:de\s+)?)?([a-z0-9ñ ]{2,24})$/);
+  if(!m) return { es:false };
+
+  const nombreDestino = m[1].trim();
+  const cat = buscarCategoria(nombreDestino);
+  const destino = cat ? cat.id : null;
+  const mencionaCategoria = /categoria/.test(r);
+
+  // Sin categoría existente y sin la palabra "categoría", no es un cambio
+  // (puede ser "cambia la fecha del examen al 20 de octubre")
+  if(!destino && !mencionaCategoria) return { es:false };
+
+  // Lo que queda antes del destino es la búsqueda
+  const corte = r.lastIndexOf(m[0]);
+  const resto = corte > 0 ? resto0.slice(0, corte) : resto0;
+
+  return { es:true, resto, destino, nombreDestino };
+}
+
+function showPreviewCambio(lista, destino){
+  pendingCambio = { lista, destino };
+  const shown = lista.slice(0, 6);
+  const rows = shown.map(ev => `
+    <div class="prev-row">
+      <i class="dot" style="background:${safeColor(catColor(ev.type))}"></i>
+      <span class="flecha">→</span>
+      <i class="dot" style="background:${safeColor(catColor(destino))}"></i>
+      <span class="when">${shortDate(ev.date)}</span>
+      <span>${esc(ev.title)}</span>
+    </div>
+  `).join('');
+  const extra = lista.length > 6 ? `<div class="agent-msg">…y ${lista.length - 6} más</div>` : '';
+  agentSetResult(`
+    <div class="prev-card">
+      <div class="prev-head">Pasar ${lista.length === 1 ? '1 evento' : lista.length + ' eventos'} a «${esc(catLabel(destino))}»</div>
+      ${rows}${extra}
+      <div class="prev-actions">
+        <button class="btn" onclick="cancelarCambio()">Cancelar</button>
+        <button class="btn primary" onclick="confirmarCambio()">Cambiar</button>
+      </div>
+    </div>
+  `);
+}
+
+function cancelarCambio(){
+  pendingCambio = null;
+  agentSetResult('');
+}
+
+async function confirmarCambio(){
+  if(!pendingCambio) return;
+  const { lista, destino } = pendingCambio;
+  const n = lista.length;
+
+  lista.forEach(ev => {
+    const id = evId(ev);
+    const u = USER_EVENTS.find(x => evId(x) === id);
+    if(u) u.type = destino;
+    else USER_EVENTS.push({ date:ev.date, title:ev.title, type:destino, rem:safeRem(ev.rem) });
+  });
+
+  pendingCambio = null;
+  rebuildEvents();
+  renderLegend();
+  renderVista();
+  await markChanged();
+  agentSetResult(`<div class="agent-msg ok">Listo — ${n === 1 ? '1 evento pasó' : n + ' eventos pasaron'} a «${esc(catLabel(destino))}».</div>`);
+  document.getElementById('agentInput').value = '';
+}
+
+// Crea la categoría del cambio cuando no existía, y aplica
+async function crearYCambiar(nombre, ids){
+  const limpio = limpiarTexto(nombre, MAX_ETIQUETA);
+  if(!limpio || CAT_MIAS.length >= MAX_CATS) return;
+  const nueva = {
+    id: 'c_' + Date.now().toString(36),
+    label: limpio.charAt(0).toUpperCase() + limpio.slice(1),
+    color: PALETA[CAT_MIAS.length % PALETA.length],
+    palabras: [normalize(limpio)],
+  };
+  CAT_MIAS.push(nueva);
+  await markChanged();
+  renderLegend();
+  renderCatList();
+  const lista = EVENTS.filter(ev => ids.includes(evId(ev)));
+  showPreviewCambio(lista, nueva.id);
+}
+
 // ---------- Interpretación compartida (IA o lector local) ----------
 async function interpretar(texto){
   let list = null;
@@ -3901,13 +4058,44 @@ async function agentSubmit(){
     return;
   }
 
+  // ── Camino de cambio de categoría ──
+  const cambio = intentoCambiar(text);
+  if(cambio.es){
+    let objetivo = [];
+    if(cambio.resto.trim()) objetivo = await interpretar(cambio.resto);
+    const { lista, vago } = buscarEventos(objetivo, cambio.resto);
+    sendBtn.disabled = false;
+
+    if(vago){
+      agentSetResult('<div class="agent-msg err">Dime qué quieres cambiar. Por ejemplo “cambia los partidos de fútbol a deportes”.</div>');
+      return;
+    }
+    if(lista.length === 0){
+      agentSetResult('<div class="agent-msg err">No encontré nada que coincida en tu calendario.</div>');
+      return;
+    }
+    if(!cambio.destino){
+      const ids = JSON.stringify(lista.map(evId)).replace(/"/g,'&quot;');
+      agentSetResult(`
+        <div class="agent-msg">Encontré ${lista.length} evento(s), pero la categoría «${esc(cambio.nombreDestino)}» no existe todavía.</div>
+        <button class="btn primary" style="width:100%;margin-top:8px"
+          onclick='crearYCambiar(${JSON.stringify(cambio.nombreDestino)}, ${JSON.stringify(lista.map(evId))})'>
+          ＋ Crearla y mover los eventos
+        </button>
+      `);
+      return;
+    }
+    showPreviewCambio(lista, cambio.destino);
+    return;
+  }
+
   const intento = intentoBorrar(text);
 
   // ── Camino de borrado ──
   if(intento.es){
     let objetivo = [];
     if(intento.resto.trim()) objetivo = await interpretar(intento.resto);
-    const { lista, vago } = buscarParaBorrar(objetivo, intento.resto);
+    const { lista, vago } = buscarEventos(objetivo, intento.resto);
     sendBtn.disabled = false;
 
     if(vago){
@@ -3965,6 +4153,7 @@ function closeAgent(){
   document.getElementById('agentOverlay').classList.remove('open');
   cancelAdd();
   pendingDelete = [];
+  pendingCambio = null;
 }
 
 document.getElementById('fab').addEventListener('click', openAgent);
