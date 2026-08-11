@@ -612,6 +612,64 @@
   }
   .progress b{color:var(--accent);font-weight:600;}
 
+  /* ---------- Barra fija ---------- */
+  .barra{
+    position:sticky;
+    top:0;
+    z-index:8;
+    background:var(--paper);
+    padding:9px 0 10px;
+    margin-bottom:14px;
+    border-bottom:1px solid transparent;
+    transition:border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  /* Al despegarse del encabezado se marca con una línea */
+  .barra.pegada{
+    border-bottom-color:var(--line);
+    box-shadow:0 4px 12px -8px var(--sombra);
+  }
+  .barra-top{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    margin-bottom:9px;
+  }
+  .barra-anio{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.05rem;
+    color:var(--ink);
+    letter-spacing:-0.01em;
+  }
+  .barra-mes{
+    font-family:var(--font-mono);
+    font-size:0.68rem;
+    letter-spacing:0.07em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    flex:1;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+  .barra .icon-btn{width:32px;height:32px;flex:none;}
+  .barra .icon-btn svg{width:16px;height:16px;}
+  .barra-hoy{
+    width:auto !important;
+    padding:0 11px;
+    font-family:var(--font-body);
+    font-size:0.74rem;
+    font-weight:600;
+    color:var(--accent);
+    border-color:var(--accent);
+  }
+  .barra .legend{margin:0;}
+  /* En la vista de años sobran el botón de volver y el de rango */
+  .barra.en-anios .barra-back,
+  .barra.en-anios .barra-sel,
+  .barra.en-anios .barra-mes,
+  .barra.en-anios .barra-hoy{display:none;}
+
   /* ---------- Cuadrícula de años ---------- */
   #years{
     display:grid;
@@ -1119,12 +1177,6 @@
         <h1 id="tituloPrincipal">Calendario <span class="year">2026–2050</span></h1>
       </div>
       <div class="head-btns">
-        <button class="icon-btn" id="backBtn" aria-label="Volver a los años" style="display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <button class="icon-btn" id="selBtn" aria-label="Seleccionar varios días">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2" stroke-dasharray="3 2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
-        </button>
         <button class="icon-btn" id="optsBtn" aria-label="Opciones">
           <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
         </button>
@@ -1137,11 +1189,24 @@
 
     <div class="sel-hint" id="selHint"></div>
     <div class="sel-hint" id="filtroVacio">Con ese filtro no hay nada aquí. Toca «Ver todo» para quitarlo.</div>
-
-    <div class="legend">
-
-    </div>
   </header>
+
+  <!-- Se pega arriba al bajar, para tener siempre a la mano
+       el botón de volver y los filtros -->
+  <div class="barra" id="barra">
+    <div class="barra-top">
+      <button class="icon-btn barra-back" id="backBtn2" aria-label="Volver a los años">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="barra-anio" id="barraAnio">2026</span>
+      <span class="barra-mes" id="barraMes"></span>
+      <button class="icon-btn barra-sel" id="selBtn2" aria-label="Seleccionar varios días">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2" stroke-dasharray="3 2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+      </button>
+      <button class="icon-btn barra-hoy" id="hoyBtn" aria-label="Ir a hoy">Hoy</button>
+    </div>
+    <div class="legend"></div>
+  </div>
 
   <main id="years"></main>
   <main id="months" style="display:none"></main>
@@ -2290,7 +2355,7 @@ function selHint(txt){
 function toggleSelectMode(){
   selectMode = !selectMode;
   rangeStart = rangeEnd = null;
-  document.getElementById('selBtn').classList.toggle('active', selectMode);
+  document.getElementById('selBtn2').classList.toggle('active', selectMode);
   document.body.classList.toggle('selecting', selectMode);
   selHint(selectMode ? 'Toca el día en que empieza.' : '');
   renderMonths();
@@ -2351,14 +2416,15 @@ async function guardarRango(){
   cerrarRango();
   rangeStart = rangeEnd = null;
   selectMode = false;
-  document.getElementById('selBtn').classList.remove('active');
+  document.getElementById('selBtn2').classList.remove('active');
   document.body.classList.remove('selecting');
   selHint('');
   renderMonths();
 }
 
-document.getElementById('backBtn').addEventListener('click', volverAnios);
-document.getElementById('selBtn').addEventListener('click', toggleSelectMode);
+document.getElementById('backBtn2').addEventListener('click', volverAnios);
+document.getElementById('selBtn2').addEventListener('click', toggleSelectMode);
+document.getElementById('hoyBtn').addEventListener('click', irAHoy);
 document.getElementById('rangeClose').addEventListener('click', cerrarRango);
 document.getElementById('rgCancel').addEventListener('click', cerrarRango);
 document.getElementById('rangeOverlay').addEventListener('click', cerrarRango);
@@ -2596,8 +2662,11 @@ function irAlMesDeHoy(inmediato){
   requestAnimationFrame(() => {
     const el = document.getElementById(id);
     if(!el){ window.scrollTo({ top: 0, behavior: 'instant' }); return; }
-    const y = el.getBoundingClientRect().top + window.scrollY - 12;
+    const barra = document.getElementById('barra');
+    const alto = barra ? barra.getBoundingClientRect().height : 0;
+    const y = el.getBoundingClientRect().top + window.scrollY - alto - 10;
     window.scrollTo({ top: Math.max(0, y), behavior: inmediato ? 'instant' : 'smooth' });
+    setTimeout(actualizarMesEnBarra, inmediato ? 40 : 420);
   });
 }
 
@@ -2613,9 +2682,10 @@ function renderVista(){
   const enAnio = vista === 'anio';
   document.getElementById('years').style.display = enAnio ? 'none' : '';
   document.getElementById('months').style.display = enAnio ? '' : 'none';
-  document.getElementById('backBtn').style.display = enAnio ? '' : 'none';
-  document.getElementById('selBtn').style.display = enAnio ? '' : 'none';
   document.getElementById('timeline').style.display = enAnio ? '' : 'none';
+  document.getElementById('barra').classList.toggle('en-anios', !enAnio);
+  document.getElementById('barraAnio').textContent = enAnio ? ANIO : `${ANIO_MIN}–${ANIO_MAX}`;
+  if(!enAnio) document.getElementById('barraMes').textContent = '';
 
   document.getElementById('tituloPrincipal').innerHTML = enAnio
     ? `Año <span class="year">${ANIO}</span>`
@@ -2627,6 +2697,7 @@ function renderVista(){
   if(enAnio){
     renderTimeline();
     renderMonths();
+    requestAnimationFrame(actualizarMesEnBarra);
   }else{
     renderYears();
   }
@@ -2640,6 +2711,51 @@ function renderVista(){
   renderNextEvent();
   renderProgress();
 }
+
+// ══════════════════════════════════════════════════════════════
+// BARRA FIJA — muestra el mes que estás viendo y te deja volver
+// ══════════════════════════════════════════════════════════════
+function irAHoy(){
+  const hoy = new Date();
+  const a = Math.min(Math.max(hoy.getFullYear(), ANIO_MIN), ANIO_MAX);
+  if(ANIO !== a || vista !== 'anio'){
+    ANIO = a;
+    vista = 'anio';
+    if(selectMode) toggleSelectMode();
+    renderVista();
+  }
+  irAlMesDeHoy();
+}
+
+// Escribe en la barra el mes que queda más arriba en pantalla
+let mesVisibleTick = null;
+function actualizarMesEnBarra(){
+  if(vista !== 'anio') return;
+  const barra = document.getElementById('barra');
+  const lbl = document.getElementById('barraMes');
+  if(!barra || !lbl) return;
+
+  const corte = barra.getBoundingClientRect().bottom + 8;
+  let elegido = null;
+  for(let m = 1; m <= 12; m++){
+    const el = document.getElementById(`mes-${ANIO}-${pad(m)}`);
+    if(!el) continue;
+    const r = el.getBoundingClientRect();
+    if(r.bottom > corte){ elegido = m; break; }
+  }
+  lbl.textContent = elegido ? MONTHS_ES[elegido-1] : '';
+}
+
+function onScroll(){
+  const barra = document.getElementById('barra');
+  if(barra) barra.classList.toggle('pegada', window.scrollY > 4);
+  if(mesVisibleTick) return;
+  mesVisibleTick = requestAnimationFrame(() => {
+    mesVisibleTick = null;
+    actualizarMesEnBarra();
+  });
+}
+window.addEventListener('scroll', onScroll, { passive:true });
 
 // ---------- Panel de detalle ----------
 let currentPanelDate = null;
