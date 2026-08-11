@@ -324,6 +324,22 @@
     font-size:0.7rem;
     color:var(--ink-soft);
   }
+  .cell.pintado{
+    border-radius:4px;
+    border-right-color:transparent;
+  }
+  .cell.pintado .daynum{
+    color:var(--ink);
+    font-weight:700;
+  }
+  .ev-num{
+    font-family:var(--font-mono);
+    font-size:0.6rem;
+    font-weight:600;
+    color:var(--ink);
+    opacity:0.75;
+    line-height:1;
+  }
   .cell.today{outline:2px solid var(--accent);outline-offset:-2px;border-radius:4px;z-index:1;}
   .cell.today .daynum{color:var(--accent);font-weight:700;}
   .cell.has-events{cursor:pointer;}
@@ -1448,6 +1464,14 @@ function catOf(id){
   return categorias().find(k => k.id === id) || CAT_FIJAS[3];
 }
 function catColor(id){ return catOf(id).color; }
+
+// Color de fondo suave para el recuadro del día.
+// En oscuro se necesita más intensidad para que se note.
+function tinteDia(id){
+  const base = safeColor(catColor(id));
+  const real = (temaElegido === 'auto') ? temaDelSistema() : temaElegido;
+  return base + (real === 'oscuro' ? '4D' : '38');
+}
 function catLabel(id){ return catOf(id).label; }
 
 // ══════════════════════════════════════════════════════════════
@@ -2301,20 +2325,31 @@ function buildMonthCard(y, m, byDate){
     if(isWeekend) classes += ' weekend';
     if(isToday) classes += ' today';
     if(hasEvents) classes += ' has-events';
+    const enSeleccion = selectMode && inSelection(iso);
     if(selectMode){
-      if(inSelection(iso)) classes += ' in-range';
+      if(enSeleccion) classes += ' in-range';
       if(iso === rangeStart || iso === rangeEnd) classes += ' range-edge';
     }
 
+    // Con un filtro puesto, el día se pinta del color de la categoría
+    // para encontrarlo de un vistazo. La selección de rango manda.
+    let fondo = '';
+    if(hasEvents && filtros.size > 0 && !enSeleccion){
+      classes += ' pintado';
+      fondo = ` style="background:${tinteDia(dayEvents[0].type)}"`;
+    }
+
     let dotsHtml = '';
-    if(hasEvents){
+    if(hasEvents && !(filtros.size > 0 && !enSeleccion)){
       const shown = dayEvents.slice(0,3);
       const dots = shown.map(ev => `<i class="ev-dot${COMPLETED.has(evId(ev)) ? ' done' : ''}" style="background:${catColor(ev.type)}"></i>`).join('');
       const plus = dayEvents.length > 3 ? `<span class="ev-plus">+${dayEvents.length - 3}</span>` : '';
       dotsHtml = `<span class="ev-dots">${dots}${plus}</span>`;
+    }else if(hasEvents && dayEvents.length > 1){
+      dotsHtml = `<span class="ev-num">${dayEvents.length}</span>`;
     }
 
-    cells += `<button class="${classes}" onclick="dayTap('${iso}')"><span class="daynum">${d}</span>${dotsHtml}</button>`;
+    cells += `<button class="${classes}"${fondo} onclick="dayTap('${iso}')"><span class="daynum">${d}</span>${dotsHtml}</button>`;
   }
 
   for(let i=0;i<trail;i++) cells += `<div class="cell blank"></div>`;
@@ -4616,6 +4651,9 @@ function aplicarTema(){
 async function elegirTema(v){
   temaElegido = ['auto','claro','oscuro'].includes(v) ? v : 'auto';
   aplicarTema();
+  // Los días pintados llevan el color en línea: hay que redibujar
+  // para que cambien de intensidad con el tema.
+  if(filtros.size > 0 && vista === 'anio') renderMonths();
   await writeKey(KEY_TEMA, temaElegido);
 }
 
@@ -4630,7 +4668,11 @@ document.querySelectorAll('.tema-btn').forEach(b => {
 });
 if(window.matchMedia){
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
-  const alCambiar = () => { if(temaElegido === 'auto') aplicarTema(); };
+  const alCambiar = () => {
+    if(temaElegido !== 'auto') return;
+    aplicarTema();
+    if(filtros.size > 0 && vista === 'anio') renderMonths();
+  };
   if(mq.addEventListener) mq.addEventListener('change', alCambiar);
   else if(mq.addListener) mq.addListener(alCambiar);
 }
