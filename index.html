@@ -247,6 +247,10 @@
     #months{grid-template-columns:1fr 1fr;}
   }
 
+  .month-card.mes-actual{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent);
+  }
   .month-card{
     background:var(--paper-card);
     border:1px solid var(--line);
@@ -2243,8 +2247,9 @@ function buildMonthCard(y, m, byDate){
 
   const weekdayRow = WEEKDAYS_SHORT.map(w => `<span>${w}</span>`).join('');
 
+  const esMesActual = (y === anioDeHoy() && m === (new Date().getMonth() + 1));
   return `
-    <div class="month-card">
+    <div class="month-card${esMesActual ? ' mes-actual' : ''}" id="mes-${y}-${pad(m)}">
       <div class="month-head">
         <span class="month-code">L-${pad(m)}</span>
         <span class="month-name">${MONTHS_ES[m-1]} ${y}</span>
@@ -2575,7 +2580,25 @@ function abrirAnio(y){
   vista = 'anio';
   if(selectMode) toggleSelectMode();
   renderVista();
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  irAlMesDeHoy();
+}
+
+// Si el año que se abre es el actual, baja al mes en curso.
+// En cualquier otro año arranca desde enero.
+function irAlMesDeHoy(inmediato){
+  const hoy = new Date();
+  if(ANIO !== hoy.getFullYear()){
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
+  const id = `mes-${ANIO}-${pad(hoy.getMonth() + 1)}`;
+  // Se espera un cuadro para que el navegador ya tenga las medidas
+  requestAnimationFrame(() => {
+    const el = document.getElementById(id);
+    if(!el){ window.scrollTo({ top: 0, behavior: 'instant' }); return; }
+    const y = el.getBoundingClientRect().top + window.scrollY - 12;
+    window.scrollTo({ top: Math.max(0, y), behavior: inmediato ? 'instant' : 'smooth' });
+  });
 }
 
 function volverAnios(){
@@ -4482,10 +4505,15 @@ let lastRenderedDay = todayISO();
 
 function checkDayChange(){
   const now = todayISO();
-  if(now !== lastRenderedDay){
-    lastRenderedDay = now;
-    renderAll();
-  }
+  if(now === lastRenderedDay) return;
+  const mesAntes = lastRenderedDay.slice(0,7);
+  lastRenderedDay = now;
+  const pos = window.scrollY;
+  renderAll();
+  // Si solo cambió el día, se conserva la posición de lectura.
+  // Si cambió el mes, la marca se movió: se baja al mes nuevo.
+  if(vista === 'anio' && now.slice(0,7) !== mesAntes) irAlMesDeHoy();
+  else window.scrollTo({ top: pos, behavior: 'instant' });
 }
 
 function onResume(){
@@ -4510,6 +4538,7 @@ async function init(){
   ANIO = Math.min(Math.max(anioDeHoy(), ANIO_MIN), ANIO_MAX);
   renderVista();
   renderEmptyNote();
+  if(vista === 'anio') irAlMesDeHoy(true);
 
   // Luego se cargan palomitas y eventos guardados
   await loadAll();
