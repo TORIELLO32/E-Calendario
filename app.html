@@ -489,6 +489,77 @@
   .bell-btn svg{width:15px;height:15px;}
   .bell-btn.on{color:var(--accent);}
   .bell-btn:active{background:var(--accent-soft);color:var(--accent);}
+  /* ---------- Subtareas ---------- */
+  .sub-btn{
+    flex:none;
+    width:30px;
+    background:none;
+    border:none;
+    color:var(--line);
+    cursor:pointer;
+    border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .sub-btn svg{width:15px;height:15px;}
+  .sub-btn.on{color:var(--accent);}
+  .sub-btn:active{background:var(--accent-soft);color:var(--accent);}
+  .prog-tag{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:0.64rem;
+    font-weight:600;
+    color:var(--accent);
+    background:var(--accent-soft);
+    border-radius:20px;
+    padding:1px 7px;
+    margin-top:4px;
+  }
+  .panel-item.done .prog-tag{color:var(--ink-soft);background:var(--paper-alt);}
+  .subs-caja{
+    border-left:2px solid var(--accent);
+    margin:2px 0 10px 12px;
+    padding:8px 0 8px 11px;
+  }
+  .sub-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:3px 0;
+  }
+  .sub-check{
+    background:none;border:none;padding:0;
+    cursor:pointer;flex:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .checkbox.chico{width:17px;height:17px;border-radius:4px;}
+  .checkbox.chico svg{width:10px;height:10px;}
+  .sub-row.hecha .checkbox{background:var(--accent);border-color:var(--accent);}
+  .sub-row.hecha .checkbox svg{opacity:1;}
+  .sub-txt{
+    flex:1;
+    font-size:0.82rem;
+    line-height:1.3;
+  }
+  .sub-row.hecha .sub-txt{
+    color:var(--ink-soft);
+    text-decoration:line-through;
+  }
+  .del-btn.chico{width:26px;font-size:1.05rem;}
+  .sub-add{display:flex;gap:6px;margin-top:8px;}
+  .sub-add input{
+    flex:1;
+    font-family:var(--font-body);
+    font-size:16px;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:7px 10px;
+  }
+  .sub-add input:focus{outline:none;border-color:var(--accent);}
+  .sub-go{flex:none;width:40px;padding:0;font-size:1rem;}
+
   .hora-tag{
     font-family:var(--font-mono);
     font-size:0.66rem;
@@ -1852,6 +1923,31 @@ function fmtHora(h){
   return `${h12}:${pad(mm)} ${suf}`;
 }
 
+// Subtareas de un evento: [{ t:'texto', d:true/false }]
+const MAX_SUBS = 20;
+const MAX_SUB_TXT = 60;
+
+function sanitizeSubs(arr){
+  if(!Array.isArray(arr)) return [];
+  const out = [];
+  for(const s of arr){
+    if(out.length >= MAX_SUBS) break;
+    if(!s || typeof s !== 'object') continue;
+    const t = limpiarTexto(s.t, MAX_SUB_TXT);
+    if(!t) continue;
+    out.push({ t, d: s.d === true });
+  }
+  return out;
+}
+
+function subsDe(ev){ return Array.isArray(ev.subs) ? ev.subs : []; }
+function subsHechas(ev){ return subsDe(ev).filter(s => s.d).length; }
+// Avance de 0 a 1; null si no tiene subtareas
+function avance(ev){
+  const n = subsDe(ev).length;
+  return n ? subsHechas(ev) / n : null;
+}
+
 function safeRem(r){
   const n = Number(r);
   return (Number.isInteger(n) && n >= -1 && n <= 30) ? n : -1;
@@ -1871,7 +1967,7 @@ function sanitizeEvent(e){
   if(typeof e.title !== 'string') return null;
   const title = limpiarTexto(e.title, MAX_TITULO);
   if(!title) return null;
-  return { date: e.date, title, type: safeType(e.type), rem: safeRem(e.rem), hora: safeHora(e.hora) };
+  return { date: e.date, title, type: safeType(e.type), rem: safeRem(e.rem), hora: safeHora(e.hora), subs: sanitizeSubs(e.subs) };
 }
 function sanitizeList(arr){
   if(!Array.isArray(arr)) return [];
@@ -2381,7 +2477,15 @@ function buildMonthCard(y, m, byDate){
     let dotsHtml = '';
     if(hasEvents && !(filtros.size > 0 && !enSeleccion)){
       const shown = dayEvents.slice(0,3);
-      const dots = shown.map(ev => `<i class="ev-dot${COMPLETED.has(evId(ev)) ? ' done' : ''}" style="background:${catColor(ev.type)}"></i>`).join('');
+      const dots = shown.map(ev => {
+        const a = avance(ev);
+        const col = catColor(ev.type);
+        // Con subtareas, el punto se llena según el avance
+        const fondo = (a !== null && a < 1)
+          ? `conic-gradient(${col} ${Math.round(a*100)}%, ${col}33 0)`
+          : col;
+        return `<i class="ev-dot${COMPLETED.has(evId(ev)) ? ' done' : ''}" style="background:${fondo}"></i>`;
+      }).join('');
       const plus = dayEvents.length > 3 ? `<span class="ev-plus">+${dayEvents.length - 3}</span>` : '';
       dotsHtml = `<span class="ev-dots">${dots}${plus}</span>`;
     }else if(hasEvents && dayEvents.length > 1){
@@ -2842,6 +2946,118 @@ function onScroll(){
 }
 window.addEventListener('scroll', onScroll, { passive:true });
 
+// ══════════════════════════════════════════════════════════════
+// SUBTAREAS
+// Una entrega no es una casilla: son varios pasos. El evento se
+// marca solo cuando todas están hechas.
+// ══════════════════════════════════════════════════════════════
+let subsAbiertas = new Set();
+
+// Devuelve el evento guardado, creándolo si venía del archivo
+function mioOCrear(ev){
+  const id = evId(ev);
+  let u = USER_EVENTS.find(x => evId(x) === id);
+  if(!u){
+    u = { date:ev.date, title:ev.title, type:ev.type, rem:safeRem(ev.rem), hora:safeHora(ev.hora), subs:sanitizeSubs(ev.subs) };
+    USER_EVENTS.push(u);
+  }
+  if(!Array.isArray(u.subs)) u.subs = [];
+  return u;
+}
+
+function toggleSubsAbierto(i){
+  const ev = panelEvents[i];
+  if(!ev) return;
+  const id = evId(ev);
+  if(subsAbiertas.has(id)) subsAbiertas.delete(id);
+  else subsAbiertas.add(id);
+  renderPanelBody();
+}
+
+// El evento queda hecho solo si todas sus subtareas lo están
+function sincronizarHecho(u){
+  const id = evId(u);
+  const n = subsDe(u).length;
+  if(!n) return;
+  if(subsHechas(u) === n) COMPLETED.add(id);
+  else COMPLETED.delete(id);
+}
+
+async function toggleSub(i, k){
+  const ev = panelEvents[i];
+  if(!ev) return;
+  const u = mioOCrear(ev);
+  if(!u.subs[k]) return;
+  u.subs[k].d = !u.subs[k].d;
+  sincronizarHecho(u);
+  rebuildEvents();
+  renderPanelBody();
+  renderMonths();
+  renderProgress();
+  await markChanged();
+}
+
+async function addSub(i){
+  const ev = panelEvents[i];
+  const inp = document.getElementById('subInput');
+  if(!ev || !inp) return;
+  const t = limpiarTexto(inp.value, MAX_SUB_TXT);
+  if(!t){ inp.focus(); return; }
+  const u = mioOCrear(ev);
+  if(u.subs.length >= MAX_SUBS) return;
+  u.subs.push({ t, d:false });
+  sincronizarHecho(u);
+  subsAbiertas.add(evId(u));
+  rebuildEvents();
+  renderPanelBody();
+  renderMonths();
+  await markChanged();
+  const nuevo = document.getElementById('subInput');
+  if(nuevo){ nuevo.value = ''; nuevo.focus(); }
+}
+
+async function delSub(i, k){
+  const ev = panelEvents[i];
+  if(!ev) return;
+  const u = mioOCrear(ev);
+  u.subs.splice(k, 1);
+  sincronizarHecho(u);
+  rebuildEvents();
+  renderPanelBody();
+  renderMonths();
+  renderProgress();
+  await markChanged();
+}
+
+// Dibuja la lista de subtareas de un evento
+function subsHTML(ev, i){
+  const lista = subsDe(ev);
+  const abierto = subsAbiertas.has(evId(ev));
+  if(!abierto) return '';
+
+  const filas = lista.map((s, k) => `
+    <div class="sub-row ${s.d ? 'hecha' : ''}">
+      <button class="sub-check" onclick="toggleSub(${i},${k})" aria-label="Marcar">
+        <span class="checkbox chico">${CHECK_SVG}</span>
+      </button>
+      <span class="sub-txt">${esc(s.t)}</span>
+      <button class="del-btn chico" onclick="delSub(${i},${k})" aria-label="Borrar">&times;</button>
+    </div>
+  `).join('');
+
+  const puedeMas = lista.length < MAX_SUBS;
+  return `
+    <div class="subs-caja">
+      ${filas || '<div class="panel-hint" style="margin:0 0 8px">Sin pasos todavía.</div>'}
+      ${puedeMas ? `
+        <div class="sub-add">
+          <input type="text" id="subInput" maxlength="${MAX_SUB_TXT}" placeholder="Agregar paso…">
+          <button class="btn primary sub-go" onclick="addSub(${i})">＋</button>
+        </div>` : '<div class="panel-hint" style="margin:0">Máximo de pasos alcanzado.</div>'}
+    </div>
+  `;
+}
+
 // ---------- Panel de detalle ----------
 let currentPanelDate = null;
 let panelEvents = [];
@@ -2921,8 +3137,12 @@ function renderPanelBody(){
           <span class="txt">
             <span class="cat"><i class="dot" style="background:${catColor(ev.type)}"></i>${esc(catLabel(ev.type))}${ev.hora ? ` · <b class="hora-tag">${esc(fmtHora(ev.hora))}</b>` : ''}</span>
             ${esc(ev.title)}
+            ${subsDe(ev).length ? `<span class="prog-tag">${subsHechas(ev)}/${subsDe(ev).length} pasos</span>` : ''}
             ${safeRem(ev.rem) >= 0 ? `<span class="rem-tag">🔔 ${esc(remLabel(ev.rem))}</span>` : ''}
           </span>
+        </button>
+        <button class="sub-btn ${subsDe(ev).length ? 'on' : ''}" onclick="toggleSubsAbierto(${i})" aria-label="Pasos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>
         </button>
         <button class="bell-btn ${safeRem(ev.rem) >= 0 ? 'on' : ''}" onclick="startRemAt(${i})" aria-label="Recordatorio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
@@ -2932,6 +3152,7 @@ function renderPanelBody(){
         </button>
         <button class="del-btn" onclick="deleteEventAt(${i})" aria-label="Borrar">&times;</button>
       </div>
+      ${subsHTML(ev, i)}
     `;
   }).join('');
 
@@ -2983,6 +3204,7 @@ function openPanel(iso){
   addingHere = false;
   editingId = null;
   remindingId = null;
+  subsAbiertas.clear();
   const d = parseISO(iso);
   const weekday = WEEKDAYS_FULL[(d.getDay() + 6) % 7];
   const raw = `${weekday} ${d.getDate()} de ${MONTHS_ES[d.getMonth()]} de ${d.getFullYear()}`;
@@ -2999,6 +3221,7 @@ function closePanel(){
   addingHere = false;
   editingId = null;
   remindingId = null;
+  subsAbiertas.clear();
   document.getElementById('panel').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
 }
