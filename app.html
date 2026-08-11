@@ -489,6 +489,13 @@
   .bell-btn svg{width:15px;height:15px;}
   .bell-btn.on{color:var(--accent);}
   .bell-btn:active{background:var(--accent-soft);color:var(--accent);}
+  .hora-tag{
+    font-family:var(--font-mono);
+    font-size:0.66rem;
+    font-weight:600;
+    color:var(--accent);
+  }
+  .edit-form input[type="time"]{width:100%;}
   .rem-tag{
     display:block;
     font-size:0.68rem;
@@ -1345,6 +1352,7 @@
   <div class="opt-desc" id="rangeCount"></div>
   <div class="edit-form">
     <input type="text" id="rgTitle" maxlength="80" placeholder="¿Qué vas a poner en estos días?">
+    <input type="time" id="rgHora" placeholder="Hora (opcional)">
     <select id="rgType" onchange="checkNueva(this,'rgNueva')"></select>
     <div id="rgNueva"></div>
     <div class="prev-actions">
@@ -1824,6 +1832,26 @@ const REM_OPCIONES = [
   { v: 7,  label: '7 días antes, y diario' },
   { v: 14, label: '14 días antes, y diario' },
 ];
+// Hora del evento: 'HH:MM' en 24 h, o null si es de día completo
+function safeHora(h){
+  if(typeof h !== 'string') return null;
+  const m = h.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if(!m) return null;
+  const hh = +m[1], mm = +m[2];
+  if(hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
+  return pad(hh) + ':' + pad(mm);
+}
+
+// Para mostrar: 14:30 → "2:30 pm"
+function fmtHora(h){
+  const v = safeHora(h);
+  if(!v) return '';
+  let [hh, mm] = v.split(':').map(Number);
+  const suf = hh < 12 ? 'am' : 'pm';
+  let h12 = hh % 12; if(h12 === 0) h12 = 12;
+  return `${h12}:${pad(mm)} ${suf}`;
+}
+
 function safeRem(r){
   const n = Number(r);
   return (Number.isInteger(n) && n >= -1 && n <= 30) ? n : -1;
@@ -1843,7 +1871,7 @@ function sanitizeEvent(e){
   if(typeof e.title !== 'string') return null;
   const title = limpiarTexto(e.title, MAX_TITULO);
   if(!title) return null;
-  return { date: e.date, title, type: safeType(e.type), rem: safeRem(e.rem) };
+  return { date: e.date, title, type: safeType(e.type), rem: safeRem(e.rem), hora: safeHora(e.hora) };
 }
 function sanitizeList(arr){
   if(!Array.isArray(arr)) return [];
@@ -2147,6 +2175,7 @@ async function saveEdit(oldId){
   const title = limpiarTexto(document.getElementById('edTitle').value, MAX_TITULO);
   const date = document.getElementById('edDate').value;
   const type = document.getElementById('edType').value;
+  const hora = safeHora(document.getElementById('edHora').value);
 
   if(!title || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
     editingId = null;
@@ -2156,7 +2185,7 @@ async function saveEdit(oldId){
 
   const wasDone = COMPLETED.has(oldId);
   const previo = EVENTS.find(e => evId(e) === oldId);
-  const nuevo = { date, title: title.slice(0,80), type, rem: previo ? safeRem(previo.rem) : -1 };
+  const nuevo = { date, title: title.slice(0,80), type, rem: previo ? safeRem(previo.rem) : -1, hora };
   const newId = evId(nuevo);
 
   // Se retira el original y se guarda la versión editada
@@ -2226,6 +2255,16 @@ function eventsByDate(){
   eventosVisibles().forEach(ev => {
     if(!map[ev.date]) map[ev.date] = [];
     map[ev.date].push(ev);
+  });
+  // Dentro de cada día: los de día completo arriba, luego por hora
+  Object.keys(map).forEach(k => {
+    map[k].sort((a, b) => {
+      const ha = safeHora(a.hora), hb = safeHora(b.hora);
+      if(!ha && !hb) return 0;
+      if(!ha) return -1;
+      if(!hb) return 1;
+      return ha.localeCompare(hb);
+    });
   });
   return map;
 }
@@ -2437,6 +2476,7 @@ function abrirRango(){
   document.getElementById('rangeCount').textContent =
     dias.length === 1 ? 'Se agregará en 1 día.' : `Se agregará en los ${dias.length} días.`;
   document.getElementById('rgTitle').value = '';
+  document.getElementById('rgHora').value = '';
   document.getElementById('rgType').innerHTML = typeOptions('otro');
   document.getElementById('rgNueva').innerHTML = '';
   document.getElementById('rangeSheet').classList.add('open');
@@ -2452,9 +2492,10 @@ function cerrarRango(){
 async function guardarRango(){
   const title = limpiarTexto(document.getElementById('rgTitle').value, MAX_TITULO);
   const type = document.getElementById('rgType').value;
+  const hora = safeHora(document.getElementById('rgHora').value);
   if(!title){ document.getElementById('rgTitle').focus(); return; }
 
-  const lista = diasDelRango().map(date => ({ date, title, type }));
+  const lista = diasDelRango().map(date => ({ date, title, type, hora }));
   await addEvents(lista);
 
   cerrarRango();
@@ -2861,6 +2902,7 @@ function renderPanelBody(){
           <input type="text" id="edTitle" maxlength="80" value="${esc(ev.title)}" placeholder="Nombre del evento">
           <div class="edit-row">
             <input type="date" id="edDate" value="${esc(ev.date)}" min="${ANIO_MIN}-01-01" max="${ANIO_MAX}-12-31">
+            <input type="time" id="edHora" value="${esc(safeHora(ev.hora) || '')}" placeholder="Hora">
             <select id="edType" onchange="checkNueva(this,'edNueva')">${typeOptions(ev.type)}</select>
             <div id="edNueva"></div>
           </div>
@@ -2877,7 +2919,7 @@ function renderPanelBody(){
         <button class="panel-row" onclick="toggleDoneAt(${i})">
           <span class="checkbox">${CHECK_SVG}</span>
           <span class="txt">
-            <span class="cat"><i class="dot" style="background:${catColor(ev.type)}"></i>${esc(catLabel(ev.type))}</span>
+            <span class="cat"><i class="dot" style="background:${catColor(ev.type)}"></i>${esc(catLabel(ev.type))}${ev.hora ? ` · <b class="hora-tag">${esc(fmtHora(ev.hora))}</b>` : ''}</span>
             ${esc(ev.title)}
             ${safeRem(ev.rem) >= 0 ? `<span class="rem-tag">🔔 ${esc(remLabel(ev.rem))}</span>` : ''}
           </span>
@@ -2900,6 +2942,7 @@ function renderPanelBody(){
   const formAdd = addingHere ? `
     <div class="edit-form">
       <input type="text" id="adTitle" maxlength="80" placeholder="¿Qué vas a poner este día?">
+      <input type="time" id="adHora" placeholder="Hora (opcional)">
       <select id="adType" onchange="checkNueva(this,'adNueva')">${typeOptions('otro')}</select>
       <div id="adNueva"></div>
       <div class="prev-actions">
@@ -2928,9 +2971,10 @@ function cancelAddHere(){
 async function saveAddHere(){
   const title = limpiarTexto(document.getElementById('adTitle').value, MAX_TITULO);
   const type = document.getElementById('adType').value;
+  const hora = safeHora(document.getElementById('adHora').value);
   if(!title){ document.getElementById('adTitle').focus(); return; }
   addingHere = false;
-  await addEvents([{ date: currentPanelDate, title, type }]);
+  await addEvents([{ date: currentPanelDate, title, type, hora }]);
   renderPanelBody();
 }
 
@@ -3218,16 +3262,88 @@ function categoriaExplicita(t){
   return null;
 }
 
+// Saca la hora de la frase. Se corre ANTES de buscar la fecha,
+// para que "el 15 de octubre a las 2" no confunda el 2 con un día.
+function extraerHora(t){
+  const ap = (h, suf) => {
+    if(!suf) return null;
+    const s = suf.replace(/\./g,'');
+    if(/^(pm|p m)$/.test(s) || /tarde|noche/.test(s)) return h < 12 ? h + 12 : h;
+    if(/^(am|a m)$/.test(s) || /manana|madrugada/.test(s)) return h === 12 ? 0 : h;
+    return null;
+  };
+  // Sin am/pm: 1–6 se entiende de la tarde; 7–12 de la mañana
+  const supone = (h) => (h >= 1 && h <= 6) ? h + 12 : h;
+
+  let m;
+
+  // "al mediodía" / "a medianoche"
+  m = t.match(/\bal?\s+mediodia\b/);
+  if(m) return { hora:'12:00', frag:m[0] };
+  m = t.match(/\ba\s+media\s?noche\b/);
+  if(m) return { hora:'00:00', frag:m[0] };
+
+  // "a las 2 y media" / "y cuarto"
+  m = t.match(/\ba\s+las?\s+(\d{1,2})\s+y\s+(media|cuarto)(?:\s+de\s+la\s+(manana|tarde|noche|madrugada))?/);
+  if(m){
+    let h = +m[1];
+    h = ap(h, m[3]) ?? supone(h);
+    if(h > 23) return null;
+    return { hora: pad(h) + ':' + (m[2] === 'media' ? '30' : '15'), frag:m[0] };
+  }
+
+  // "a las 14:30", "a las 2:00 pm", "a las 2.30"
+  m = t.match(/\ba\s+las?\s+(\d{1,2})[:.](\d{2})(?:\s*(a\.?\s?m\.?|p\.?\s?m\.?))?(?:\s+de\s+la\s+(manana|tarde|noche|madrugada))?/);
+  if(m){
+    let h = +m[1];
+    const alt = ap(h, m[3] || m[4]);
+    h = alt !== null ? alt : (m[3] || m[4] ? h : ((+m[1] >= 1 && +m[1] <= 6) ? h + 12 : h));
+    if(h > 23 || +m[2] > 59) return null;
+    return { hora: pad(h) + ':' + pad(+m[2]), frag:m[0] };
+  }
+
+  // "a las 8 de la mañana", "a las 2 pm", "a las 9"
+  m = t.match(/\ba\s+las?\s+(\d{1,2})(?:\s*(a\.?\s?m\.?|p\.?\s?m\.?))?(?:\s+de\s+la\s+(manana|tarde|noche|madrugada))?(?!\d|\s*[:.]\d|\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre))/);
+  if(m){
+    let h = +m[1];
+    const alt = ap(h, m[2] || m[3]);
+    h = alt !== null ? alt : supone(h);
+    if(h > 23) return null;
+    return { hora: pad(h) + ':00', frag:m[0] };
+  }
+
+  // "14:30" o "2:00 pm" sueltos (solo con dos puntos, para no
+  // confundirse con las fechas tipo 20.10)
+  m = t.match(/(?:^|\s)(\d{1,2}):(\d{2})(?:\s*(a\.?\s?m\.?|p\.?\s?m\.?))?(?![\d\/\-])/);
+  if(m){
+    let h = +m[1];
+    const alt = ap(h, m[3]);
+    if(alt !== null) h = alt;
+    if(h > 23 || +m[2] > 59) return null;
+    return { hora: pad(h) + ':' + pad(+m[2]), frag:m[0].trim() };
+  }
+
+  return null;
+}
+
 function localParse(text){
   let raw = text.trim();
   let t = normalize(raw);
   [raw, t] = numerosALetra(raw, t);
+
+  // La hora se saca primero, para que no estorbe a la fecha
+  const conHora = extraerHora(t);
+  const hora = conHora ? conHora.hora : null;
+  if(conHora){
+    t = t.replace(conHora.frag, ' ').replace(/\s+/g,' ').trim();
+  }
 
   // ¿Dijo la categoría a propósito? "como examen", "categoría gym", "#gym"
   const explicita = categoriaExplicita(t);
   ultimaCatPedida = (explicita && explicita.pedida) ? explicita.pedida : null;
   const type = (explicita && explicita.id) ? explicita.id : detectType(raw);
   const removals = [];
+  if(conHora) removals.push(flexRx(conHora.frag));
   if(explicita) removals.push(flexRx(explicita.frag));
 
   // Año por omisión: el que se está viendo
@@ -3269,7 +3385,7 @@ function localParse(text){
     const rem = removals.slice();
     if(HAY_ANIO) rem.push(/\s*\b(?:de\s+|del\s+)?(?:20[2-4]\d|2050)\b/gi);
     const title = cleanTitle(raw, rem);
-    return fechas.map(date => ({ date, title, type, rem: -1 }));
+    return fechas.map(date => ({ date, title, type, rem: -1, hora }));
   };
   const marcar = (frag) => { removals.push(flexRx(frag)); };
   const listaWD = (txt) => {
@@ -3689,7 +3805,7 @@ function showPreview(list){
   const rows = shown.map(ev => `
     <div class="prev-row">
       <i class="dot" style="background:${safeColor(catColor(ev.type))}"></i>
-      <span class="when">${shortDate(ev.date)}</span>
+      <span class="when">${shortDate(ev.date)}${ev.hora ? ' · ' + esc(fmtHora(ev.hora)) : ''}</span>
       <span>${esc(ev.title)}</span>
     </div>
   `).join('');
@@ -4080,7 +4196,7 @@ function mostrarRespuesta(res){
       <button class="resp-row ${done ? 'hecho' : ''}" onclick="verDia('${ev.date}')">
         <i class="dot" style="background:${safeColor(catColor(ev.type))}"></i>
         <span class="when">${cuando}</span>
-        <span class="resp-txt">${esc(ev.title)}</span>
+        <span class="resp-txt">${esc(ev.title)}${ev.hora ? ` <b class="hora-tag">${esc(fmtHora(ev.hora))}</b>` : ''}</span>
         <span class="resp-falta">${falta}</span>
       </button>
     `;
@@ -4400,7 +4516,7 @@ function nextDayCompact(iso){
 // Identificador estable por evento: al reexportar, Calendario
 // actualiza el evento en vez de duplicarlo.
 function uidFor(ev){
-  const s = evId(ev);
+  const s = evId(ev) + '|' + (safeHora(ev.hora) || '');
   let h1 = 5381, h2 = 52711;
   for(let i = 0; i < s.length; i++){
     const ch = s.charCodeAt(i);
@@ -4411,14 +4527,15 @@ function uidFor(ev){
 }
 
 // Alarmas: una por cada día, desde N días antes hasta el día del evento.
-// El evento es de día completo, así que la hora se cuenta desde medianoche:
-// 9:00 AM = +9 h. Para N días antes: -(N*24) + 9 horas.
+// Con hora: suenan a esa hora. Sin hora (día completo): a las 9:00,
+// que se cuenta como +9 h desde la medianoche.
 function alarmsFor(ev){
   const n = safeRem(ev.rem);
   if(n < 0) return [];
+  const tieneHora = !!safeHora(ev.hora);
   const out = [];
   for(let d = n; d >= 0; d--){
-    const horas = d * 24 - 9;
+    const horas = tieneHora ? d * 24 : d * 24 - 9;
     const trigger = horas > 0 ? `-PT${horas}H` : (horas === 0 ? 'PT0S' : `PT${-horas}H`);
     out.push(
       'BEGIN:VALARM',
@@ -4448,11 +4565,22 @@ function buildICS(){
 
   EVENTS.forEach(ev => {
     const start = ev.date.replace(/-/g,'');
+    const hora = safeHora(ev.hora);
     lines.push('BEGIN:VEVENT');
     lines.push('UID:' + uidFor(ev) + '@bitacora-semestre');
     lines.push('DTSTAMP:' + stamp);
-    lines.push('DTSTART;VALUE=DATE:' + start);
-    lines.push('DTEND;VALUE=DATE:' + nextDayCompact(ev.date));
+    if(hora){
+      // Hora local del dispositivo (sin zona): Calendario la respeta
+      const [hh, mm] = hora.split(':').map(Number);
+      const fin = new Date(2000, 0, 1, hh, mm + 60);
+      const cruzaDia = fin.getDate() !== 1;
+      const dFin = cruzaDia ? nextDayCompact(ev.date) : start;
+      lines.push('DTSTART:' + start + 'T' + pad(hh) + pad(mm) + '00');
+      lines.push('DTEND:' + dFin + 'T' + pad(fin.getHours()) + pad(fin.getMinutes()) + '00');
+    }else{
+      lines.push('DTSTART;VALUE=DATE:' + start);
+      lines.push('DTEND;VALUE=DATE:' + nextDayCompact(ev.date));
+    }
     lines.push('SUMMARY:' + icsEscape(ev.title));
     lines.push('CATEGORIES:' + icsEscape(catLabel(ev.type)));
     alarmsFor(ev).forEach(l => lines.push(l));
