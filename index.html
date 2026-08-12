@@ -489,6 +489,13 @@
   .bell-btn svg{width:15px;height:15px;}
   .bell-btn.on{color:var(--accent);}
   .bell-btn:active{background:var(--accent-soft);color:var(--accent);}
+  .cell.carga-dia .daynum{color:var(--ink);font-weight:700;}
+  .cell.carga-dia .ev-num{
+    font-size:0.72rem;
+    font-weight:700;
+    opacity:1;
+  }
+
   /* ---------- Subtareas ---------- */
   .sub-btn{
     flex:none;
@@ -765,6 +772,7 @@
   .barra.en-anios .barra-back,
   .barra.en-anios .barra-sel,
   .barra.en-anios .barra-mes,
+  .barra.en-anios .barra-carga,
   .barra.en-anios .barra-hoy{display:none;}
 
   /* ---------- Cuadrícula de años ---------- */
@@ -811,10 +819,13 @@
     display:flex;
     gap:2px;
     width:100%;
+    height:16px;
+    align-items:flex-end;
   }
   .mes-bar{
     flex:1;
-    height:14px;
+    height:100%;
+    min-height:3px;
     border-radius:2px;
     background:var(--paper-alt);
     display:block;
@@ -1286,6 +1297,7 @@
 
     <div class="sel-hint" id="selHint"></div>
     <div class="sel-hint" id="filtroVacio">Con ese filtro no hay nada aquí. Toca «Ver todo» para quitarlo.</div>
+    <div class="sel-hint" id="cargaHint"></div>
   </header>
 
   <!-- Se pega arriba al bajar, para tener siempre a la mano
@@ -1299,6 +1311,9 @@
       <span class="barra-mes" id="barraMes"></span>
       <button class="icon-btn barra-sel" id="selBtn2" aria-label="Seleccionar varios días">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2" stroke-dasharray="3 2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+      </button>
+      <button class="icon-btn barra-carga" id="cargaBtn" aria-label="Ver carga de trabajo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20V8"/></svg>
       </button>
       <button class="icon-btn barra-hoy" id="hoyBtn" aria-label="Ir a hoy">Hoy</button>
     </div>
@@ -2316,6 +2331,10 @@ function renderAll(){
   renderLegend();
   renderVista();
   renderPanelBody();
+  if(cargaMode){
+    const el = document.getElementById('cargaHint');
+    if(el) el.innerHTML = resumenCarga();
+  }
 }
 
 async function addEvents(list){
@@ -2466,16 +2485,26 @@ function buildMonthCard(y, m, byDate){
       if(iso === rangeStart || iso === rangeEnd) classes += ' range-edge';
     }
 
-    // Con un filtro puesto, el día se pinta del color de la categoría
-    // para encontrarlo de un vistazo. La selección de rango manda.
+    // Prioridad: selección de rango > modo carga > filtro por categoría
     let fondo = '';
-    if(hasEvents && filtros.size > 0 && !enSeleccion){
+    const pendDia = cargaMode
+      ? dayEvents.filter(ev => !COMPLETED.has(evId(ev))).length
+      : 0;
+
+    if(cargaMode && !enSeleccion){
+      if(pendDia > 0){
+        classes += ' pintado carga-dia';
+        fondo = ` style="background:${tinteCarga(pendDia)}"`;
+      }
+    }else if(hasEvents && filtros.size > 0 && !enSeleccion){
       classes += ' pintado';
       fondo = ` style="background:${tinteDia(dayEvents[0].type)}"`;
     }
 
     let dotsHtml = '';
-    if(hasEvents && !(filtros.size > 0 && !enSeleccion)){
+    if(cargaMode){
+      if(pendDia > 0) dotsHtml = `<span class="ev-num">${pendDia}</span>`;
+    }else if(hasEvents && !(filtros.size > 0 && !enSeleccion)){
       const shown = dayEvents.slice(0,3);
       const dots = shown.map(ev => {
         const a = avance(ev);
@@ -2541,6 +2570,13 @@ function selHint(txt){
 
 function toggleSelectMode(){
   selectMode = !selectMode;
+  if(selectMode && cargaMode){
+    cargaMode = false;
+    const b = document.getElementById('cargaBtn');
+    if(b) b.classList.remove('active');
+    const h = document.getElementById('cargaHint');
+    if(h){ h.innerHTML = ''; h.className = 'sel-hint'; }
+  }
   rangeStart = rangeEnd = null;
   document.getElementById('selBtn2').classList.toggle('active', selectMode);
   document.body.classList.toggle('selecting', selectMode);
@@ -2614,6 +2650,7 @@ async function guardarRango(){
 document.getElementById('backBtn2').addEventListener('click', volverAnios);
 document.getElementById('selBtn2').addEventListener('click', toggleSelectMode);
 document.getElementById('hoyBtn').addEventListener('click', irAHoy);
+document.getElementById('cargaBtn').addEventListener('click', toggleCarga);
 document.getElementById('rangeClose').addEventListener('click', cerrarRango);
 document.getElementById('rgCancel').addEventListener('click', cerrarRango);
 document.getElementById('rangeOverlay').addEventListener('click', cerrarRango);
@@ -2815,9 +2852,13 @@ function renderYears(){
   let html = '';
   for(let y = ANIO_MIN; y <= ANIO_MAX; y++){
     const d = porAnio[y] || { total:0, meses:new Array(12).fill(0), color:{} };
-    const barras = d.meses.map((n, i) =>
-      n ? `<i class="mes-bar" style="background:${safeColor(d.color[i])}"></i>` : '<i class="mes-bar"></i>'
-    ).join('');
+    // La altura de cada barrita indica cuánto hay ese mes
+    const tope = Math.max(1, ...d.meses);
+    const barras = d.meses.map((n, i) => {
+      if(!n) return '<i class="mes-bar"></i>';
+      const alto = 35 + Math.round((n / tope) * 65);
+      return `<i class="mes-bar" style="background:${safeColor(d.color[i])};height:${alto}%"></i>`;
+    }).join('');
     const cuenta = d.total ? (d.total === 1 ? '1 evento' : d.total + ' eventos') : 'sin eventos';
     html += `
       <button class="year-card ${y === hoyY ? 'hoy' : ''}" onclick="abrirAnio(${y})">
@@ -2873,6 +2914,12 @@ function renderVista(){
   document.getElementById('months').style.display = enAnio ? '' : 'none';
   document.getElementById('timeline').style.display = enAnio ? '' : 'none';
   document.getElementById('barra').classList.toggle('en-anios', !enAnio);
+  if(!enAnio && cargaMode){
+    cargaMode = false;
+    document.getElementById('cargaBtn').classList.remove('active');
+    const h = document.getElementById('cargaHint');
+    if(h){ h.innerHTML = ''; h.className = 'sel-hint'; }
+  }
   document.getElementById('barraAnio').textContent = enAnio ? ANIO : `${ANIO_MIN}–${ANIO_MAX}`;
   if(!enAnio) document.getElementById('barraMes').textContent = '';
 
@@ -3056,6 +3103,99 @@ function subsHTML(ev, i){
         </div>` : '<div class="panel-hint" style="margin:0">Máximo de pasos alcanzado.</div>'}
     </div>
   `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MAPA DE CARGA
+// Muestra qué tan pesada está cada semana para poder adelantar
+// trabajo antes de que se junte todo. Solo cuenta lo pendiente:
+// lo que ya palomeaste deja de pesar.
+// ══════════════════════════════════════════════════════════════
+let cargaMode = false;
+
+// Pendientes por día (respeta el filtro de categorías)
+function pendientesPorDia(){
+  const m = {};
+  eventosVisibles().forEach(ev => {
+    if(COMPLETED.has(evId(ev))) return;
+    m[ev.date] = (m[ev.date] || 0) + 1;
+  });
+  return m;
+}
+
+// Intensidad de 0 a 4 según cuántos pendientes hay
+function nivelCarga(n){
+  if(!n) return 0;
+  if(n === 1) return 1;
+  if(n === 2) return 2;
+  if(n <= 4) return 3;
+  return 4;
+}
+
+function tinteCarga(n){
+  const nivel = nivelCarga(n);
+  if(!nivel) return '';
+  const real = (temaElegido === 'auto') ? temaDelSistema() : temaElegido;
+  const alfas = real === 'oscuro'
+    ? ['', '26', '4D', '73', '99']
+    : ['', '1F', '3D', '5C', '80'];
+  return '#C9702B' + alfas[nivel];
+}
+
+// Semanas del año en vista, con su conteo de pendientes
+function semanasDelAnio(){
+  const porDia = pendientesPorDia();
+  const semanas = [];
+  const d = parseISO(ANIO + '-01-01');
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));   // al lunes
+  const fin = parseISO(ANIO + '-12-31');
+  let guard = 0;
+  while(d <= fin && guard < 60){
+    const ini = new Date(d);
+    let n = 0;
+    for(let k = 0; k < 7; k++){
+      const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+      if(+iso.slice(0,4) === ANIO) n += (porDia[iso] || 0);
+      d.setDate(d.getDate() + 1);
+    }
+    const ultimo = new Date(d); ultimo.setDate(ultimo.getDate() - 1);
+    semanas.push({ ini, fin: ultimo, n });
+    guard++;
+  }
+  return semanas;
+}
+
+function rangoCorto(a, b){
+  const mA = MONTHS_ES[a.getMonth()].slice(0,3);
+  const mB = MONTHS_ES[b.getMonth()].slice(0,3);
+  return a.getMonth() === b.getMonth()
+    ? `${a.getDate()}–${b.getDate()} ${mA}`
+    : `${a.getDate()} ${mA} – ${b.getDate()} ${mB}`;
+}
+
+// Resumen: la semana más cargada de aquí en adelante
+function resumenCarga(){
+  const hoy = todayISO();
+  const futuras = semanasDelAnio().filter(s => {
+    const f = toISO(s.fin.getFullYear(), s.fin.getMonth()+1, s.fin.getDate());
+    return f >= hoy && s.n > 0;
+  });
+  if(!futuras.length) return 'No tienes pendientes en lo que queda del año.';
+  const peor = futuras.reduce((a, b) => b.n > a.n ? b : a);
+  const total = futuras.reduce((s, x) => s + x.n, 0);
+  return `Semana más cargada: <b>${rangoCorto(peor.ini, peor.fin)}</b> con ${peor.n} pendiente${peor.n===1?'':'s'} · ${total} en total`;
+}
+
+function toggleCarga(){
+  cargaMode = !cargaMode;
+  if(cargaMode && selectMode) toggleSelectMode();
+  document.getElementById('cargaBtn').classList.toggle('active', cargaMode);
+  const el = document.getElementById('cargaHint');
+  if(el){
+    el.innerHTML = cargaMode ? resumenCarga() : '';
+    el.className = 'sel-hint' + (cargaMode ? ' show' : '');
+  }
+  renderMonths();
 }
 
 // ---------- Panel de detalle ----------
