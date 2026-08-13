@@ -1109,6 +1109,26 @@
     margin-bottom:3px;
   }
   .campo input, .campo select{width:100%;}
+
+  /* iOS le pone ancho propio a estos campos y se salen del recuadro */
+  input[type="time"], input[type="date"]{
+    -webkit-appearance:none;
+    appearance:none;
+    width:100% !important;
+    min-width:0;
+    max-width:100%;
+    box-sizing:border-box;
+    text-align:left;
+  }
+  input[type="time"]::-webkit-date-and-time-value,
+  input[type="date"]::-webkit-date-and-time-value{
+    text-align:left;
+    margin:0;
+  }
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="date"]::-webkit-calendar-picker-indicator{
+    margin-left:auto;
+  }
   .edit-row .campo{flex:1;min-width:0;}
 
   /* El panel de categorías siempre a todo el ancho */
@@ -1409,6 +1429,8 @@
     <button class="ex-chip">Partidos fútbol en categoría Deporte</button>
     <button class="ex-chip">Pago de renta todos los 1 de cada mes</button>
     <button class="ex-chip">Cita dentista el 21 de agosto a las 2 pm</button>
+    <button class="ex-chip">Cita el siguiente 21</button>
+    <button class="ex-chip">Entrega la primera semana de octubre</button>
     <button class="ex-chip">Viaje a Orlando de diciembre 23 a enero 8</button>
     <button class="ex-chip">¿Qué entrego la próxima semana?</button>
     <button class="ex-chip">¿Cuáles son mis vacaciones próximas?</button>
@@ -3749,6 +3771,38 @@ function nEsimoDelMes(orden, wd, anio, desde){
   return out;
 }
 
+// Próxima vez que caiga el día N del mes, a partir de 'desde'
+function proximoDiaN(n, desde){
+  const base = parseISO(desde);
+  for(let salto = 0; salto < 14; salto++){
+    const y = base.getFullYear();
+    const mo = base.getMonth() + 1 + salto;
+    const anioReal = y + Math.floor((mo - 1) / 12);
+    const mesReal = ((mo - 1) % 12) + 1;
+    if(n > daysInMonth(anioReal, mesReal)) continue;
+    const iso = toISO(anioReal, mesReal, n);
+    if(iso >= desde && clampToSemester(iso)) return iso;
+  }
+  return null;
+}
+
+// La semana n de un mes: bloques de 7 días desde el día 1.
+// Así "la primera semana de octubre" son los días 1 al 7, que es
+// lo que uno entiende, y no un pedazo suelto según caiga el lunes.
+// n = 1..5, o -1 para la última (los últimos 7 días del mes).
+function semanaDelMes(n, mo, a){
+  const tope = daysInMonth(a, mo);
+  const out = [];
+  if(n === -1){
+    for(let d = Math.max(1, tope - 6); d <= tope; d++) out.push(toISO(a, mo, d));
+    return out;
+  }
+  const ini = (n - 1) * 7 + 1;
+  if(ini > tope) return [];
+  for(let d = ini; d <= Math.min(ini + 6, tope); d++) out.push(toISO(a, mo, d));
+  return out;
+}
+
 function monthBounds(mo, a){
   const y = a || ANIO;
   return [ toISO(y, mo, 1), toISO(y, mo, daysInMonth(y, mo)) ];
@@ -3852,6 +3906,20 @@ function extraerHora(t){
     h = alt !== null ? alt : supone(h);
     if(h > 23) return null;
     return { hora: pad(h) + ':00', frag:m[0] };
+  }
+
+  // Momentos del día sin hora exacta
+  const momentos = [
+    { rx:/\b(?:muy\s+)?temprano\b/, h:'08:00' },
+    { rx:/\b(?:en|por|a)\s+la\s+manana\b/, h:'09:00' },
+    { rx:/\b(?:en|por|a)\s+la\s+tarde\b/, h:'16:00' },
+    { rx:/\b(?:en|por|a)\s+la\s+noche\b/, h:'20:00' },
+    { rx:/\b(?:en|por|a)\s+la\s+madrugada\b/, h:'05:00' },
+    { rx:/\ba\s+la\s+hora\s+de\s+(?:la\s+)?comida\b/, h:'14:00' },
+  ];
+  for(const mo of momentos){
+    const mm = t.match(mo.rx);
+    if(mm) return { hora:mo.h, frag:mm[0] };
   }
 
   // "14:30" o "2:00 pm" sueltos (solo con dos puntos, para no
@@ -4295,6 +4363,64 @@ function localParse(text){
     }
   }
 
+  // ── 25b. Semanas de un mes: "la primera semana de octubre"
+  m = t.match(new RegExp('(?:la\\s+)?(primer|primera|segunda|tercer|tercera|cuarta|ultima)\\s+semana\\s+de\\s+(' + M + ')' + ANO));
+  if(m){
+    marcar(m[0]);
+    const orden = { primer:1, primera:1, segunda:2, tercer:3, tercera:3, cuarta:4, ultima:-1 }[m[1]];
+    const a = m[3] ? enRango(+m[3]) : anio;
+    return armar(semanaDelMes(orden, monthIndex(m[2]), a).filter(clampToSemester));
+  }
+
+  // ── 25c. "primeros días de octubre" / "últimos días de octubre"
+  m = t.match(new RegExp('(?:los\\s+)?(primeros|ultimos)\\s+dias\\s+de\\s+(' + M + ')' + ANO));
+  if(m){
+    marcar(m[0]);
+    const mo = monthIndex(m[2]);
+    const a = m[3] ? enRango(+m[3]) : anio;
+    const tope = daysInMonth(a, mo);
+    const out = [];
+    if(m[1] === 'primeros'){ for(let d=1; d<=5; d++) out.push(toISO(a, mo, d)); }
+    else { for(let d=tope-4; d<=tope; d++) out.push(toISO(a, mo, d)); }
+    return armar(out.filter(clampToSemester));
+  }
+
+  // ── 25d. "el 21 del mes que viene"
+  m = t.match(/(?:el\s+)?(?:dia\s+)?(\d{1,2})\s+del\s+(?:mes\s+)?(?:que\s+viene|proximo|siguiente|entrante)/);
+  if(m){
+    marcar(m[0]);
+    const d = parseISO(today);
+    const y = d.getFullYear(), mo = d.getMonth() + 2;
+    const anioReal = mo > 12 ? y + 1 : y;
+    const mesReal = mo > 12 ? 1 : mo;
+    const dia = Math.min(+m[1], daysInMonth(anioReal, mesReal));
+    const iso = toISO(anioReal, mesReal, dia);
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+
+  // ── 25e. "el 21 de este mes"
+  m = t.match(/(?:el\s+)?(?:dia\s+)?(\d{1,2})\s+de\s+este\s+mes/);
+  if(m){
+    marcar(m[0]);
+    const d = parseISO(today);
+    const dia = Math.min(+m[1], daysInMonth(d.getFullYear(), d.getMonth()+1));
+    const iso = toISO(d.getFullYear(), d.getMonth()+1, dia);
+    return clampToSemester(iso) ? armar([iso]) : [];
+  }
+
+  // ── 25f. Día suelto sin mes: "el siguiente 21", "el día 21", "este 21"
+  //         Se entiende como la próxima vez que caiga ese día.
+  m = t.match(/\b(?:el\s+|la\s+)?(?:siguiente|proximo|proxima|este|esta)\s+(?:dia\s+)?(\d{1,2})\b(?!\s*[:.]\d)/)
+   || t.match(/\bel\s+dia\s+(\d{1,2})\b(?!\s*[:.]\d)/);
+  if(m){
+    const n = +m[1];
+    if(n >= 1 && n <= 31){
+      marcar(m[0]);
+      const iso = proximoDiaN(n, today);
+      if(iso) return armar([iso]);
+    }
+  }
+
   // ── 26. Solo se menciona un mes: "examen en octubre"
   m = t.match(new RegExp('\\b(?:en|de|para|del)\\s+(' + M + ')' + ANO));
   if(m){
@@ -4337,6 +4463,10 @@ Reglas:
 - MENSUALES: "todos los 10 de cada mes" = el día 10 de cada mes hasta fin de año. También "el día 15 de cada mes", "cada mes el 20", "el primer lunes de cada mes", "el último viernes de cada mes", "el último día de cada mes", "cada quincena" (días 1 y 15), "cada mes", "mensual".
 - "cada semana"/"semanal" = una vez por semana en el mismo día. "cada dos semanas" = cada 14 días.
 - Las repeticiones empiezan HOY si el año en vista es el actual; no generes fechas pasadas.
+- Día suelto sin mes: "el siguiente 21", "el próximo 5", "el día 30" = la próxima vez que caiga ese día del mes.
+- "el 21 del mes que viene", "el 25 de este mes".
+- "la primera/segunda/última semana de octubre" = 7 días. "los primeros/últimos días de octubre" = 5 días.
+- Momentos del día sin hora exacta: temprano=08:00, en la mañana=09:00, a la hora de la comida=14:00, en la tarde=16:00, en la noche=20:00.
 - HORA: si dice una hora, ponla en el campo "hora" con formato "HH:MM" de 24 h. Ejemplos: "a las 2" = "14:00", "a las 8 de la mañana" = "08:00", "a las 14:30" = "14:30". Si no dice hora, omite el campo.
 - Si dice "todos los días", "diario" o "cada día", genera un evento por CADA día hasta el 31 de diciembre de ${ANIO} (o hasta la fecha límite que indique).
 - Si dice "todos los días de <mes>", genera un evento por cada día de ese mes.
@@ -5070,6 +5200,7 @@ async function agentSubmit(){
       <div class="agent-msg">Para <b>agregar</b>: “examen el 15 de octubre a las 2 pm”.<br>
       <b>Repetido</b>: “todos los lunes”, “todos los 10 de cada mes”, “cada quincena”.<br>
       <b>Rango</b>: “del 23 de diciembre al 8 de enero”.<br>
+      <b>Sin mes</b>: “el siguiente 21”, “el 5 del mes que viene”, “la primera semana de octubre”.<br>
       Para <b>cambiar de categoría</b>: “cambia los partidos a deporte”.<br>
       Para <b>quitar</b>: “quítame la creatina”.<br>
       Para <b>preguntar</b>: “¿qué entrego la próxima semana?”.</div>
