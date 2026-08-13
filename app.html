@@ -496,6 +496,38 @@
     opacity:1;
   }
 
+  /* ---------- Confirmar borrado ---------- */
+  .conf-borrar{
+    border:1px solid var(--examen);
+    background:var(--peligro-tenue);
+    border-radius:9px;
+    padding:12px;
+    margin:8px 0;
+  }
+  .conf-txt{
+    font-size:0.88rem;
+    line-height:1.4;
+    margin-bottom:8px;
+  }
+  .conf-nota{
+    font-size:0.74rem;
+    color:var(--ink-soft);
+    line-height:1.4;
+    margin-bottom:10px;
+  }
+  .deshacer{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:12px;
+    padding:10px 12px;
+    background:var(--paper-alt);
+    border-radius:9px;
+    font-size:0.82rem;
+  }
+  .deshacer span{flex:1;}
+  .deshacer .btn{flex:none;padding:7px 14px;}
+
   /* ---------- Subtareas ---------- */
   .sub-btn{
     flex:none;
@@ -2263,6 +2295,58 @@ async function toggleDone(id){
   await markChanged();
 }
 
+// ══════════════════════════════════════════════════════════════
+// BORRAR CON CONFIRMACIÓN
+// La × no borra de golpe: pide confirmar, y aun después deja
+// deshacerlo mientras el panel siga abierto.
+// ══════════════════════════════════════════════════════════════
+let confirmandoId = null;
+let ultimoBorrado = null;   // { ev, estabaHecho }
+
+function pedirBorrar(i){
+  const ev = panelEvents[i];
+  if(!ev) return;
+  confirmandoId = evId(ev);
+  editingId = null;
+  remindingId = null;
+  addingHere = false;
+  renderPanelBody();
+}
+
+function cancelarBorrarEvento(){
+  confirmandoId = null;
+  renderPanelBody();
+}
+
+async function confirmarBorrarEvento(i){
+  const ev = panelEvents[i];
+  if(!ev){ confirmandoId = null; renderPanelBody(); return; }
+  const id = evId(ev);
+
+  // Se guarda una copia por si se quiere deshacer
+  ultimoBorrado = {
+    ev: { date:ev.date, title:ev.title, type:ev.type, rem:safeRem(ev.rem), hora:safeHora(ev.hora), subs:sanitizeSubs(ev.subs) },
+    estabaHecho: COMPLETED.has(id),
+  };
+
+  confirmandoId = null;
+  await deleteEvent(id);
+}
+
+async function deshacerBorrado(){
+  if(!ultimoBorrado) return;
+  const { ev, estabaHecho } = ultimoBorrado;
+  const id = evId(ev);
+  DELETED.delete(id);
+  if(!USER_EVENTS.some(x => evId(x) === id)) USER_EVENTS.push(ev);
+  if(estabaHecho) COMPLETED.add(id);
+  ultimoBorrado = null;
+  rebuildEvents();
+  renderVista();
+  renderPanelBody();
+  await markChanged();
+}
+
 // ---------- Recordatorios ----------
 let remindingId = null;
 
@@ -3241,10 +3325,6 @@ function startEditAt(i){
   const ev = panelEvents[i];
   if(ev) startEdit(evId(ev));
 }
-function deleteEventAt(i){
-  const ev = panelEvents[i];
-  if(ev) deleteEvent(evId(ev));
-}
 function saveEditAt(i){
   const ev = panelEvents[i];
   if(ev) saveEdit(evId(ev));
@@ -3263,6 +3343,20 @@ function renderPanelBody(){
   const rows = dayEvents.map((ev, i) => {
     const id = evId(ev);
     const done = COMPLETED.has(id);
+
+    if(confirmandoId === id){
+      const cuantos = EVENTS.filter(e => e.title === ev.title).length;
+      return `
+        <div class="conf-borrar">
+          <div class="conf-txt">¿Borrar <b>${esc(ev.title)}</b> del ${shortDate(ev.date)}?</div>
+          ${cuantos > 1 ? `<div class="conf-nota">Solo se borra este día. Tienes ${cuantos} eventos con ese nombre; para quitarlos todos usa el asistente: “quítame ${esc(ev.title.toLowerCase())}”.</div>` : ''}
+          <div class="prev-actions">
+            <button class="btn" onclick="cancelarBorrarEvento()">Cancelar</button>
+            <button class="btn peligro" onclick="confirmarBorrarEvento(${i})">Sí, borrar</button>
+          </div>
+        </div>
+      `;
+    }
 
     if(remindingId === id){
       const opts = REM_OPCIONES.map(o =>
@@ -3328,7 +3422,7 @@ function renderPanelBody(){
         <button class="edit-btn" onclick="startEditAt(${i})" aria-label="Editar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </button>
-        <button class="del-btn" onclick="deleteEventAt(${i})" aria-label="Borrar">&times;</button>
+        <button class="del-btn" onclick="pedirBorrar(${i})" aria-label="Borrar">&times;</button>
       </div>
       ${subsHTML(ev, i)}
     `;
@@ -3357,7 +3451,14 @@ function renderPanelBody(){
     </div>
   ` : `<button class="btn add-here" onclick="startAddHere()">＋ Agregar en este día</button>`;
 
-  document.getElementById('panelBody').innerHTML = rows + hint + formAdd;
+  const deshacer = ultimoBorrado
+    ? `<div class="deshacer">
+         <span>Se borró <b>${esc(ultimoBorrado.ev.title)}</b></span>
+         <button class="btn" onclick="deshacerBorrado()">Deshacer</button>
+       </div>`
+    : '';
+
+  document.getElementById('panelBody').innerHTML = rows + hint + formAdd + deshacer;
 }
 
 // ---------- Agregar directo en un día ----------
@@ -3388,6 +3489,8 @@ function openPanel(iso){
   addingHere = false;
   editingId = null;
   remindingId = null;
+  confirmandoId = null;
+  ultimoBorrado = null;
   subsAbiertas.clear();
   const d = parseISO(iso);
   const weekday = WEEKDAYS_FULL[(d.getDay() + 6) % 7];
@@ -3405,6 +3508,8 @@ function closePanel(){
   addingHere = false;
   editingId = null;
   remindingId = null;
+  confirmandoId = null;
+  ultimoBorrado = null;
   subsAbiertas.clear();
   document.getElementById('panel').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
