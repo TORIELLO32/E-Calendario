@@ -609,12 +609,7 @@
     color:var(--ink-soft);
     margin:2px 0 7px;
   }
-  .cat-sugs{
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px;
-    margin-bottom:12px;
-  }
+
   .cat-sug{
     display:flex;
     align-items:center;
@@ -1071,8 +1066,34 @@
   }
   .edit-form input:focus, .edit-form select:focus{outline:none;border-color:var(--accent);}
   .edit-row{display:flex;gap:8px;}
-  .edit-row input{flex:1.3;}
-  .edit-row select{flex:1;}
+  .campo{display:block;width:100%;}
+  .campo-lbl{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:0.6rem;
+    letter-spacing:0.07em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:3px;
+  }
+  .campo input, .campo select{width:100%;}
+  .edit-row .campo{flex:1;min-width:0;}
+
+  /* El panel de categorías siempre a todo el ancho */
+  #edNueva, #adNueva, #rgNueva, #prevNueva{width:100%;}
+  .cat-sugs{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(112px, 1fr));
+    gap:6px;
+    margin-bottom:12px;
+  }
+  .cat-sug{
+    width:100%;
+    justify-content:flex-start;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
 
   /* ---------- Botón flotante ---------- */
   .fab{
@@ -1354,6 +1375,8 @@
     <button class="ex-chip">Quítame creatina todos los días</button>
     <button class="ex-chip">Cambia los partidos de fútbol a Deporte</button>
     <button class="ex-chip">Partidos fútbol en categoría Deporte</button>
+    <button class="ex-chip">Pago de renta todos los 1 de cada mes</button>
+    <button class="ex-chip">Cita dentista el 21 de agosto a las 2 pm</button>
     <button class="ex-chip">Viaje a Orlando de diciembre 23 a enero 8</button>
     <button class="ex-chip">¿Qué entrego la próxima semana?</button>
     <button class="ex-chip">¿Cuáles son mis vacaciones próximas?</button>
@@ -1438,8 +1461,14 @@
   <div class="opt-desc" id="rangeCount"></div>
   <div class="edit-form">
     <input type="text" id="rgTitle" maxlength="80" placeholder="¿Qué vas a poner en estos días?">
-    <input type="time" id="rgHora" placeholder="Hora (opcional)">
-    <select id="rgType" onchange="checkNueva(this,'rgNueva')"></select>
+    <label class="campo">
+      <span class="campo-lbl">Hora (opcional)</span>
+      <input type="time" id="rgHora">
+    </label>
+    <label class="campo">
+      <span class="campo-lbl">Categoría</span>
+      <select id="rgType" onchange="checkNueva(this,'rgNueva')"></select>
+    </label>
     <div id="rgNueva"></div>
     <div class="prev-actions">
       <button class="btn" id="rgCancel">Cancelar</button>
@@ -3257,11 +3286,20 @@ function renderPanelBody(){
         <div class="edit-form">
           <input type="text" id="edTitle" maxlength="80" value="${esc(ev.title)}" placeholder="Nombre del evento">
           <div class="edit-row">
-            <input type="date" id="edDate" value="${esc(ev.date)}" min="${ANIO_MIN}-01-01" max="${ANIO_MAX}-12-31">
-            <input type="time" id="edHora" value="${esc(safeHora(ev.hora) || '')}" placeholder="Hora">
-            <select id="edType" onchange="checkNueva(this,'edNueva')">${typeOptions(ev.type)}</select>
-            <div id="edNueva"></div>
+            <label class="campo">
+              <span class="campo-lbl">Fecha</span>
+              <input type="date" id="edDate" value="${esc(ev.date)}" min="${ANIO_MIN}-01-01" max="${ANIO_MAX}-12-31">
+            </label>
+            <label class="campo">
+              <span class="campo-lbl">Hora</span>
+              <input type="time" id="edHora" value="${esc(safeHora(ev.hora) || '')}">
+            </label>
           </div>
+          <label class="campo">
+            <span class="campo-lbl">Categoría</span>
+            <select id="edType" onchange="checkNueva(this,'edNueva')">${typeOptions(ev.type)}</select>
+          </label>
+          <div id="edNueva"></div>
           <div class="prev-actions">
             <button class="btn" onclick="cancelEdit()">Cancelar</button>
             <button class="btn primary" onclick="saveEditAt(${i})">Guardar</button>
@@ -3303,8 +3341,14 @@ function renderPanelBody(){
   const formAdd = addingHere ? `
     <div class="edit-form">
       <input type="text" id="adTitle" maxlength="80" placeholder="¿Qué vas a poner este día?">
-      <input type="time" id="adHora" placeholder="Hora (opcional)">
-      <select id="adType" onchange="checkNueva(this,'adNueva')">${typeOptions('otro')}</select>
+      <label class="campo">
+        <span class="campo-lbl">Hora (opcional)</span>
+        <input type="time" id="adHora">
+      </label>
+      <label class="campo">
+        <span class="campo-lbl">Categoría</span>
+        <select id="adType" onchange="checkNueva(this,'adNueva')">${typeOptions('otro')}</select>
+      </label>
       <div id="adNueva"></div>
       <div class="prev-actions">
         <button class="btn" onclick="cancelAddHere()">Cancelar</button>
@@ -3570,6 +3614,36 @@ function datesBetween(startISO, endISO, wds, paso){
   return out;
 }
 
+// Día N de cada mes del año (si el mes no tiene ese día, se usa el último)
+function diasMensuales(dia, anio, desde){
+  const out = [];
+  for(let mo = 1; mo <= 12; mo++){
+    const tope = daysInMonth(anio, mo);
+    const d = Math.min(Math.max(dia, 1), tope);
+    const iso = toISO(anio, mo, d);
+    if((!desde || iso >= desde) && clampToSemester(iso)) out.push(iso);
+  }
+  return out;
+}
+
+// El primer/segundo/…/último día-de-semana de cada mes. orden -1 = último
+function nEsimoDelMes(orden, wd, anio, desde){
+  const out = [];
+  for(let mo = 1; mo <= 12; mo++){
+    const tope = daysInMonth(anio, mo);
+    const dias = [];
+    for(let d = 1; d <= tope; d++){
+      const f = new Date(anio, mo-1, d);
+      if(((f.getDay() + 6) % 7) === wd) dias.push(d);
+    }
+    const elegido = orden === -1 ? dias[dias.length-1] : dias[orden-1];
+    if(!elegido) continue;
+    const iso = toISO(anio, mo, elegido);
+    if((!desde || iso >= desde) && clampToSemester(iso)) out.push(iso);
+  }
+  return out;
+}
+
 function monthBounds(mo, a){
   const y = a || ANIO;
   return [ toISO(y, mo, 1), toISO(y, mo, daysInMonth(y, mo)) ];
@@ -3805,6 +3879,80 @@ function localParse(text){
     const mo = monthIndex(m[3]);
     const a = m[4] ? enRango(+m[4]) : anio;
     return armar(datesBetween(toISO(a, mo, +m[1]), toISO(a, mo, +m[2]), wdExtra()));
+  }
+
+  // ── 4b. Mensuales: "todos los 10 de cada mes"
+  m = t.match(new RegExp('(?:' + CADA + '\\s+)?(?:dias?\\s+)?(\\d{1,2})\\s+de\\s+cada\\s+mes'))
+   || t.match(/cada\s+mes\s+(?:el\s+)?(?:dia\s+)?(\d{1,2})/)
+   || t.match(/(?:el\s+)?dia\s+(\d{1,2})\s+(?:de\s+)?cada\s+mes/)
+   || t.match(new RegExp('(?:' + CADA + '\\s+)?(\\d{1,2})\\s+de\\s+(?:todos\\s+los|cada)\\s+meses?'));
+  if(m){
+    marcar(m[0]);
+    return armar(diasMensuales(+m[1], anio, inicioRec(anio)));
+  }
+
+  // ── 4c. "el primer lunes de cada mes", "el último viernes de cada mes"
+  m = t.match(new RegExp('(?:el\\s+)?(primer|primero|segundo|tercer|tercero|cuarto|ultimo)\\s+(' + WD + ')\\s+de\\s+cada\\s+mes'));
+  if(m){
+    marcar(m[0]);
+    const orden = { primer:1, primero:1, segundo:2, tercer:3, tercero:3, cuarto:4, ultimo:-1 }[m[1]];
+    return armar(nEsimoDelMes(orden, WD_MAP[m[2]], anio, inicioRec(anio)));
+  }
+
+  // ── 4d. "el último día de cada mes" / "a fin de cada mes"
+  {
+    const rx = /(?:el\s+)?ultimo\s+dia\s+de\s+cada\s+mes|(?:a\s+)?fin(?:al)?\s+de\s+cada\s+mes|cada\s+fin\s+de\s+mes/;
+    const mm = t.match(rx);
+    if(mm){
+      marcar(mm[0]);
+      const out = [];
+      for(let mo = 1; mo <= 12; mo++){
+        const iso = toISO(anio, mo, daysInMonth(anio, mo));
+        if(iso >= inicioRec(anio) && clampToSemester(iso)) out.push(iso);
+      }
+      return armar(out);
+    }
+  }
+
+  // ── 4e. "cada quincena" → días 1 y 15
+  {
+    const mm = t.match(/cada\s+quincena|quincenal(?:mente)?/);
+    if(mm){
+      marcar(mm[0]);
+      const out = diasMensuales(1, anio, inicioRec(anio))
+        .concat(diasMensuales(15, anio, inicioRec(anio)))
+        .sort();
+      return armar(out);
+    }
+  }
+
+  // ── 4f. "cada mes" / "mensual" a secas → mismo día del mes
+  {
+    const mm = t.match(/\bmensual(?:mente)?\b|cada\s+mes\b|todos\s+los\s+meses/);
+    if(mm){
+      marcar(mm[0]);
+      const dia = parseISO(inicioRec(anio)).getDate();
+      return armar(diasMensuales(dia, anio, inicioRec(anio)));
+    }
+  }
+
+  // ── 4g. "cada semana" / "semanal" → mismo día de la semana
+  {
+    const mm = t.match(/cada\s+semana|\bsemanal(?:mente)?\b|todas\s+las\s+semanas/);
+    if(mm){
+      marcar(mm[0]);
+      const d = parseISO(inicioRec(anio));
+      return armar(datesBetween(inicioRec(anio), finDeAnio(anio), (d.getDay() + 6) % 7));
+    }
+  }
+
+  // ── 4h. "cada dos semanas"
+  m = t.match(/cada\s+(dos|tres|cuatro|\d{1,2})\s+semanas?/);
+  if(m){
+    marcar(m[0]);
+    const mapa = { dos:2, tres:3, cuatro:4 };
+    const n = mapa[m[1]] || parseInt(m[1], 10) || 2;
+    return armar(datesBetween(inicioRec(anio), finDeAnio(anio), null, n * 7));
   }
 
   // ── 5. "entre el 5 y el 9 de octubre"
@@ -4070,7 +4218,7 @@ Convierte el siguiente texto en español a eventos de calendario.
 
 Reglas:
 - Responde SOLO con un arreglo JSON, sin explicación ni markdown.
-- Cada evento: {"date":"YYYY-MM-DD","title":"...","type":"..."}
+- Cada evento: {"date":"YYYY-MM-DD","title":"...","type":"...","hora":"HH:MM" o ausente}
 - type debe ser exactamente uno de estos identificadores: ${categorias().map(k => k.id).join(', ')}
 - Significado: ${categorias().map(k => k.id + ' = ' + k.label).join('; ')}
 - examen para exámenes y parciales; entrega para tareas, proyectos, láminas y maquetas; vacacion para vacaciones, viajes y puentes; otro para lo demás.
@@ -4081,6 +4229,10 @@ Reglas:
 - Acepta los dos órdenes: "23 de diciembre" y "diciembre 23". Reconoce "del X al Y", "de el X al Y", "desde el X hasta el Y", "a partir del X", "entre el X y el Y".
 - "de lunes a viernes" o "entre semana" = solo días hábiles. "fines de semana" = sábados y domingos.
 - Puede haber varios días de la semana juntos: "todos los lunes y miércoles".
+- MENSUALES: "todos los 10 de cada mes" = el día 10 de cada mes hasta fin de año. También "el día 15 de cada mes", "cada mes el 20", "el primer lunes de cada mes", "el último viernes de cada mes", "el último día de cada mes", "cada quincena" (días 1 y 15), "cada mes", "mensual".
+- "cada semana"/"semanal" = una vez por semana en el mismo día. "cada dos semanas" = cada 14 días.
+- Las repeticiones empiezan HOY si el año en vista es el actual; no generes fechas pasadas.
+- HORA: si dice una hora, ponla en el campo "hora" con formato "HH:MM" de 24 h. Ejemplos: "a las 2" = "14:00", "a las 8 de la mañana" = "08:00", "a las 14:30" = "14:30". Si no dice hora, omite el campo.
 - Si dice "todos los días", "diario" o "cada día", genera un evento por CADA día hasta el 31 de diciembre de ${ANIO} (o hasta la fecha límite que indique).
 - Si dice "todos los días de <mes>", genera un evento por cada día de ese mes.
 - Si dice "todos los <día de la semana>", genera uno por semana hasta el 31 de diciembre de ${ANIO}.
@@ -4810,8 +4962,10 @@ async function agentSubmit(){
   if(!list || list.length === 0){
     agentSetResult(`
       <div class="agent-msg err">No encontré una fecha.</div>
-      <div class="agent-msg">Para <b>agregar</b>: “examen de estructuras el 15 de octubre”.<br>
-      Para <b>cambiar de categoría</b>: “cambia los partidos de fútbol a deporte”.<br>
+      <div class="agent-msg">Para <b>agregar</b>: “examen el 15 de octubre a las 2 pm”.<br>
+      <b>Repetido</b>: “todos los lunes”, “todos los 10 de cada mes”, “cada quincena”.<br>
+      <b>Rango</b>: “del 23 de diciembre al 8 de enero”.<br>
+      Para <b>cambiar de categoría</b>: “cambia los partidos a deporte”.<br>
       Para <b>quitar</b>: “quítame la creatina”.<br>
       Para <b>preguntar</b>: “¿qué entrego la próxima semana?”.</div>
     `);
