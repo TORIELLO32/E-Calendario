@@ -339,6 +339,16 @@
     opacity:0.75;
     line-height:1;
   }
+  .cell.destello{
+    animation:destella 1.6s ease-out;
+    border-radius:4px;
+    z-index:3;
+  }
+  @keyframes destella{
+    0%   { box-shadow:0 0 0 0 var(--accent), inset 0 0 0 2px var(--accent); }
+    35%  { box-shadow:0 0 0 7px transparent, inset 0 0 0 2px var(--accent); }
+    100% { box-shadow:0 0 0 0 transparent, inset 0 0 0 0 transparent; }
+  }
   .cell.today{outline:2px solid var(--accent);outline-offset:-2px;border-radius:4px;z-index:1;}
   .cell.today .daynum{color:var(--accent);font-weight:700;}
   .cell.has-events{cursor:pointer;}
@@ -2772,7 +2782,7 @@ function buildMonthCard(y, m, byDate){
       dotsHtml = `<span class="ev-num">${dayEvents.length}</span>`;
     }
 
-    cells += `<button class="${classes}"${fondo} onclick="dayTap('${iso}')"><span class="daynum">${d}</span>${dotsHtml}</button>`;
+    cells += `<button class="${classes}"${fondo} data-d="${iso}" onclick="dayTap('${iso}')"><span class="daynum">${d}</span>${dotsHtml}</button>`;
   }
 
   for(let i=0;i<trail;i++) cells += `<div class="cell blank"></div>`;
@@ -3031,11 +3041,60 @@ function eventosVisibles(){
   return EVENTS.filter(ev => filtros.has(ev.type));
 }
 
+// El evento más próximo de lo que se está viendo.
+// Si ya no queda nada por venir, el último que hubo.
+function proximoVisible(){
+  const hoy = todayISO();
+  const vis = eventosVisibles();
+  if(!vis.length) return null;
+  const futuros = vis.filter(e => e.date >= hoy).sort((a,b) => a.date.localeCompare(b.date));
+  if(futuros.length) return futuros[0];
+  return vis.slice().sort((a,b) => b.date.localeCompare(a.date))[0] || null;
+}
+
+// Lleva la vista hasta esa fecha y le da un destello al día
+function irAFecha(iso){
+  const y = +iso.slice(0,4);
+  if(y < ANIO_MIN || y > ANIO_MAX) return;
+
+  if(ANIO !== y || vista !== 'anio'){
+    ANIO = y;
+    vista = 'anio';
+    renderVista();
+  }
+
+  requestAnimationFrame(() => {
+    const mes = document.getElementById(`mes-${y}-${iso.slice(5,7)}`);
+    if(!mes) return;
+    const barra = document.getElementById('barra');
+    const alto = barra ? barra.getBoundingClientRect().height : 0;
+    const top = mes.getBoundingClientRect().top + window.scrollY - alto - 10;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    setTimeout(actualizarMesEnBarra, 420);
+
+    // Destello para que se vea cuál es
+    setTimeout(() => {
+      const celda = document.querySelector(`.cell[data-d="${iso}"]`);
+      if(!celda) return;
+      celda.classList.add('destello');
+      setTimeout(() => celda.classList.remove('destello'), 1600);
+    }, 380);
+  });
+}
+
 function toggleFiltro(id){
-  if(filtros.has(id)) filtros.delete(id);
-  else filtros.add(id);
+  const prendiendo = !filtros.has(id);
+  if(prendiendo) filtros.add(id);
+  else filtros.delete(id);
   renderLegend();
   renderVista();
+
+  // Al prender un filtro no tiene caso dejarte buscando:
+  // se salta al evento más cercano de lo que quedó a la vista.
+  if(prendiendo && filtros.size > 0){
+    const ev = proximoVisible();
+    if(ev) irAFecha(ev.date);
+  }
 }
 
 function limpiarFiltros(){
@@ -5040,7 +5099,8 @@ function responderPregunta(texto){
 // Abre el día desde la respuesta
 function verDia(iso){
   closeAgent();
-  openPanel(iso);
+  irAFecha(iso);
+  setTimeout(() => openPanel(iso), 260);
 }
 
 function mostrarRespuesta(res){
