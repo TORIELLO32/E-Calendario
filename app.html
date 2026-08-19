@@ -368,7 +368,18 @@
     flex:none;
   }
 
-  .ev-dot.done{opacity:0.28;}
+  .ev-dot.done{
+    width:10px;
+    height:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .ev-dot.done svg{
+    width:7px;
+    height:7px;
+    display:block;
+  }
   .ev-plus{
     font-family:var(--font-mono);
     font-size:0.55rem;
@@ -2768,13 +2779,23 @@ function buildMonthCard(y, m, byDate){
     }else if(hasEvents && !(filtros.size > 0 && !enSeleccion)){
       const shown = dayEvents.slice(0,3);
       const dots = shown.map(ev => {
-        const a = avance(ev);
-        const col = catColor(ev.type);
+        const col = safeColor(catColor(ev.type));
+
+        // Completado: fondo tenue y palomita del color encima.
+        // El fondo se aclara con transparencia (no con opacity) para
+        // que la palomita se vea nítida y no se apague con él.
+        if(COMPLETED.has(evId(ev))){
+          return `<i class="ev-dot done" style="background:${col}2E">
+            <svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </i>`;
+        }
+
         // Con subtareas, el punto se llena según el avance
+        const a = avance(ev);
         const fondo = (a !== null && a < 1)
           ? `conic-gradient(${col} ${Math.round(a*100)}%, ${col}33 0)`
           : col;
-        return `<i class="ev-dot${COMPLETED.has(evId(ev)) ? ' done' : ''}" style="background:${fondo}"></i>`;
+        return `<i class="ev-dot" style="background:${fondo}"></i>`;
       }).join('');
       const plus = dayEvents.length > 3 ? `<span class="ev-plus">+${dayEvents.length - 3}</span>` : '';
       dotsHtml = `<span class="ev-dots">${dots}${plus}</span>`;
@@ -3041,15 +3062,27 @@ function eventosVisibles(){
   return EVENTS.filter(ev => filtros.has(ev.type));
 }
 
-// El evento más próximo de lo que se está viendo.
-// Si ya no queda nada por venir, el último que hubo.
+// A dónde saltar al prender un filtro. En orden de preferencia:
+//   1. lo más próximo que falta por hacer
+//   2. si todo lo que viene ya está hecho, lo más próximo que sea
+//   3. si ya no viene nada, lo último que hubo
+// Lo ya completado se salta: no tiene caso llevarte a algo terminado.
 function proximoVisible(){
   const hoy = todayISO();
   const vis = eventosVisibles();
   if(!vis.length) return null;
-  const futuros = vis.filter(e => e.date >= hoy).sort((a,b) => a.date.localeCompare(b.date));
+
+  const porFecha = (a,b) => a.date.localeCompare(b.date);
+  const futuros = vis.filter(e => e.date >= hoy).sort(porFecha);
+
+  const pendiente = futuros.find(e => !COMPLETED.has(evId(e)));
+  if(pendiente) return pendiente;
+
   if(futuros.length) return futuros[0];
-  return vis.slice().sort((a,b) => b.date.localeCompare(a.date))[0] || null;
+
+  // Nada por venir: el último, prefiriendo uno sin completar
+  const pasados = vis.slice().sort((a,b) => b.date.localeCompare(a.date));
+  return pasados.find(e => !COMPLETED.has(evId(e))) || pasados[0] || null;
 }
 
 // Lleva la vista hasta esa fecha y le da un destello al día
