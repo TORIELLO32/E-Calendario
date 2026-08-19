@@ -8,9 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="Semestre">
 <meta name="theme-color" content="#F6F4EE">
 <link rel="apple-touch-icon" href="icon.png">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<!-- El guardado lo maneja sw.js: primero red, y si tarda, la copia
+     del teléfono. Así abre siempre y se actualiza cuando hay señal. -->
 <title>Bitácora · Calendario 2026–2050</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -496,6 +495,42 @@
     opacity:1;
   }
 
+  /* ---------- Pantalla de rescate ---------- */
+  .rescate{
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:200;
+    background:var(--paper);
+    padding:24px;
+    align-items:center;
+    justify-content:center;
+  }
+  .rescate.show{display:flex;}
+  .rescate-caja{
+    width:100%;
+    max-width:340px;
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  .rescate-tit{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.1rem;
+  }
+  .rescate-txt{
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    line-height:1.45;
+    margin-bottom:6px;
+  }
+  .rescate .btn{width:100%;}
+
   /* ---------- Confirmar borrado ---------- */
   .conf-borrar{
     border:1px solid var(--examen);
@@ -742,6 +777,62 @@
     margin-bottom:12px;
   }
   .progress b{color:var(--accent);font-weight:600;}
+
+  /* ---------- Pantalla de carga ---------- */
+  .cargando{
+    position:fixed;
+    inset:0;
+    z-index:200;
+    background:var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:opacity 0.25s ease;
+  }
+  .cargando.fuera{opacity:0;pointer-events:none;}
+  .cargando-caja{text-align:center;padding:0 30px;}
+  .cargando-punto{
+    width:26px;height:26px;
+    border-radius:50%;
+    border:3px solid var(--line);
+    border-top-color:var(--accent);
+    margin:0 auto 14px;
+    animation:gira 0.8s linear infinite;
+  }
+  @keyframes gira{to{transform:rotate(360deg);}}
+  .cargando-txt{
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .cargando-nota{
+    font-family:var(--font-body);
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    line-height:1.45;
+    margin-top:14px;
+    max-width:270px;
+  }
+
+  .aviso-sw{
+    position:fixed;
+    left:14px;right:14px;
+    bottom:calc(16px + env(safe-area-inset-bottom));
+    z-index:150;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--paper-card);
+    border:1px solid var(--accent);
+    border-radius:12px;
+    padding:11px 13px;
+    box-shadow:0 8px 24px -12px var(--sombra);
+    font-size:0.84rem;
+  }
+  .aviso-sw span{flex:1;}
+  .aviso-sw .btn{flex:none;padding:7px 14px;}
 
   /* ---------- Barra fija ---------- */
   .barra{
@@ -1351,6 +1442,14 @@
 <body>
 
 <div class="wrap">
+  <div class="cargando" id="cargando">
+    <div class="cargando-caja">
+      <div class="cargando-punto"></div>
+      <div class="cargando-txt">Abriendo tu calendario…</div>
+      <div class="cargando-nota" id="cargandoNota"></div>
+    </div>
+  </div>
+
   <header class="masthead">
     <div class="top-row">
       <div>
@@ -1467,7 +1566,10 @@
   <div class="opt-block">
     <div class="opt-title">Versión</div>
     <div class="opt-desc">Estás usando la versión <b id="verNum">—</b>. Si acabas de subir un archivo nuevo y no ves los cambios, toca Recargar.</div>
-    <button class="btn" id="btnRecargar">Recargar de cero</button>
+    <div class="opt-actions">
+      <button class="btn" id="btnRecargar">Recargar de cero</button>
+      <button class="btn" id="btnVaciar">Vaciar guardado</button>
+    </div>
   </div>
 
   <div class="opt-block">
@@ -1528,6 +1630,16 @@
       <button class="btn" id="rgCancel">Cancelar</button>
       <button class="btn primary" id="rgGo">Agregar</button>
     </div>
+  </div>
+</div>
+
+<div class="rescate" id="rescate">
+  <div class="rescate-caja">
+    <div class="rescate-tit">La app tardó en abrir</div>
+    <div class="rescate-txt" id="rescateTxt">Algo se atoró al arrancar. Tus eventos están a salvo en la nube.</div>
+    <button class="btn primary" onclick="recargarDeCero()">Recargar de cero</button>
+    <button class="btn" onclick="entrarDeNuevo()">Entrar con mi cuenta</button>
+    <button class="btn" onclick="cerrarRescate()">Seguir de todos modos</button>
   </div>
 </div>
 
@@ -2218,10 +2330,20 @@ function hasLocalStorage(){
 }
 
 // Lee una llave probando Claude y luego el navegador
+// Nunca se espera para siempre: si algo no responde a tiempo,
+// se sigue adelante con un valor por omisión. Un cuelgue aquí
+// dejaba la app en blanco sin manera de recuperarla.
+function conTimeout(promesa, ms, siFalla){
+  return Promise.race([
+    Promise.resolve(promesa).catch(() => siFalla),
+    new Promise(r => setTimeout(() => r(siFalla), ms)),
+  ]);
+}
+
 async function readKey(key){
   if(hasClaudeStorage()){
     try{
-      const res = await window.storage.get(key, false);
+      const res = await conTimeout(window.storage.get(key, false), 3000, null);
       if(res && res.value) return res.value;
     }catch(e){ /* la llave aún no existe */ }
   }
@@ -2239,19 +2361,13 @@ async function writeKey(key, payload){
     return false;
   }
   if(hasClaudeStorage() && !claudeStorageBroken){
-    try{
-      await window.storage.set(key, payload, false);
-      storageMode = 'claude';
-      return true;
-    }catch(e){
-      try{
-        await window.storage.set(key, payload);
-        storageMode = 'claude';
-        return true;
-      }catch(e2){
-        claudeStorageBroken = true;
-      }
-    }
+    const ok = await conTimeout(
+      window.storage.set(key, payload, false).then(() => true), 3000, false);
+    if(ok){ storageMode = 'claude'; return true; }
+    const ok2 = await conTimeout(
+      Promise.resolve().then(() => window.storage.set(key, payload)).then(() => true), 3000, false);
+    if(ok2){ storageMode = 'claude'; return true; }
+    claudeStorageBroken = true;
   }
   if(hasLocalStorage()){
     try{
@@ -5482,6 +5598,19 @@ document.getElementById('btnPasteOpen').addEventListener('click', () => {
 });
 document.getElementById('btnPasteGo').addEventListener('click', restoreBackup);
 document.getElementById('btnRecargar').addEventListener('click', recargarDeCero);
+document.getElementById('btnVaciar').addEventListener('click', async () => {
+  try{
+    if('caches' in window){
+      const n = await caches.keys();
+      await Promise.all(n.map(k => caches.delete(k)));
+    }
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+  }catch(e){}
+  recargarDeCero();
+});
 document.getElementById('btnLogout').addEventListener('click', cerrarSesion);
 document.getElementById('btnSyncNow').addEventListener('click', async () => {
   if(!syncEnabled()){
@@ -5591,6 +5720,68 @@ setInterval(checkDayChange, 60000);
 
 // ---------- Inicio ----------
 // ══════════════════════════════════════════════════════════════
+// GUARDAR LA APP EN EL TELÉFONO
+// Con esto abre al instante y funciona aunque la señal esté mal.
+// ══════════════════════════════════════════════════════════════
+let swListo = false;
+
+function registrarSW(){
+  if(!('serviceWorker' in navigator)) return;
+  if(location.protocol !== 'https:' && location.hostname !== 'localhost') return;
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => {
+      swListo = true;
+      // Si llega una versión nueva, se avisa en vez de cambiarla sola
+      reg.addEventListener('updatefound', () => {
+        const nuevo = reg.installing;
+        if(!nuevo) return;
+        nuevo.addEventListener('statechange', () => {
+          if(nuevo.state === 'installed' && navigator.serviceWorker.controller){
+            avisoVersionNueva();
+          }
+        });
+      });
+    })
+    .catch(e => console.warn('No se pudo guardar la app:', e));
+}
+
+function avisoVersionNueva(){
+  if(document.getElementById('avisoSW')) return;
+  const el = document.createElement('div');
+  el.id = 'avisoSW';
+  el.className = 'aviso-sw';
+  el.innerHTML = `<span>Hay una versión nueva.</span>
+    <button class="btn" onclick="aplicarVersionNueva()">Actualizar</button>`;
+  document.body.appendChild(el);
+}
+
+function aplicarVersionNueva(){
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage('actualizar');
+  }
+  setTimeout(() => location.reload(), 200);
+}
+
+// Se registra sin bloquear el arranque
+setTimeout(registrarSW, 1200);
+
+// Quita la pantalla de carga
+function quitarCargando(){
+  const el = document.getElementById('cargando');
+  if(!el) return;
+  el.classList.add('fuera');
+  setTimeout(() => { if(el.parentNode) el.remove(); }, 300);
+}
+
+// Si tarda mucho, se explica en vez de dejar una pantalla muda
+setTimeout(() => {
+  const n = document.getElementById('cargandoNota');
+  if(n && document.getElementById('cargando')){
+    n.textContent = 'Está tardando más de lo normal. Puede ser la señal; en un momento debería abrir con lo guardado en el teléfono.';
+  }
+}, 4000);
+
+// ══════════════════════════════════════════════════════════════
 // ARRANQUE
 //
 // Regla de oro: si el archivo tiene cuenta configurada, la pantalla
@@ -5634,6 +5825,7 @@ async function init(){
     }
     if(!sesion){
       setSyncState('error');
+      quitarCargando();
       return;              // la puerta se queda puesta
     }
     ocultarGate();
@@ -5665,6 +5857,7 @@ async function init(){
     console.error('Error al dibujar:', e);
   }
 
+  quitarCargando();
   if(!cargoBien) avisoCarga();
 
   // 7. Nube
@@ -5696,8 +5889,12 @@ function avisoCarga(){
 
 // Si el arranque truena por completo, se avisa en vez de dejar
 // un calendario vacío que parece que perdió todo.
+// Red de seguridad: pase lo que pase, la pantalla de carga se va
+setTimeout(quitarCargando, 9000);
+
 init().catch(err => {
   console.error('Fallo al arrancar:', err);
+  quitarCargando();
   if(syncEnabled()) mostrarGate();
   setSyncState('error');
   const m = document.getElementById('authMsg');
