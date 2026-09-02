@@ -655,6 +655,52 @@
   .sub-add input:focus{outline:none;border-color:var(--accent);}
   .sub-go{flex:none;width:40px;padding:0;font-size:1rem;}
 
+  .det-caja{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px;
+    margin-top:6px;
+  }
+  .det-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    background:var(--paper-alt);
+    border-radius:20px;
+    padding:3px 9px;
+    text-decoration:none;
+    max-width:100%;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+  .det-chip:active{background:var(--accent-soft);}
+  .det-chip svg{width:12px;height:12px;flex:none;}
+  .det-nota{
+    display:block;
+    width:100%;
+    font-size:0.76rem;
+    line-height:1.4;
+    color:var(--ink-soft);
+    white-space:pre-wrap;
+  }
+  .panel-item.done .det-caja{opacity:0.55;}
+  .campo textarea{
+    width:100%;
+    font-family:var(--font-body);
+    font-size:16px;
+    color:var(--ink);
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    resize:vertical;
+    box-sizing:border-box;
+  }
+  .campo textarea:focus{outline:none;border-color:var(--accent);}
   .hora-tag{
     font-family:var(--font-mono);
     font-size:0.66rem;
@@ -2394,6 +2440,47 @@ function fmtHora(h){
   return `${h12}:${pad(mm)} ${suf}`;
 }
 
+const MAX_LINK  = 500;
+const MAX_NOTAS = 600;
+const MAX_LUGAR = 120;
+
+// Solo se aceptan ligas http/https. Nada de javascript: ni data:
+function safeLink(u){
+  if(typeof u !== 'string') return '';
+  const s = limpiarTexto(u, MAX_LINK);
+  if(!s) return '';
+  if(!/^https?:\/\/[^\s]+$/i.test(s)) return '';
+  try{
+    const url = new URL(s);
+    if(url.protocol !== 'http:' && url.protocol !== 'https:') return '';
+    return url.href.slice(0, MAX_LINK);
+  }catch(e){ return ''; }
+}
+
+// De qué es la liga, para ponerle nombre e ícono
+function tipoLink(u){
+  const s = safeLink(u);
+  if(!s) return null;
+  let h = '';
+  try{ h = new URL(s).hostname.toLowerCase(); }catch(e){ return null; }
+  if(h.includes('zoom.'))            return { n:'Zoom',    c:'#2D8CFF' };
+  if(h.includes('meet.google'))      return { n:'Meet',    c:'#00897B' };
+  if(h.includes('teams.'))           return { n:'Teams',   c:'#5059C9' };
+  if(h.includes('drive.google'))     return { n:'Drive',   c:'#1A73E8' };
+  if(h.includes('docs.google'))      return { n:'Docs',    c:'#1A73E8' };
+  if(h.includes('classroom.google')) return { n:'Classroom', c:'#1E8E3E' };
+  if(h.includes('youtube') || h.includes('youtu.be')) return { n:'YouTube', c:'#FF0000' };
+  if(h.includes('whatsapp') || h.includes('wa.me'))   return { n:'WhatsApp', c:'#25D366' };
+  return { n: h.replace(/^www\./,'').slice(0,22), c:'var(--accent)' };
+}
+
+// Liga a Mapas con el lugar
+function linkMapa(lugar){
+  const s = limpiarTexto(lugar, MAX_LUGAR);
+  if(!s) return '';
+  return 'https://maps.apple.com/?q=' + encodeURIComponent(s);
+}
+
 // Subtareas de un evento: [{ t:'texto', d:true/false }]
 const MAX_SUBS = 20;
 const MAX_SUB_TXT = 60;
@@ -2438,7 +2525,13 @@ function sanitizeEvent(e){
   if(typeof e.title !== 'string') return null;
   const title = limpiarTexto(e.title, MAX_TITULO);
   if(!title) return null;
-  return { date: e.date, title, type: safeType(e.type), rem: safeRem(e.rem), hora: safeHora(e.hora), subs: sanitizeSubs(e.subs) };
+  return {
+    date: e.date, title, type: safeType(e.type),
+    rem: safeRem(e.rem), hora: safeHora(e.hora), subs: sanitizeSubs(e.subs),
+    link: safeLink(e.link),
+    notas: typeof e.notas === 'string' ? limpiarTexto(e.notas, MAX_NOTAS) : '',
+    lugar: typeof e.lugar === 'string' ? limpiarTexto(e.lugar, MAX_LUGAR) : '',
+  };
 }
 function sanitizeList(arr){
   if(!Array.isArray(arr)) return [];
@@ -2724,7 +2817,8 @@ async function confirmarBorrarEvento(i){
 
   // Se guarda una copia por si se quiere deshacer
   ultimoBorrado = {
-    ev: { date:ev.date, title:ev.title, type:ev.type, rem:safeRem(ev.rem), hora:safeHora(ev.hora), subs:sanitizeSubs(ev.subs) },
+    ev: { date:ev.date, title:ev.title, type:ev.type, rem:safeRem(ev.rem), hora:safeHora(ev.hora),
+          subs:sanitizeSubs(ev.subs), link:safeLink(ev.link), notas:ev.notas || '', lugar:ev.lugar || '' },
     estabaHecho: COMPLETED.has(id),
   };
 
@@ -2799,6 +2893,10 @@ async function saveEdit(oldId){
   const date = document.getElementById('edDate').value;
   const type = document.getElementById('edType').value;
   const hora = safeHora(document.getElementById('edHora').value);
+  const lugar = limpiarTexto(document.getElementById('edLugar').value, MAX_LUGAR);
+  const link = safeLink(document.getElementById('edLink').value);
+  const notas = limpiarTexto(document.getElementById('edNotas').value, MAX_NOTAS);
+  const linkCrudo = document.getElementById('edLink').value.trim();
 
   if(!title || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
     editingId = null;
@@ -2808,7 +2906,16 @@ async function saveEdit(oldId){
 
   const wasDone = COMPLETED.has(oldId);
   const previo = EVENTS.find(e => evId(e) === oldId);
-  const nuevo = { date, title: title.slice(0,80), type, rem: previo ? safeRem(previo.rem) : -1, hora };
+  if(linkCrudo && !link){
+    alert('Esa liga no se ve válida. Debe empezar con https://');
+    return;
+  }
+  const nuevo = {
+    date, title: title.slice(0,80), type,
+    rem: previo ? safeRem(previo.rem) : -1,
+    hora, lugar, link, notas,
+    subs: previo ? sanitizeSubs(previo.subs) : [],
+  };
   const newId = evId(nuevo);
 
   // Se retira el original y se guarda la versión editada
@@ -3588,7 +3695,8 @@ function mioOCrear(ev){
   const id = evId(ev);
   let u = USER_EVENTS.find(x => evId(x) === id);
   if(!u){
-    u = { date:ev.date, title:ev.title, type:ev.type, rem:safeRem(ev.rem), hora:safeHora(ev.hora), subs:sanitizeSubs(ev.subs) };
+    u = { date:ev.date, title:ev.title, type:ev.type, rem:safeRem(ev.rem), hora:safeHora(ev.hora),
+          subs:sanitizeSubs(ev.subs), link:safeLink(ev.link), notas:ev.notas || '', lugar:ev.lugar || '' };
     USER_EVENTS.push(u);
   }
   if(!Array.isArray(u.subs)) u.subs = [];
@@ -3657,6 +3765,33 @@ async function delSub(i, k){
   renderMonths();
   renderProgress();
   await markChanged();
+}
+
+// Liga, lugar y notas de un evento, si tiene
+function detallesHTML(ev){
+  const partes = [];
+
+  const tl = tipoLink(ev.link);
+  if(tl){
+    partes.push(`<a class="det-chip" href="${esc(safeLink(ev.link))}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="${esc(tl.c)}" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+      ${esc(tl.n)}
+    </a>`);
+  }
+
+  const lugar = limpiarTexto(ev.lugar || '', MAX_LUGAR);
+  if(lugar){
+    partes.push(`<a class="det-chip" href="${esc(linkMapa(lugar))}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      ${esc(lugar)}
+    </a>`);
+  }
+
+  const notas = limpiarTexto(ev.notas || '', MAX_NOTAS);
+  const nota = notas ? `<span class="det-nota">${esc(notas)}</span>` : '';
+
+  if(!partes.length && !nota) return '';
+  return `<span class="det-caja">${partes.join('')}${nota}</span>`;
 }
 
 // Dibuja la lista de subtareas de un evento
@@ -3864,6 +3999,18 @@ function renderPanelBody(){
             <select id="edType" onchange="checkNueva(this,'edNueva')">${typeOptions(ev.type)}</select>
           </label>
           <div id="edNueva"></div>
+          <label class="campo">
+            <span class="campo-lbl">Lugar (opcional)</span>
+            <input type="text" id="edLugar" maxlength="${MAX_LUGAR}" value="${esc(ev.lugar || '')}" placeholder="Salón, dirección…">
+          </label>
+          <label class="campo">
+            <span class="campo-lbl">Liga (Zoom, Meet, Drive…)</span>
+            <input type="url" id="edLink" maxlength="${MAX_LINK}" value="${esc(ev.link || '')}" placeholder="https://…" inputmode="url" autocapitalize="off">
+          </label>
+          <label class="campo">
+            <span class="campo-lbl">Notas (opcional)</span>
+            <textarea id="edNotas" maxlength="${MAX_NOTAS}" rows="2" placeholder="Qué llevar, con quién…">${esc(ev.notas || '')}</textarea>
+          </label>
           <div class="prev-actions">
             <button class="btn" onclick="cancelEdit()">Cancelar</button>
             <button class="btn primary" onclick="saveEditAt(${i})">Guardar</button>
@@ -3879,6 +4026,7 @@ function renderPanelBody(){
           <span class="txt">
             <span class="cat"><i class="dot" style="background:${catColor(ev.type)}"></i>${esc(catLabel(ev.type))}${ev.hora ? ` · <b class="hora-tag">${esc(fmtHora(ev.hora))}</b>` : ''}</span>
             ${esc(ev.title)}
+            ${detallesHTML(ev)}
             ${subsDe(ev).length ? `<span class="prog-tag">${subsHechas(ev)}/${subsDe(ev).length} pasos</span>` : ''}
             ${safeRem(ev.rem) >= 0 ? `<span class="rem-tag">🔔 ${esc(remLabel(ev.rem))}</span>` : ''}
           </span>
@@ -4389,6 +4537,15 @@ function localParse(text){
   let t = normalize(raw);
   [raw, t] = numerosALetra(raw, t);
 
+  // Si viene una liga pegada, se guarda aparte y se saca del título
+  let ligaSuelta = '';
+  const mLiga = raw.match(/https?:\/\/[^\s]+/i);
+  if(mLiga){
+    ligaSuelta = safeLink(mLiga[0]);
+    raw = raw.replace(mLiga[0], ' ').replace(/\s+/g,' ').trim();
+    t = normalize(raw);
+  }
+
   // La hora se saca primero, para que no estorbe a la fecha
   const conHora = extraerHora(t);
   const hora = conHora ? conHora.hora : null;
@@ -4443,7 +4600,7 @@ function localParse(text){
     const rem = removals.slice();
     if(HAY_ANIO) rem.push(/\s*\b(?:de\s+|del\s+)?(?:20[2-4]\d|2050)\b/gi);
     const title = cleanTitle(raw, rem);
-    return fechas.map(date => ({ date, title, type, rem: -1, hora }));
+    return fechas.map(date => ({ date, title, type, rem: -1, hora, link: ligaSuelta, notas:'', lugar:'', subs:[] }));
   };
   const marcar = (frag) => { removals.push(flexRx(frag)); };
   const listaWD = (txt) => {
@@ -5525,7 +5682,8 @@ function etiquetaMod(tipo, valor){
 // Cómo queda cada evento después del cambio
 function aplicarMod(ev, tipo, valor){
   const nuevo = { date:ev.date, title:ev.title, type:ev.type,
-                  rem:safeRem(ev.rem), hora:safeHora(ev.hora), subs:sanitizeSubs(ev.subs) };
+                  rem:safeRem(ev.rem), hora:safeHora(ev.hora), subs:sanitizeSubs(ev.subs),
+                  link:safeLink(ev.link), notas:ev.notas || '', lugar:ev.lugar || '' };
   if(tipo === 'nombre') nuevo.title = valor;
   else if(tipo === 'hora') nuevo.hora = safeHora(valor);
   else if(tipo === 'fecha') nuevo.date = valor;
@@ -6000,6 +6158,11 @@ function buildICS(){
     }
     lines.push('SUMMARY:' + icsEscape(ev.title));
     lines.push('CATEGORIES:' + icsEscape(catLabel(ev.type)));
+    if(ev.lugar) lines.push('LOCATION:' + icsEscape(ev.lugar));
+    const liga = safeLink(ev.link);
+    const desc = [ev.notas || '', liga].filter(Boolean).join(' ');
+    if(desc) lines.push('DESCRIPTION:' + icsEscape(desc));
+    if(liga) lines.push('URL:' + liga);
     alarmsFor(ev).forEach(l => lines.push(l));
     lines.push('END:VEVENT');
   });
