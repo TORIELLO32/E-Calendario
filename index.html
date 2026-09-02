@@ -655,6 +655,13 @@
   .sub-add input:focus{outline:none;border-color:var(--accent);}
   .sub-go{flex:none;width:40px;padding:0;font-size:1rem;}
 
+  .mas-det{
+    width:100%;
+    margin-bottom:9px;
+    border-style:dashed;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+  }
   .det-caja{
     display:flex;
     flex-wrap:wrap;
@@ -1150,12 +1157,133 @@
     border-color:var(--accent);
   }
   .barra .legend{margin:0;}
+  .vistas{
+    display:flex;
+    gap:3px;
+    background:var(--paper-alt);
+    border-radius:9px;
+    padding:3px;
+    margin-bottom:9px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .vistas::-webkit-scrollbar{display:none;}
+  .vista-btn{
+    flex:1;
+    min-width:64px;
+    border:none;
+    background:none;
+    border-radius:7px;
+    padding:6px 9px;
+    font-family:var(--font-body);
+    font-size:0.76rem;
+    color:var(--ink-soft);
+    cursor:pointer;
+    white-space:nowrap;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .vista-btn.on{
+    background:var(--paper-card);
+    color:var(--ink);
+    font-weight:600;
+    box-shadow:0 1px 3px -1px var(--sombra);
+  }
+  .barra.en-anios .vistas{display:none;}
   /* En la vista de años sobran el botón de volver y el de rango */
   .barra.en-anios .barra-back,
   .barra.en-anios .barra-sel,
   .barra.en-anios .barra-mes,
   .barra.en-anios .barra-carga,
   .barra.en-anios .barra-hoy{display:none;}
+
+  /* ---------- Vista de lista ---------- */
+  #listaVista{padding-bottom:20px;}
+  .lista-pasados{
+    width:100%;
+    margin-bottom:14px;
+    border-style:dashed;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+  }
+  .lista-vacia{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:0.88rem;
+    padding:40px 20px;
+    line-height:1.5;
+  }
+  .lista-dia{
+    display:flex;
+    align-items:baseline;
+    gap:9px;
+    padding:16px 2px 7px;
+    border-bottom:1px solid var(--line-soft);
+    margin-bottom:4px;
+  }
+  .lista-fecha{
+    flex:1;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:0.92rem;
+    letter-spacing:-0.01em;
+  }
+  .lista-dia.es-hoy .lista-fecha{color:var(--accent);}
+  .lista-falta{
+    font-family:var(--font-mono);
+    font-size:0.64rem;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    flex:none;
+  }
+  .lista-ev{
+    display:flex;
+    align-items:stretch;
+    gap:10px;
+    width:100%;
+    background:var(--paper-card);
+    border:1px solid var(--line-soft);
+    border-radius:10px;
+    padding:10px 11px;
+    margin-bottom:6px;
+    text-align:left;
+    font-family:inherit;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .lista-ev:active{border-color:var(--accent);}
+  .lista-barra{
+    width:3px;
+    border-radius:2px;
+    flex:none;
+  }
+  .lista-cuerpo{flex:1;min-width:0;}
+  .lista-tit{
+    display:block;
+    font-size:0.9rem;
+    line-height:1.3;
+    color:var(--ink);
+    margin-bottom:2px;
+  }
+  .lista-meta{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:0.64rem;
+    letter-spacing:0.03em;
+    color:var(--ink-soft);
+  }
+  .lista-meta b{color:var(--accent);font-weight:600;}
+  .lista-ev.hecho .lista-tit{
+    color:var(--ink-soft);
+    text-decoration:line-through;
+  }
+  .lista-ok{
+    flex:none;
+    align-self:center;
+    color:var(--vacacion);
+    font-size:0.95rem;
+    font-weight:700;
+  }
 
   /* ---------- Cuadrícula de años ---------- */
   #years{
@@ -1775,11 +1903,16 @@
       </button>
       <button class="icon-btn barra-hoy" id="hoyBtn" aria-label="Ir a hoy">Hoy</button>
     </div>
+    <div class="vistas" id="vistas">
+      <button class="vista-btn on" data-v="puntos">Puntos</button>
+      <button class="vista-btn" data-v="lista">Lista</button>
+    </div>
     <div class="legend"></div>
   </div>
 
   <main id="years"></main>
   <main id="months" style="display:none"></main>
+  <main id="listaVista" style="display:none"></main>
 </div>
 
 <div class="overlay" id="overlay"></div>
@@ -1920,6 +2053,7 @@
       <select id="rgType" onchange="checkNueva(this,'rgNueva')"></select>
     </label>
     <div id="rgNueva"></div>
+    <div id="rgDetalles"></div>
     <div class="prev-actions">
       <button class="btn" id="rgCancel">Cancelar</button>
       <button class="btn primary" id="rgGo">Agregar</button>
@@ -2935,10 +3069,7 @@ async function saveEdit(oldId){
   renderProgress();
   renderMonths();
 
-  const d = parseISO(date);
-  const wd = WEEKDAYS_FULL[(d.getDay() + 6) % 7];
-  const raw = `${wd} ${d.getDate()} de ${MONTHS_ES[d.getMonth()]} de ${d.getFullYear()}`;
-  document.getElementById('panelDate').textContent = raw.charAt(0).toUpperCase() + raw.slice(1);
+  document.getElementById('panelDate').textContent = fechaLarga(date, true);
   renderPanelBody();
 
   await markChanged();
@@ -3237,6 +3368,12 @@ function diasDelRango(){
   return datesBetween(rangeStart, rangeEnd || rangeStart);
 }
 
+// Redibuja los campos de detalle del rango
+function abrirRangoCampos(){
+  const el = document.getElementById('rgDetalles');
+  if(el) el.innerHTML = camposDetalle('rg');
+}
+
 function abrirRango(){
   const dias = diasDelRango();
   const a = parseISO(rangeStart), b = parseISO(rangeEnd || rangeStart);
@@ -3248,6 +3385,8 @@ function abrirRango(){
   document.getElementById('rgHora').value = '';
   document.getElementById('rgType').innerHTML = typeOptions('otro');
   document.getElementById('rgNueva').innerHTML = '';
+  detallesAbiertos = false;
+  abrirRangoCampos();
   document.getElementById('rangeSheet').classList.add('open');
   document.getElementById('rangeOverlay').classList.add('open');
   setTimeout(() => document.getElementById('rgTitle').focus(), 250);
@@ -3263,11 +3402,17 @@ async function guardarRango(){
   const type = document.getElementById('rgType').value;
   const hora = safeHora(document.getElementById('rgHora').value);
   if(!title){ document.getElementById('rgTitle').focus(); return; }
+  const det = leerDetalle('rg');
+  if(det.error){ alert(det.error); return; }
 
-  const lista = diasDelRango().map(date => ({ date, title, type, hora }));
+  const lista = diasDelRango().map(date => ({
+    date, title, type, hora,
+    lugar:det.lugar, link:det.link, notas:det.notas, subs:[],
+  }));
   await addEvents(lista);
 
   cerrarRango();
+  detallesAbiertos = false;
   rangeStart = rangeEnd = null;
   selectMode = false;
   document.getElementById('selBtn2').classList.remove('active');
@@ -3572,6 +3717,7 @@ function abrirAnio(y){
 // Si el año que se abre es el actual, baja al mes en curso.
 // En cualquier otro año arranca desde enero.
 function irAlMesDeHoy(inmediato){
+  if(vistaTipo !== 'puntos'){ window.scrollTo({ top:0, behavior:'instant' }); return; }
   const hoy = new Date();
   if(ANIO !== hoy.getFullYear()){
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -3620,10 +3766,22 @@ function renderVista(){
     ? 'Bitácora · Arquitectura UDEM'
     : 'Bitácora · toca un año para abrirlo';
 
+  const enLista = enAnio && vistaTipo === 'lista';
+  document.getElementById('listaVista').style.display = enLista ? '' : 'none';
+  document.getElementById('months').style.display = (enAnio && !enLista) ? '' : 'none';
+  document.getElementById('timeline').style.display = (enAnio && !enLista) ? '' : 'none';
+  document.getElementById('selBtn2').style.display = enLista ? 'none' : '';
+  document.getElementById('cargaBtn').style.display = enLista ? 'none' : '';
+
   if(enAnio){
-    renderTimeline();
-    renderMonths();
-    requestAnimationFrame(actualizarMesEnBarra);
+    if(enLista){
+      renderLista();
+      document.getElementById('barraMes').textContent = '';
+    }else{
+      renderTimeline();
+      renderMonths();
+      requestAnimationFrame(actualizarMesEnBarra);
+    }
   }else{
     renderYears();
   }
@@ -3765,6 +3923,44 @@ async function delSub(i, k){
   renderMonths();
   renderProgress();
   await markChanged();
+}
+
+// Campos de lugar / liga / notas para los formularios de crear.
+// Van escondidos tras "Más detalles" para no alargar el formulario.
+let detallesAbiertos = false;
+
+function camposDetalle(pre){
+  if(!detallesAbiertos){
+    return `<button type="button" class="btn mas-det" onclick="abrirDetalles()">＋ Más detalles (lugar, liga, notas)</button>`;
+  }
+  return `
+    <label class="campo">
+      <span class="campo-lbl">Lugar (opcional)</span>
+      <input type="text" id="${pre}Lugar" maxlength="${MAX_LUGAR}" placeholder="Salón, dirección…">
+    </label>
+    <label class="campo">
+      <span class="campo-lbl">Liga (Zoom, Meet, Drive…)</span>
+      <input type="url" id="${pre}Link" maxlength="${MAX_LINK}" placeholder="https://…" inputmode="url" autocapitalize="off">
+    </label>
+    <label class="campo">
+      <span class="campo-lbl">Notas (opcional)</span>
+      <textarea id="${pre}Notas" maxlength="${MAX_NOTAS}" rows="2" placeholder="Qué llevar, con quién…"></textarea>
+    </label>
+  `;
+}
+
+// Lee esos campos si están abiertos
+function leerDetalle(pre){
+  const g = id => document.getElementById(pre + id);
+  if(!detallesAbiertos || !g('Lugar')) return { lugar:'', link:'', notas:'' };
+  const crudo = g('Link').value.trim();
+  const link = safeLink(crudo);
+  if(crudo && !link) return { error:'Esa liga no se ve válida. Debe empezar con https://' };
+  return {
+    lugar: limpiarTexto(g('Lugar').value, MAX_LUGAR),
+    link,
+    notas: limpiarTexto(g('Notas').value, MAX_NOTAS),
+  };
 }
 
 // Liga, lugar y notas de un evento, si tiene
@@ -3916,6 +4112,112 @@ function toggleCarga(){
   renderMonths();
 }
 
+// ══════════════════════════════════════════════════════════════
+// VISTAS
+// El mismo año se puede ver de varias formas. Se guarda cuál
+// prefieres, por dispositivo.
+// ══════════════════════════════════════════════════════════════
+const KEY_VISTA = 'semestre2026:vista';
+const VISTAS_OK = ['puntos','lista'];
+let vistaTipo = 'puntos';
+
+async function elegirVista(v){
+  if(!VISTAS_OK.includes(v)) return;
+  vistaTipo = v;
+  document.querySelectorAll('.vista-btn').forEach(b => {
+    b.classList.toggle('on', b.getAttribute('data-v') === v);
+  });
+  renderVista();
+  await writeKey(KEY_VISTA, v);
+}
+
+async function cargarVista(){
+  const g = await readKey(KEY_VISTA);
+  if(g && VISTAS_OK.includes(g)) vistaTipo = g;
+  document.querySelectorAll('.vista-btn').forEach(b => {
+    b.classList.toggle('on', b.getAttribute('data-v') === vistaTipo);
+  });
+}
+
+document.querySelectorAll('.vista-btn').forEach(b => {
+  b.addEventListener('click', () => elegirVista(b.getAttribute('data-v')));
+});
+
+// ---------- Vista de lista ----------
+let listaPasados = false;
+
+function togglePasados(){
+  listaPasados = !listaPasados;
+  renderLista();
+}
+
+function renderLista(){
+  const el = document.getElementById('listaVista');
+  if(!el) return;
+
+  const hoy = todayISO();
+  let evs = eventosVisibles().filter(e => +e.date.slice(0,4) === ANIO);
+  const pasados = evs.filter(e => e.date < hoy).length;
+  if(!listaPasados) evs = evs.filter(e => e.date >= hoy);
+
+  evs.sort((a,b) => {
+    if(a.date !== b.date) return a.date.localeCompare(b.date);
+    const ha = safeHora(a.hora), hb = safeHora(b.hora);
+    if(!ha && !hb) return 0;
+    if(!ha) return -1;
+    if(!hb) return 1;
+    return ha.localeCompare(hb);
+  });
+
+  const botonPasados = pasados
+    ? `<button class="btn lista-pasados" onclick="togglePasados()">${listaPasados ? 'Ocultar' : 'Ver'} lo anterior (${pasados})</button>`
+    : '';
+
+  if(!evs.length){
+    el.innerHTML = `${botonPasados}<div class="lista-vacia">No hay nada${listaPasados ? '' : ' por venir'} en ${ANIO}${filtros.size ? ' con ese filtro' : ''}.</div>`;
+    return;
+  }
+
+  // Se agrupa por día
+  let html = botonPasados;
+  let ultimo = '';
+  evs.forEach(ev => {
+    if(ev.date !== ultimo){
+      ultimo = ev.date;
+      const d = parseISO(ev.date);
+      const dias = diffDays(d, parseISO(hoy));
+      const falta = dias === 0 ? 'hoy' : (dias === 1 ? 'mañana' : (dias > 0 ? 'en ' + dias + ' d' : 'hace ' + (-dias) + ' d'));
+      html += `
+        <div class="lista-dia ${ev.date === hoy ? 'es-hoy' : ''}">
+          <span class="lista-fecha">${esc(fechaLarga(ev.date))}</span>
+          <span class="lista-falta">${falta}</span>
+        </div>`;
+    }
+    const hecho = COMPLETED.has(evId(ev));
+    const a = avance(ev);
+    html += `
+      <button class="lista-ev ${hecho ? 'hecho' : ''}" onclick="verDiaLista('${ev.date}')">
+        <i class="lista-barra" style="background:${safeColor(catColor(ev.type))}"></i>
+        <span class="lista-cuerpo">
+          <span class="lista-tit">${esc(ev.title)}</span>
+          <span class="lista-meta">
+            ${ev.hora ? `<b>${esc(fmtHora(ev.hora))}</b>` : 'Todo el día'}
+            · ${esc(catLabel(ev.type))}
+            ${a !== null ? ` · ${subsHechas(ev)}/${subsDe(ev).length} pasos` : ''}
+          </span>
+          ${detallesHTML(ev)}
+        </span>
+        ${hecho ? '<span class="lista-ok">✓</span>' : ''}
+      </button>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function verDiaLista(iso){
+  openPanel(iso);
+}
+
 // ---------- Panel de detalle ----------
 let currentPanelDate = null;
 let panelEvents = [];
@@ -4062,6 +4364,7 @@ function renderPanelBody(){
         <select id="adType" onchange="checkNueva(this,'adNueva')">${typeOptions('otro')}</select>
       </label>
       <div id="adNueva"></div>
+      ${camposDetalle('ad')}
       <div class="prev-actions">
         <button class="btn" onclick="cancelAddHere()">Cancelar</button>
         <button class="btn primary" onclick="saveAddHere()">Agregar</button>
@@ -4082,8 +4385,15 @@ function renderPanelBody(){
 // ---------- Agregar directo en un día ----------
 let addingHere = false;
 
+function abrirDetalles(){
+  detallesAbiertos = true;
+  if(addingHere) renderPanelBody();
+  else abrirRangoCampos();
+}
+
 function startAddHere(){
   addingHere = true;
+  detallesAbiertos = false;
   editingId = null;
   renderPanelBody();
   setTimeout(() => { const i = document.getElementById('adTitle'); if(i) i.focus(); }, 60);
@@ -4097,8 +4407,12 @@ async function saveAddHere(){
   const type = document.getElementById('adType').value;
   const hora = safeHora(document.getElementById('adHora').value);
   if(!title){ document.getElementById('adTitle').focus(); return; }
+  const det = leerDetalle('ad');
+  if(det.error){ alert(det.error); return; }
   addingHere = false;
-  await addEvents([{ date: currentPanelDate, title, type, hora }]);
+  detallesAbiertos = false;
+  await addEvents([{ date: currentPanelDate, title, type, hora,
+                     lugar:det.lugar, link:det.link, notas:det.notas, subs:[] }]);
   renderPanelBody();
 }
 
@@ -5116,6 +5430,14 @@ Texto: ${text}`;
 // ---------- Flujo del asistente ----------
 function agentSetResult(html){
   document.getElementById('agentResult').innerHTML = html;
+}
+
+// "Miércoles 19 de agosto"
+function fechaLarga(iso, conAnio){
+  const d = parseISO(iso);
+  const wd = WEEKDAYS_FULL[(d.getDay() + 6) % 7];
+  const raw = `${wd} ${d.getDate()} de ${MONTHS_ES[d.getMonth()]}` + (conAnio ? ` de ${d.getFullYear()}` : '');
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
 function shortDate(iso){
@@ -6839,6 +7161,7 @@ async function init(){
 
   // 2. Tema (si falla, no importa: sigue)
   try{ await cargarTema(); }catch(e){ console.warn('tema:', e); }
+  try{ await cargarVista(); }catch(e){ console.warn('vista:', e); }
 
   // 3. ?reset=1 cierra la sesión guardada
   let reseteado = false;
