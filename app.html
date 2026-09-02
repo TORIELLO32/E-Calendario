@@ -799,6 +799,203 @@
   }
   .progress b{color:var(--accent);font-weight:600;}
 
+  /* ---------- Tutorial ---------- */
+  .tuto{
+    position:fixed;
+    inset:0;
+    z-index:180;
+    background:var(--paper);
+    display:none;
+    flex-direction:column;
+    padding:calc(14px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom));
+  }
+  .tuto.open{display:flex;}
+  .tuto-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 16px 12px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .tuto-paso{
+    flex:1;
+    font-family:var(--font-mono);
+    font-size:0.68rem;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+  }
+  .tuto-body{
+    flex:1;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:20px 16px 16px;
+  }
+  .tuto-titulo{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:1.28rem;
+    line-height:1.2;
+    letter-spacing:-0.02em;
+    margin-bottom:6px;
+  }
+  .tuto-sub{
+    font-size:0.9rem;
+    line-height:1.5;
+    color:var(--ink-soft);
+    margin-bottom:16px;
+  }
+  .tuto-visual{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .tuto-texto{
+    font-size:0.9rem;
+    line-height:1.55;
+  }
+  .tuto-texto p{margin:0 0 10px;}
+  .tuto-texto p:last-child{margin-bottom:0;}
+  .tuto-texto b{color:var(--ink);}
+  .tuto-lista{
+    margin:10px 0 0;
+    padding:0;
+    list-style:none;
+  }
+  .tuto-lista li{
+    position:relative;
+    padding-left:16px;
+    margin-bottom:7px;
+    font-size:0.88rem;
+    line-height:1.45;
+  }
+  .tuto-lista li::before{
+    content:'';
+    position:absolute;
+    left:2px; top:8px;
+    width:5px; height:5px;
+    border-radius:50%;
+    background:var(--accent);
+  }
+  .tuto-frase{
+    display:inline-block;
+    font-family:var(--font-body);
+    font-size:0.84rem;
+    background:var(--accent-soft);
+    color:var(--accent);
+    border-radius:20px;
+    padding:4px 11px;
+    margin:0 4px 5px 0;
+  }
+  .tuto-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 16px 0;
+    border-top:1px solid var(--line-soft);
+  }
+  .tuto-nav .btn{flex:none;}
+  .tuto-nav .btn:disabled{opacity:0.35;}
+  .tuto-puntos{
+    flex:1;
+    display:flex;
+    gap:5px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .tuto-punto{
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--line);
+  }
+  .tuto-punto.on{background:var(--accent);width:16px;border-radius:3px;}
+
+  /* Maquetas dentro del tutorial */
+  .mk-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:1px;
+    background:var(--line-soft);
+    border:1px solid var(--line-soft);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .mk-c{
+    background:var(--paper-card);
+    aspect-ratio:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+    font-family:var(--font-mono);
+    font-size:0.6rem;
+    color:var(--ink-soft);
+  }
+  .mk-c.fin{background:var(--paper-alt);}
+  .mk-c.hoy{outline:2px solid var(--accent);outline-offset:-2px;}
+  .mk-c b{font-size:0.62rem;color:var(--ink);}
+  .mk-d{width:5px;height:5px;border-radius:50%;}
+  .mk-fila{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .mk-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    background:var(--paper);
+    border:1px solid var(--line-soft);
+    border-radius:20px;
+    padding:4px 10px;
+  }
+  .mk-chip.on{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);}
+  .mk-cap{
+    font-family:var(--font-mono);
+    font-size:0.58rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:10px 0 6px;
+  }
+  .mk-cap:first-child{margin-top:0;}
+  .mk-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:30px;height:30px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    color:var(--ink-soft);
+    background:var(--paper);
+    font-size:0.8rem;
+  }
+  .mk-btn.on{border-color:var(--accent);background:var(--accent);color:var(--paper-card);}
+  .mk-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 0;
+    border-bottom:1px solid var(--line-soft);
+    font-size:0.82rem;
+  }
+  .mk-row:last-child{border-bottom:none;}
+  .mk-row .ck{
+    width:16px;height:16px;
+    border:1.5px solid var(--line);
+    border-radius:4px;
+    flex:none;
+  }
+  .mk-row .ck.on{background:var(--accent);border-color:var(--accent);}
+  .mk-row span{flex:1;}
+  .mk-tag{
+    font-family:var(--font-mono);
+    font-size:0.62rem;
+    color:var(--accent);
+    flex:none;
+  }
+
   /* ---------- Pantalla de carga ---------- */
   .cargando{
     position:fixed;
@@ -1416,6 +1613,28 @@
     color:var(--ink-soft);
     text-decoration:line-through;
   }
+  .mod-antes{
+    font-family:var(--font-mono);
+    font-size:0.7rem;
+    color:var(--ink-soft);
+    text-decoration:line-through;
+    flex:none;
+  }
+  .mod-despues{
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    font-weight:600;
+    color:var(--accent);
+    flex:none;
+  }
+  .mod-tit{
+    flex:1;
+    font-size:0.8rem;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    color:var(--ink-soft);
+  }
   .prev-row .flecha{
     font-family:var(--font-mono);
     font-size:0.75rem;
@@ -1551,6 +1770,8 @@
     <button class="ex-chip">Cita dentista el 21 de agosto a las 2 pm</button>
     <button class="ex-chip">Cita el siguiente 21</button>
     <button class="ex-chip">Entrega la primera semana de octubre</button>
+    <button class="ex-chip">Cambia la hora del gimnasio a las 7 am</button>
+    <button class="ex-chip">Recorre las prácticas una semana</button>
     <button class="ex-chip">Viaje a Orlando de diciembre 23 a enero 8</button>
     <button class="ex-chip">¿Qué entrego la próxima semana?</button>
     <button class="ex-chip">¿Cuáles son mis vacaciones próximas?</button>
@@ -1582,6 +1803,12 @@
       <button class="btn" id="btnSyncNow">Sincronizar ahora</button>
       <button class="btn" id="btnLogout">Cerrar sesión</button>
     </div>
+  </div>
+
+  <div class="opt-block">
+    <div class="opt-title">Cómo se usa</div>
+    <div class="opt-desc">Un recorrido corto por todo lo que sabe hacer el calendario.</div>
+    <button class="btn primary" id="btnTutorial" style="width:100%">Abrir el tutorial</button>
   </div>
 
   <div class="opt-block">
@@ -1661,6 +1888,19 @@
     <button class="btn primary" onclick="recargarDeCero()">Recargar de cero</button>
     <button class="btn" onclick="entrarDeNuevo()">Entrar con mi cuenta</button>
     <button class="btn" onclick="cerrarRescate()">Seguir de todos modos</button>
+  </div>
+</div>
+
+<div class="tuto" id="tuto" role="dialog" aria-modal="true">
+  <div class="tuto-head">
+    <span class="tuto-paso" id="tutoPaso">1 / 1</span>
+    <button class="panel-close" id="tutoClose">Cerrar</button>
+  </div>
+  <div class="tuto-body" id="tutoBody"></div>
+  <div class="tuto-nav">
+    <button class="btn" id="tutoPrev">‹ Atrás</button>
+    <div class="tuto-puntos" id="tutoPuntos"></div>
+    <button class="btn primary" id="tutoNext">Siguiente ›</button>
   </div>
 </div>
 
@@ -5188,6 +5428,194 @@ const VERBOS_CAMBIAR = [
 let pendingCambio = null;
 
 // ¿Pide cambiar de categoría? Devuelve el qué y el a-dónde.
+// ══════════════════════════════════════════════════════════════
+// EDITAR EN BLOQUE CON EL AGENTE
+// Renombrar una serie, cambiarle la hora, moverla de fecha o
+// recorrerla unos días. Todo con vista previa antes de aplicar.
+// ══════════════════════════════════════════════════════════════
+const VERBOS_MODIFICAR = [
+  'cambia','cambiar','cambiame','cámbiame','cambiale','cámbiale','cambialos','cámbialos',
+  'mueve','mover','muevelo','muévelo','muevelos','muévelos',
+  'pasa','pasar','pasalo','pásalo','pasalos','pásalos',
+  'renombra','renombrar','rebautiza','ponle','pon',
+  'recorre','recorrer','adelanta','adelantar','atrasa','atrasar','retrasa','retrasar',
+  'reprograma','reprogramar','reagenda','reagendar',
+];
+
+let pendingMod = null;
+
+// Quita el verbo inicial y devuelve el resto
+function sinVerboMod(text){
+  const t = normalize(text).trim();
+  const tokens = t.split(/\s+/);
+  let i = 0;
+  while(i < tokens.length && i < 4 && RELLENO.has(tokens[i]) && !VERBOS_MODIFICAR.includes(tokens[i])) i++;
+  if(i >= tokens.length || !VERBOS_MODIFICAR.includes(tokens[i])) return null;
+  const verbo = tokens[i];
+  const partes = text.trim().split(/\s+/);
+  return { verbo, resto: partes.slice(i + 1).join(' ') };
+}
+
+// ¿Qué cambio pide? Devuelve { tipo, busqueda, valor }
+function intentoModificar(text){
+  const v = sinVerboMod(text);
+  if(!v) return { es:false };
+  const resto = v.resto;
+  const r = normalize(resto);
+
+  // ── Recorrer: "recorre el gym una semana", "adelanta X 3 días"
+  const adelanta = /^(adelanta|adelantar)$/.test(v.verbo);
+  const atrasa = /^(atrasa|atrasar|retrasa|retrasar|recorre|recorrer)$/.test(v.verbo);
+  if(adelanta || atrasa){
+    const m = r.match(/\s(?:por\s+)?(un|una|dos|tres|cuatro|cinco|seis|siete|\d{1,2})\s+(dias?|semanas?|meses?|mes)\s*$/);
+    if(m){
+      const mapa = { un:1, una:1, dos:2, tres:3, cuatro:4, cinco:5, seis:6, siete:7 };
+      const n = mapa[m[1]] || parseInt(m[1], 10) || 1;
+      const mult = /semana/.test(m[2]) ? 7 : (/mes/.test(m[2]) ? 30 : 1);
+      const corte = r.lastIndexOf(m[0]);
+      return {
+        es:true, tipo:'recorrer',
+        busqueda: corte > 0 ? resto.slice(0, corte) : resto,
+        valor: (adelanta ? -1 : 1) * n * mult,
+      };
+    }
+  }
+
+  // ── Nombre: "cambia el nombre de gimnasio a gym"
+  let m = r.match(/^(?:el\s+)?nombre\s+(?:de|del)\s+(.+?)\s+(?:a|por)\s+(.+)$/);
+  if(m){
+    return { es:true, tipo:'nombre', busqueda:m[1].trim(), valor:limpiarTexto(m[2], MAX_TITULO) };
+  }
+  // "renombra gimnasio a gym"
+  if(/^(renombra|renombrar|rebautiza)$/.test(v.verbo)){
+    m = r.match(/^(.+?)\s+(?:a|por|como)\s+(.+)$/);
+    if(m) return { es:true, tipo:'nombre', busqueda:m[1].trim(), valor:limpiarTexto(m[2], MAX_TITULO) };
+  }
+
+  // ── Hora: "cambia la hora del gym a las 7 am"
+  const conHora = extraerHora(r);
+  if(conHora){
+    const corte = r.lastIndexOf(conHora.frag);
+    let busqueda = corte > 0 ? resto.slice(0, corte) : resto;
+    busqueda = busqueda.replace(/\s*(?:la\s+)?hora\s+(?:de|del)\s*/i, ' ').replace(/\s+(a|al|para)\s*$/i, '').trim();
+    if(busqueda) return { es:true, tipo:'hora', busqueda, valor:conHora.hora };
+  }
+
+  // ── Fecha: "mueve el examen del 15 de octubre al 20 de octubre"
+  const corte = r.search(/\s(?:al|a\s+el|para\s+el|hasta\s+el|para)\s+/);
+  if(corte > 0){
+    const cola = resto.slice(corte).replace(/^\s*(?:al|a\s+el|para\s+el|hasta\s+el|para)\s+/i, '');
+    const fechas = localParse(cola);
+    if(fechas.length === 1){
+      return { es:true, tipo:'fecha', busqueda:resto.slice(0, corte), valor:fechas[0].date };
+    }
+  }
+
+  return { es:false };
+}
+
+function etiquetaMod(tipo, valor){
+  if(tipo === 'nombre') return `renombrar a «${esc(valor)}»`;
+  if(tipo === 'hora') return `poner a las ${esc(fmtHora(valor))}`;
+  if(tipo === 'fecha') return `mover al ${shortDate(valor)}`;
+  const dias = Math.abs(valor);
+  return `${valor < 0 ? 'adelantar' : 'recorrer'} ${dias} día${dias===1?'':'s'}`;
+}
+
+// Cómo queda cada evento después del cambio
+function aplicarMod(ev, tipo, valor){
+  const nuevo = { date:ev.date, title:ev.title, type:ev.type,
+                  rem:safeRem(ev.rem), hora:safeHora(ev.hora), subs:sanitizeSubs(ev.subs) };
+  if(tipo === 'nombre') nuevo.title = valor;
+  else if(tipo === 'hora') nuevo.hora = safeHora(valor);
+  else if(tipo === 'fecha') nuevo.date = valor;
+  else if(tipo === 'recorrer'){
+    const d = parseISO(ev.date);
+    d.setDate(d.getDate() + valor);
+    nuevo.date = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+  }
+  return nuevo;
+}
+
+function showPreviewMod(lista, tipo, valor){
+  const cambiados = lista.map(ev => ({ viejo:ev, nuevo:aplicarMod(ev, tipo, valor) }))
+                         .filter(p => clampToSemester(p.nuevo.date));
+  if(!cambiados.length){
+    agentSetResult('<div class="agent-msg err">Ese cambio dejaría las fechas fuera del rango (2026–2050).</div>');
+    return;
+  }
+  pendingMod = { cambiados, tipo, valor };
+
+  const shown = cambiados.slice(0, 6);
+  const filas = shown.map(p => {
+    const antes = tipo === 'nombre' ? esc(p.viejo.title)
+                : tipo === 'hora' ? (p.viejo.hora ? esc(fmtHora(p.viejo.hora)) : 'sin hora')
+                : shortDate(p.viejo.date);
+    const despues = tipo === 'nombre' ? esc(p.nuevo.title)
+                  : tipo === 'hora' ? esc(fmtHora(p.nuevo.hora))
+                  : shortDate(p.nuevo.date);
+    return `
+      <div class="prev-row">
+        <i class="dot" style="background:${safeColor(catColor(p.viejo.type))}"></i>
+        <span class="mod-antes">${antes}</span>
+        <span class="flecha">→</span>
+        <span class="mod-despues">${despues}</span>
+        <span class="mod-tit">${esc(p.viejo.title)}</span>
+      </div>`;
+  }).join('');
+
+  const extra = cambiados.length > 6 ? `<div class="agent-msg">…y ${cambiados.length - 6} más</div>` : '';
+  const fuera = lista.length - cambiados.length;
+  const aviso = fuera > 0 ? `<div class="conf-nota">${fuera} quedaban fuera del rango y no se tocan.</div>` : '';
+
+  agentSetResult(`
+    <div class="prev-card">
+      <div class="prev-head">${cambiados.length === 1 ? '1 evento' : cambiados.length + ' eventos'} · ${etiquetaMod(tipo, valor)}</div>
+      ${filas}${extra}${aviso}
+      <div class="prev-actions">
+        <button class="btn" onclick="cancelarMod()">Cancelar</button>
+        <button class="btn primary" onclick="confirmarMod()">Aplicar</button>
+      </div>
+    </div>
+  `);
+}
+
+function cancelarMod(){
+  pendingMod = null;
+  agentSetResult('');
+}
+
+async function confirmarMod(){
+  if(!pendingMod) return;
+  const { cambiados, tipo, valor } = pendingMod;
+  const n = cambiados.length;
+
+  cambiados.forEach(({ viejo, nuevo }) => {
+    const idViejo = evId(viejo);
+    const idNuevo = evId(nuevo);
+    const estabaHecho = COMPLETED.has(idViejo);
+
+    // Fuera el viejo
+    USER_EVENTS = USER_EVENTS.filter(x => evId(x) !== idViejo);
+    COMPLETED.delete(idViejo);
+    if(!EVENTS.some(e => evId(e) === idViejo && !USER_EVENTS.some(u => evId(u) === idViejo))){
+      // nada más que hacer: los eventos viven en USER_EVENTS
+    }
+
+    // Entra el nuevo, sin duplicar
+    if(!USER_EVENTS.some(x => evId(x) === idNuevo)) USER_EVENTS.push(nuevo);
+    if(estabaHecho) COMPLETED.add(idNuevo);
+  });
+
+  pendingMod = null;
+  rebuildEvents();
+  renderLegend();
+  renderVista();
+  await markChanged();
+  agentSetResult(`<div class="agent-msg ok">Listo — se ${n === 1 ? 'cambió 1 evento' : 'cambiaron ' + n + ' eventos'}.</div>`);
+  document.getElementById('agentInput').value = '';
+}
+
 function intentoCambiar(text){
   const t = normalize(text).trim();
   const tokens = t.split(/\s+/);
@@ -5364,6 +5792,31 @@ async function agentSubmit(){
     return;
   }
 
+  // ── Camino de editar en bloque (nombre, hora, fecha, recorrer) ──
+  const mod = intentoModificar(text);
+  if(mod.es){
+    let objetivo = [];
+    if(mod.busqueda.trim()) objetivo = await interpretar(mod.busqueda);
+    const { lista, vago } = buscarEventos(objetivo, mod.busqueda);
+    sendBtn.disabled = false;
+
+    if(vago){
+      agentSetResult('<div class="agent-msg err">Dime qué quieres cambiar. Por ejemplo “cambia la hora del gimnasio a las 7 am”.</div>');
+      return;
+    }
+    if(lista.length === 0){
+      agentSetResult('<div class="agent-msg err">No encontré nada que coincida en tu calendario.</div>');
+      return;
+    }
+    // Mover a UNA fecha con varios coincidiendo los juntaría todos ahí
+    if(mod.tipo === 'fecha' && lista.length > 1){
+      agentSetResult(`<div class="agent-msg err">Encontré ${lista.length} eventos con ese nombre y todos caerían el mismo día. Dime cuál, por ejemplo “mueve el examen del 15 de octubre al 20”. Para correr toda la serie usa “recorre el examen 5 días”.</div>`);
+      return;
+    }
+    showPreviewMod(lista, mod.tipo, mod.valor);
+    return;
+  }
+
   const intento = intentoBorrar(text);
 
   // ── Camino de borrado ──
@@ -5411,6 +5864,7 @@ async function agentSubmit(){
       <b>Rango</b>: “del 23 de diciembre al 8 de enero”.<br>
       <b>Sin mes</b>: “el siguiente 21”, “el 5 del mes que viene”, “la primera semana de octubre”.<br>
       Para <b>cambiar de categoría</b>: “cambia los partidos a deporte”.<br>
+      Para <b>editar</b>: “cambia la hora del gym a las 7 am”, “renombra gimnasio a gym”, “mueve el examen del 15 al 20 de octubre”, “recorre las prácticas una semana”.<br>
       Para <b>quitar</b>: “quítame la creatina”.<br>
       Para <b>preguntar</b>: “¿qué entrego la próxima semana?”.</div>
     `);
@@ -5438,6 +5892,7 @@ function closeAgent(){
   cancelAdd();
   pendingDelete = [];
   pendingCambio = null;
+  pendingMod = null;
 }
 
 document.getElementById('fab').addEventListener('click', openAgent);
@@ -5812,6 +6267,336 @@ window.addEventListener('pageshow', onResume);
 setInterval(checkDayChange, 60000);
 
 // ---------- Inicio ----------
+// ══════════════════════════════════════════════════════════════
+// TUTORIAL
+// Cada paso trae una maqueta dibujada con el mismo CSS de la app,
+// así que siempre se ve igual que lo real y respeta el tema.
+// ══════════════════════════════════════════════════════════════
+let tutoIdx = 0;
+
+// Celda de maqueta
+function mkC(n, o){
+  o = o || {};
+  const cls = 'mk-c' + (o.fin ? ' fin' : '') + (o.hoy ? ' hoy' : '');
+  const est = o.bg ? ` style="background:${o.bg}"` : '';
+  const punto = o.dot ? `<i class="mk-d" style="background:${o.dot}"></i>` : '';
+  const num = o.num ? `<b>${o.num}</b>` : '';
+  return `<div class="${cls}"${est}><b>${n}</b>${punto}${num}</div>`;
+}
+function mkSemana(dias){ return `<div class="mk-grid">${dias}</div>`; }
+
+const COL = { ex:'#B23A2F', en:'#C98A2B', va:'#3F7A56', ot:'#5C6478', dep:'#2E7D8F' };
+
+const TUTO_PASOS = [
+  {
+    titulo: 'Tus años, de 2026 a 2050',
+    sub: 'La pantalla de inicio son todos los años. Tocas uno y se abre completo.',
+    visual: `
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px">
+        <div class="year-card hoy" style="pointer-events:none">
+          <span class="year-num">2026</span>
+          <span class="mes-bars">
+            <i class="mes-bar"></i><i class="mes-bar"></i><i class="mes-bar"></i>
+            <i class="mes-bar"></i><i class="mes-bar"></i><i class="mes-bar"></i>
+            <i class="mes-bar"></i><i class="mes-bar" style="background:${COL.dep};height:70%"></i>
+            <i class="mes-bar" style="background:${COL.en};height:45%"></i>
+            <i class="mes-bar" style="background:${COL.ex};height:100%"></i>
+            <i class="mes-bar" style="background:${COL.en};height:55%"></i>
+            <i class="mes-bar" style="background:${COL.va};height:80%"></i>
+          </span>
+          <span class="year-count">23 eventos</span>
+        </div>
+        <div class="year-card" style="pointer-events:none">
+          <span class="year-num">2027</span>
+          <span class="mes-bars">
+            <i class="mes-bar" style="background:${COL.va};height:40%"></i>
+            <i class="mes-bar"></i><i class="mes-bar"></i><i class="mes-bar"></i>
+            <i class="mes-bar"></i><i class="mes-bar"></i><i class="mes-bar"></i>
+            <i class="mes-bar"></i><i class="mes-bar"></i><i class="mes-bar"></i>
+            <i class="mes-bar"></i><i class="mes-bar"></i>
+          </span>
+          <span class="year-count">4 eventos</span>
+        </div>
+      </div>`,
+    texto: `
+      <p>Cada tarjeta trae <b>doce barritas</b>, una por mes. La altura te dice cuánto tienes ahí, y el color de qué es. Así ves de un vistazo que octubre está apretado sin entrar.</p>
+      <p>El año actual va con <b>borde azul</b>. Al abrirlo baja solo al mes en curso, para que no andes buscando.</p>`
+  },
+  {
+    titulo: 'Agregar tocando un día',
+    sub: 'La forma más directa: le picas al día y escribes.',
+    visual: `
+      <div class="mk-cap">Tocas cualquier día</div>
+      ${mkSemana(mkC(17)+mkC(18)+mkC(19,{dot:COL.dep})+mkC(20)+mkC(21,{dot:'#7B4FA8'})+mkC(22,{fin:1})+mkC(23,{fin:1}))}
+      <div class="mk-cap">Y abajo se abre el día</div>
+      <div style="border:1px solid var(--line);border-radius:9px;padding:11px">
+        <div style="font-family:var(--font-display);font-weight:600;font-size:0.88rem;margin-bottom:8px">Sábado 22 de agosto</div>
+        <div class="campo"><span class="campo-lbl">Qué</span>
+          <div style="border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:0.8rem;color:var(--ink-soft)">Comida con la familia</div></div>
+        <div style="height:7px"></div>
+        <div class="campo"><span class="campo-lbl">Hora (opcional)</span>
+          <div style="border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:0.8rem">2:00 pm</div></div>
+      </div>`,
+    texto: `
+      <p>Todos los días son tocables, tengan algo o no. Abajo del panel está <b>«＋ Agregar en este día»</b>.</p>
+      <p>Escribes qué es, opcionalmente una hora, eliges categoría y listo.</p>`
+  },
+  {
+    titulo: 'Varios días de un jalón',
+    sub: 'Para vacaciones, viajes o cualquier cosa que dure varios días.',
+    visual: `
+      <div class="mk-cap">Botón de rango, arriba</div>
+      <div class="mk-fila" style="margin-bottom:12px">
+        <span class="mk-btn on">▦</span>
+        <span style="font-size:0.8rem;color:var(--ink-soft)">Toca el día en que empieza</span>
+      </div>
+      ${mkSemana(
+        mkC(17)+
+        mkC(18,{bg:'var(--accent-soft)'})+
+        mkC(19,{bg:'var(--accent-soft)'})+
+        mkC(20,{bg:'var(--accent-soft)'})+
+        mkC(21,{bg:'var(--accent-soft)'})+
+        mkC(22,{bg:'var(--accent-soft)',fin:1})+
+        mkC(23,{bg:'var(--accent-soft)',fin:1})
+      )}
+      <div style="font-size:0.78rem;color:var(--ink-soft);margin-top:9px">Se pintan los días y sale un cuadro para poner qué va en todos.</div>`,
+    texto: `
+      <ol class="tuto-lista" style="counter-reset:n">
+        <li>Tocas el botón del calendario punteado</li>
+        <li>Tocas el día en que <b>empieza</b></li>
+        <li>Tocas el día en que <b>termina</b></li>
+        <li>Escribes qué es y se agrega en todos</li>
+      </ol>
+      <p style="margin-top:10px">Si te equivocas y tocas primero el final, lo acomoda solo.</p>`
+  },
+  {
+    titulo: 'El asistente: escribir normal',
+    sub: 'El botón ＋ entiende español como lo hablas.',
+    visual: `
+      <div class="mk-cap">Le escribes así</div>
+      <span class="tuto-frase">Examen de estructuras el 15 de octubre a las 2 pm</span>
+      <span class="tuto-frase">Gimnasio todos los lunes y miércoles</span>
+      <span class="tuto-frase">Vacaciones del 23 de diciembre al 8 de enero</span>
+      <span class="tuto-frase">Pago de renta todos los 10 de cada mes</span>
+      <span class="tuto-frase">Cita el siguiente 21</span>
+      <div class="mk-cap">Y te enseña qué va a hacer antes</div>
+      <div style="border:1px solid var(--line);border-radius:9px;padding:11px;font-size:0.8rem">
+        <div style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px">Se va a agregar 1 evento</div>
+        <div class="mk-row"><i class="mk-d" style="background:${COL.ex}"></i><span>Examen de estructuras</span><span class="mk-tag">15 oct · 2:00 pm</span></div>
+      </div>`,
+    texto: `
+      <p>Nunca agrega sin enseñarte primero. Si algo salió mal, cancelas.</p>
+      <p>Entiende <b>rangos</b> (del 5 al 9), <b>repeticiones</b> (todos los martes, cada quincena, cada tercer día), <b>meses cruzados</b> (23 de diciembre al 8 de enero) y <b>horas</b> (a las 2, a las 8 de la mañana, al mediodía).</p>`
+  },
+  {
+    titulo: 'El asistente también contesta',
+    sub: 'Pregúntale y te responde con la lista.',
+    visual: `
+      <div class="mk-cap">Le preguntas</div>
+      <span class="tuto-frase">¿Qué entrego la próxima semana?</span>
+      <span class="tuto-frase">¿Cuáles son mis vacaciones próximas?</span>
+      <span class="tuto-frase">¿Qué tengo pendiente este mes?</span>
+      <span class="tuto-frase">¿Cuándo es mi próximo examen?</span>
+      <div class="mk-cap">Te contesta</div>
+      <div style="border:1px solid var(--line);border-radius:9px;padding:11px">
+        <div style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px">Entregas la próxima semana · 2 eventos</div>
+        <div class="mk-row"><i class="mk-d" style="background:${COL.en}"></i><span>Láminas de sitio</span><span class="mk-tag">en 4 d</span></div>
+        <div class="mk-row"><i class="mk-d" style="background:${COL.en}"></i><span>Maqueta</span><span class="mk-tag">en 6 d</span></div>
+      </div>`,
+    texto: `
+      <p>Cada renglón es <b>tocable</b>: le picas y te lleva a ese día.</p>
+      <p>Te dice cuánto falta para cada cosa, y lo que ya palomeaste sale tachado.</p>`
+  },
+  {
+    titulo: 'Quitar y editar hablando',
+    sub: 'No tienes que ir uno por uno.',
+    visual: `
+      <div class="mk-cap">Quitar</div>
+      <span class="tuto-frase">Quítame la creatina</span>
+      <span class="tuto-frase">Borra el examen del 15 de octubre</span>
+      <div class="mk-cap">Cambiar de categoría</div>
+      <span class="tuto-frase">Cambia los partidos de fútbol a Deporte</span>
+      <div class="mk-cap">Editar toda una serie</div>
+      <span class="tuto-frase">Cambia la hora del gimnasio a las 7 am</span>
+      <span class="tuto-frase">Renombra gimnasio a gym</span>
+      <span class="tuto-frase">Recorre las prácticas una semana</span>
+      <span class="tuto-frase">Mueve el examen del 15 al 20 de octubre</span>`,
+    texto: `
+      <p>Si tienes 39 días de gimnasio, cambiarles la hora es <b>una sola frase</b>, no 39 ediciones.</p>
+      <p>Todo pasa por vista previa: te enseña el antes y el después, y confirmas. Lo que borres se puede deshacer.</p>`
+  },
+  {
+    titulo: 'Categorías y colores',
+    sub: 'Cuatro de fábrica, más las que tú quieras.',
+    visual: `
+      <div class="mk-cap">Las de siempre</div>
+      <div class="mk-fila" style="margin-bottom:12px">
+        <span class="mk-chip"><i class="mk-d" style="background:${COL.ex}"></i>Examen</span>
+        <span class="mk-chip"><i class="mk-d" style="background:${COL.en}"></i>Entrega</span>
+        <span class="mk-chip"><i class="mk-d" style="background:${COL.va}"></i>Vacaciones</span>
+        <span class="mk-chip"><i class="mk-d" style="background:${COL.ot}"></i>Otro</span>
+      </div>
+      <div class="mk-cap">Y 16 listas para agregar</div>
+      <div class="mk-fila">
+        <span class="mk-chip"><i class="mk-d" style="background:#7B4FA8"></i>Gimnasio</span>
+        <span class="mk-chip"><i class="mk-d" style="background:${COL.dep}"></i>Deporte</span>
+        <span class="mk-chip"><i class="mk-d" style="background:#B2478E"></i>Salud</span>
+        <span class="mk-chip"><i class="mk-d" style="background:#C05621"></i>Comidas</span>
+        <span class="mk-chip"><i class="mk-d" style="background:#8A6D3B"></i>Pagos</span>
+      </div>`,
+    texto: `
+      <p>Al agregar algo, en <b>Categoría</b> está «＋ Nueva categoría…». Ahí eliges una de la lista o creas la tuya con nombre y color.</p>
+      <p>Lo bueno: las del catálogo traen <b>palabras clave</b>. Agregas «Salud» y luego escribes «cita con el doctor» — se va sola a Salud sin que la nombres.</p>`
+  },
+  {
+    titulo: 'Filtrar por categoría',
+    sub: 'Los colores de arriba no son solo leyenda: son botones.',
+    visual: `
+      <div class="mk-fila" style="margin-bottom:12px">
+        <span class="mk-chip"><i class="mk-d" style="background:${COL.ex}"></i>Examen 3</span>
+        <span class="mk-chip on"><i class="mk-d" style="background:${COL.en}"></i>Entrega 4</span>
+        <span class="mk-chip"><i class="mk-d" style="background:${COL.va}"></i>Vacaciones 8</span>
+      </div>
+      ${mkSemana(
+        mkC(5)+mkC(6)+
+        mkC(7,{bg:COL.en+'38'})+
+        mkC(8)+mkC(9)+mkC(10,{fin:1})+mkC(11,{fin:1})
+      )}
+      <div style="font-size:0.78rem;color:var(--ink-soft);margin-top:9px">Con filtro, el día se pinta completo del color.</div>`,
+    texto: `
+      <p>Tocas <b>Entrega</b> y el calendario se queda solo con entregas, con el <b>recuadro pintado</b> en vez del puntito, que es mucho más fácil de ver.</p>
+      <p>Además <b>te lleva a la más cercana</b> que falte por hacer, con un destello. Puedes combinar varias, y «Ver todo ✕» las quita.</p>`
+  },
+  {
+    titulo: 'Marcar hecho y subtareas',
+    sub: 'Una entrega no es una casilla, son varios pasos.',
+    visual: `
+      <div class="mk-cap">Un evento con pasos</div>
+      <div style="border:1px solid var(--line);border-radius:9px;padding:11px;margin-bottom:12px">
+        <div style="font-size:0.85rem;font-weight:600;margin-bottom:2px">Entrega Diseño 4</div>
+        <span class="prog-tag">2/4 pasos</span>
+        <div style="border-left:2px solid var(--accent);margin:9px 0 0 6px;padding:6px 0 0 10px">
+          <div class="mk-row"><i class="ck on"></i><span style="text-decoration:line-through;color:var(--ink-soft)">Plantas</span></div>
+          <div class="mk-row"><i class="ck on"></i><span style="text-decoration:line-through;color:var(--ink-soft)">Cortes</span></div>
+          <div class="mk-row"><i class="ck"></i><span>Render</span></div>
+          <div class="mk-row"><i class="ck"></i><span>Maqueta</span></div>
+        </div>
+      </div>
+      <div class="mk-cap">Y el punto en el calendario</div>
+      <div class="mk-fila">
+        <i style="width:11px;height:11px;border-radius:50%;background:conic-gradient(${COL.en} 50%, ${COL.en}33 0);display:inline-block"></i>
+        <span style="font-size:0.78rem;color:var(--ink-soft)">se llena según tu avance</span>
+      </div>`,
+    texto: `
+      <p>Cada evento tiene un botón de lista. Ahí pones los pasos y los vas tachando.</p>
+      <p>El punto del calendario <b>se llena como una barra circular</b> conforme avanzas. Al terminar el último paso, el evento se marca solo, y aparece una <b>palomita</b> dentro del punto.</p>`
+  },
+  {
+    titulo: 'Recordatorios',
+    sub: 'Los avisos los manda el Calendario de Apple.',
+    visual: `
+      <div class="mk-cap">Eliges cuándo, con la campana</div>
+      <div style="border:1px solid var(--line);border-radius:9px;padding:11px;margin-bottom:12px;font-size:0.82rem">
+        <div class="mk-row"><span>Sin recordatorio</span></div>
+        <div class="mk-row"><span>El mismo día</span></div>
+        <div class="mk-row"><span>1 día antes</span></div>
+        <div class="mk-row" style="color:var(--accent);font-weight:600"><span>7 días antes, y diario</span><span class="mk-tag">✓</span></div>
+      </div>
+      <div style="font-size:0.8rem;line-height:1.5">
+        Con «7 días antes» y examen el 15:<br>
+        <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--accent)">8 · 9 · 10 · 11 · 12 · 13 · 14 · 15 de octubre</span><br>
+        <span style="color:var(--ink-soft);font-size:0.78rem">Después ya no suena.</span>
+      </div>`,
+    texto: `
+      <p><b>El paso que no te puedes saltar:</b> después de poner los recordatorios, ve a <b>⋯ → Exportar eventos</b> y mándalos a la app Calendario. Sin eso no suena nada.</p>
+      <p>Si el evento tiene hora, el aviso llega a esa hora. Si no, a las 9:00 de la mañana.</p>`
+  },
+  {
+    titulo: 'Mapa de carga',
+    sub: 'Para ver dónde se te junta el trabajo.',
+    visual: `
+      <div class="mk-fila" style="margin-bottom:11px">
+        <span class="mk-btn on">▮▮</span>
+        <span style="font-size:0.8rem;color:var(--ink-soft)">Botón de barritas, arriba</span>
+      </div>
+      ${mkSemana(
+        mkC(12,{bg:'#C9702B1F',num:1})+
+        mkC(13,{bg:'#C9702B3D',num:2})+
+        mkC(14,{bg:'#C9702B5C',num:3})+
+        mkC(15,{bg:'#C9702B80',num:5})+
+        mkC(16,{bg:'#C9702B1F',num:1})+
+        mkC(17,{fin:1})+mkC(18,{fin:1})
+      )}
+      <div style="font-size:0.78rem;color:var(--accent);margin-top:10px">Semana más cargada: <b>12–18 oct</b> con 12 pendientes</div>`,
+    texto: `
+      <p>Los días se pintan más fuerte según cuánto tengas <b>pendiente</b>, con el número encima.</p>
+      <p>Lo que ya palomeaste deja de pesar, así que el mapa se aclara conforme avanzas. Sirve para adelantar trabajo antes de que se junte todo.</p>`
+  },
+  {
+    titulo: 'Tus datos están seguros',
+    sub: 'Todo vive en la nube, ligado a tu cuenta.',
+    visual: `
+      <div class="mk-cap">El puntito de arriba te dice cómo va</div>
+      <div style="font-size:0.84rem;line-height:2">
+        <div class="mk-fila"><i class="mk-d" style="background:#3F7A56;width:8px;height:8px"></i> Verde — todo guardado</div>
+        <div class="mk-fila"><i class="mk-d" style="background:#C98A2B;width:8px;height:8px"></i> Amarillo — subiendo</div>
+        <div class="mk-fila"><i class="mk-d" style="background:#B23A2F;width:8px;height:8px"></i> Rojo — sin conexión</div>
+      </div>
+      <div class="mk-cap">En ⋯ también encuentras</div>
+      <ul class="tuto-lista" style="margin:0">
+        <li>Copiar respaldo — un código con todo</li>
+        <li>Exportar al Calendario de Apple</li>
+        <li>Apariencia — claro, oscuro o automático</li>
+        <li>Mis categorías — ver y borrar las tuyas</li>
+        <li>Recargar de cero — si no ves los cambios</li>
+      </ul>`,
+    texto: `
+      <p>Tus eventos <b>no viven en el teléfono</b>: viven en tu cuenta. Puedes borrar la app, cambiar de teléfono o entrar desde el iPad, y ahí están.</p>
+      <p>Aun así, de vez en cuando copia el respaldo y pégalo en Notas. Nunca sobra.</p>`
+  },
+];
+
+function renderTuto(){
+  const p = TUTO_PASOS[tutoIdx];
+  if(!p) return;
+  document.getElementById('tutoPaso').textContent = `${tutoIdx + 1} / ${TUTO_PASOS.length}`;
+  document.getElementById('tutoBody').innerHTML = `
+    <div class="tuto-titulo">${p.titulo}</div>
+    <div class="tuto-sub">${p.sub}</div>
+    <div class="tuto-visual">${p.visual}</div>
+    <div class="tuto-texto">${p.texto}</div>
+  `;
+  document.getElementById('tutoPuntos').innerHTML =
+    TUTO_PASOS.map((_, i) => `<i class="tuto-punto${i === tutoIdx ? ' on' : ''}"></i>`).join('');
+  document.getElementById('tutoPrev').disabled = tutoIdx === 0;
+  const next = document.getElementById('tutoNext');
+  next.textContent = tutoIdx === TUTO_PASOS.length - 1 ? 'Terminar' : 'Siguiente ›';
+  document.getElementById('tutoBody').scrollTop = 0;
+}
+
+function abrirTuto(){
+  tutoIdx = 0;
+  closeOpts();
+  document.getElementById('tuto').classList.add('open');
+  renderTuto();
+}
+function cerrarTuto(){
+  document.getElementById('tuto').classList.remove('open');
+}
+function tutoAvanza(n){
+  const nuevo = tutoIdx + n;
+  if(nuevo < 0) return;
+  if(nuevo >= TUTO_PASOS.length){ cerrarTuto(); return; }
+  tutoIdx = nuevo;
+  renderTuto();
+}
+
+document.getElementById('btnTutorial').addEventListener('click', abrirTuto);
+document.getElementById('tutoClose').addEventListener('click', cerrarTuto);
+document.getElementById('tutoPrev').addEventListener('click', () => tutoAvanza(-1));
+document.getElementById('tutoNext').addEventListener('click', () => tutoAvanza(1));
+
+
 // ══════════════════════════════════════════════════════════════
 // GUARDAR LA APP EN EL TELÉFONO
 // Con esto abre al instante y funciona aunque la señal esté mal.
