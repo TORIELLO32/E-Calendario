@@ -1185,9 +1185,9 @@
   }
   .vista-btn.on{
     background:var(--paper-card);
-    color:var(--ink);
-    font-weight:600;
-    box-shadow:0 1px 3px -1px var(--sombra);
+    color:var(--accent);
+    font-weight:700;
+    box-shadow:0 1px 3px -1px var(--sombra), inset 0 0 0 1px var(--accent);
   }
   .barra.en-anios .vistas{display:none;}
   /* En la vista de años sobran el botón de volver y el de rango */
@@ -1904,8 +1904,8 @@
       <button class="icon-btn barra-hoy" id="hoyBtn" aria-label="Ir a hoy">Hoy</button>
     </div>
     <div class="vistas" id="vistas">
-      <button class="vista-btn on" data-v="puntos">Puntos</button>
-      <button class="vista-btn" data-v="lista">Lista</button>
+      <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
+      <button type="button" class="vista-btn" data-v="lista" aria-pressed="false">Lista</button>
     </div>
     <div class="legend"></div>
   </div>
@@ -3745,6 +3745,7 @@ function volverAnios(){
 
 // Ajusta encabezado, botones y qué se muestra
 function renderVista(){
+  pintarVistas();
   const enAnio = vista === 'anio';
   document.getElementById('years').style.display = enAnio ? 'none' : '';
   document.getElementById('months').style.display = enAnio ? '' : 'none';
@@ -4121,22 +4122,30 @@ const KEY_VISTA = 'semestre2026:vista';
 const VISTAS_OK = ['puntos','lista'];
 let vistaTipo = 'puntos';
 
+// Los botones se pintan SIEMPRE desde vistaTipo, nunca a mano.
+// Así el botón encendido y la vista real no se pueden separar.
+function pintarVistas(){
+  document.querySelectorAll('.vista-btn').forEach(b => {
+    const activo = b.getAttribute('data-v') === vistaTipo;
+    b.classList.toggle('on', activo);
+    b.setAttribute('aria-pressed', activo ? 'true' : 'false');
+  });
+}
+
 async function elegirVista(v){
   if(!VISTAS_OK.includes(v)) return;
+  if(v === vistaTipo){ pintarVistas(); return; }
   vistaTipo = v;
-  document.querySelectorAll('.vista-btn').forEach(b => {
-    b.classList.toggle('on', b.getAttribute('data-v') === v);
-  });
-  renderVista();
-  await writeKey(KEY_VISTA, v);
+  renderVista();          // renderVista ya repinta los botones
+  try{ await writeKey(KEY_VISTA, v); }catch(e){ console.warn('vista:', e); }
 }
 
 async function cargarVista(){
-  const g = await readKey(KEY_VISTA);
-  if(g && VISTAS_OK.includes(g)) vistaTipo = g;
-  document.querySelectorAll('.vista-btn').forEach(b => {
-    b.classList.toggle('on', b.getAttribute('data-v') === vistaTipo);
-  });
+  try{
+    const g = await readKey(KEY_VISTA);
+    if(g && VISTAS_OK.includes(g)) vistaTipo = g;
+  }catch(e){ console.warn('vista:', e); }
+  pintarVistas();
 }
 
 document.querySelectorAll('.vista-btn').forEach(b => {
