@@ -1110,6 +1110,11 @@
     position:sticky;
     top:0;
     z-index:8;
+    /* Safari en iPhone no repinta lo pegado al cambiar su contenido.
+       Darle su propia capa lo obliga a hacerlo. */
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
+    will-change:transform;
     background:var(--paper);
     padding:9px 0 10px;
     margin-bottom:14px;
@@ -1164,14 +1169,10 @@
     border-radius:9px;
     padding:3px;
     margin-bottom:9px;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
   }
-  .vistas::-webkit-scrollbar{display:none;}
   .vista-btn{
     flex:1;
-    min-width:64px;
+    min-width:0;
     border:none;
     background:none;
     border-radius:7px;
@@ -1284,30 +1285,36 @@
   .dv-tira{
     position:absolute;
     top:0;
-    width:11px;
+    width:22px;
     border:none;
-    border-radius:5px;
-    padding:0;
+    border-radius:6px;
+    padding:8px 0;
     pointer-events:auto;
     cursor:pointer;
     overflow:hidden;
+    display:flex;
+    justify-content:center;
     -webkit-tap-highlight-color:transparent;
   }
-  .dv-tira.hecho{opacity:0.5;}
+  .dv-tira.hecho{opacity:0.55;}
+  /* El texto corre hacia abajo; así se recorta con puntos suspensivos
+     en vez de quedarse cortado a la mitad. */
   .dv-tira-txt{
-    position:absolute;
-    top:8px; left:50%;
-    transform:translateX(-50%) rotate(90deg);
-    transform-origin:center;
+    writing-mode:vertical-rl;
+    text-orientation:mixed;
+    max-height:100%;
+    overflow:hidden;
     white-space:nowrap;
-    font-family:var(--font-mono);
-    font-size:0.52rem;
-    letter-spacing:0.06em;
+    text-overflow:ellipsis;
+    font-family:var(--font-body);
+    font-size:0.63rem;
+    letter-spacing:0.02em;
     color:var(--paper-card);
-    text-shadow:0 0 2px rgba(0,0,0,0.35);
+    text-shadow:0 0 2px rgba(0,0,0,0.3);
     pointer-events:none;
   }
   .dv-tira.hecho .dv-tira-txt{text-decoration:line-through;}
+  [data-tema="oscuro"] .dv-tira-txt{color:var(--ink);text-shadow:0 0 3px rgba(0,0,0,0.6);}
   .dv-capa{
     position:absolute;
     left:calc(52px + var(--tiras, 0px)); right:0; top:0; bottom:0;
@@ -4035,6 +4042,7 @@ function abrirAnio(y){
 // En cualquier otro año arranca desde enero.
 function irAlMesDeHoy(inmediato){
   if(vistaTipo !== 'puntos'){ window.scrollTo({ top:0, behavior:'instant' }); return; }
+  if(vista !== 'anio') return;
   const hoy = new Date();
   if(ANIO !== hoy.getFullYear()){
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -4072,8 +4080,6 @@ function renderVista(){
   const enMeses = enAnio && vistaTipo === 'puntos';
 
   // 1. Botones de vista: siempre desde el estado
-  const cont = document.getElementById('vistas');
-  if(cont) cont.setAttribute('data-actual', vistaTipo);
   pintarVistas();
 
   // 2. Qué bloque se muestra. En un solo lugar, sin repetir.
@@ -4155,6 +4161,9 @@ function renderVista(){
   }catch(e){
     console.error('Error en los avisos:', e);
   }
+
+  // Último empujón, ya con el contenido nuevo puesto
+  requestAnimationFrame(forzarRepintado);
 }
 
 
@@ -4498,11 +4507,49 @@ let vistaTipo = 'puntos';
 // Los botones se pintan SIEMPRE desde vistaTipo, nunca a mano.
 // Así el botón encendido y la vista real no se pueden separar.
 function pintarVistas(){
+  const cont = document.getElementById('vistas');
+  if(cont) cont.setAttribute('data-actual', vistaTipo);
+
   document.querySelectorAll('.vista-btn').forEach(b => {
     const activo = b.getAttribute('data-v') === vistaTipo;
     b.classList.toggle('on', activo);
     b.setAttribute('aria-pressed', activo ? 'true' : 'false');
   });
+
+  forzarRepintado();
+}
+
+// Empujón para que Safari repinte la barra pegada de inmediato,
+// en vez de esperar a que deslices.
+let repintando = false;
+function forzarRepintado(){
+  if(repintando) return;
+  repintando = true;
+  ['barra','years','months','mesVista','diaVista','listaVista'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el || el.style.display === 'none') return;
+    // Leer una medida obliga al navegador a recalcular ya
+    void el.offsetHeight;
+    el.style.transform = 'translateZ(0)';
+  });
+  requestAnimationFrame(() => {
+    ['barra','years','months','mesVista','diaVista','listaVista'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.style.transform = '';
+    });
+    repintando = false;
+  });
+}
+
+// Al esconder un bloque grande y mostrar otro, la página cambia de
+// alto de golpe. Safari a veces no repinta hasta que deslizas, y se
+// quedan los píxeles de la vista anterior. Esto lo obliga.
+function forzarRepintado(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.opacity = '0.999';
+  void el.offsetHeight;        // obliga a recalcular ahora mismo
+  el.style.opacity = '';
 }
 
 async function elegirVista(v){
@@ -4511,7 +4558,20 @@ async function elegirVista(v){
   vistaTipo = v;
   if(v === 'mes') mesActual = mesPorOmision();
   if(v === 'dia') diaActual = diaPorOmision();
+
+  // Se sube primero: si te quedas abajo, la vista nueva empieza
+  // fuera de la pantalla y parece que no cambió nada.
+  window.scrollTo({ top: 0, behavior: 'instant' });
+
   renderVista();          // renderVista ya repinta los botones
+
+  const destino = { puntos:'months', mes:'mesVista', dia:'diaVista', lista:'listaVista' }[v];
+  forzarRepintado(destino);
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    forzarRepintado(destino);
+  });
+
   try{ await writeKey(KEY_VISTA, v); }catch(e){ console.warn('vista:', e); }
 }
 
@@ -4656,7 +4716,7 @@ function renderDia(){
     const col = safeColor(catColor(ev.type));
     return `
       <button class="dv-tira${hecho ? ' hecho' : ''}"
-        style="left:${k * 15}px;background:${col}${hecho ? '30' : ''};height:${altoTotal}px"
+        style="left:${k * 26}px;background:${col}${hecho ? '30' : ''};height:${altoTotal}px"
         onclick="dayTap('${iso}')" aria-label="${esc(ev.title)}">
         <span class="dv-tira-txt">${esc(ev.title)}</span>
       </button>`;
@@ -4675,7 +4735,7 @@ function renderDia(){
       </span>
     </div>` : '';
 
-  const anchoTiras = todoDia.length ? todoDia.length * 15 + 6 : 0;
+  const anchoTiras = todoDia.length ? todoDia.length * 26 + 8 : 0;
 
   el.innerHTML = `
     <div class="mg-head">
@@ -7325,7 +7385,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.10';
+const VERSION = '2026.09.10-b';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
