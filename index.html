@@ -1187,6 +1187,7 @@
      Así solo puede haber uno encendido, pase lo que pase en el JS. */
   .vistas[data-actual="puntos"] .vista-btn[data-v="puntos"],
   .vistas[data-actual="mes"]    .vista-btn[data-v="mes"],
+  .vistas[data-actual="dia"]    .vista-btn[data-v="dia"],
   .vistas[data-actual="lista"]  .vista-btn[data-v="lista"],
   .vista-btn.on{
     background:var(--paper-card);
@@ -1197,6 +1198,7 @@
   /* Y los demás se apagan aunque les quedara la clase pegada */
   .vistas[data-actual="puntos"] .vista-btn:not([data-v="puntos"]),
   .vistas[data-actual="mes"]    .vista-btn:not([data-v="mes"]),
+  .vistas[data-actual="dia"]    .vista-btn:not([data-v="dia"]),
   .vistas[data-actual="lista"]  .vista-btn:not([data-v="lista"]){
     background:none;
     color:var(--ink-soft);
@@ -1210,6 +1212,122 @@
   .barra.en-anios .barra-mes,
   .barra.en-anios .barra-carga,
   .barra.en-anios .barra-hoy{display:none;}
+
+  /* ---------- Vista de día (con horas) ---------- */
+  #diaVista{padding-bottom:24px;}
+  .mg-titulo.es-hoy{color:var(--accent);}
+  .dv-todo{
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    padding:8px 0 10px;
+    border-bottom:1px solid var(--line-soft);
+    margin-bottom:6px;
+  }
+  .dv-todo-lbl{
+    flex:none;
+    width:52px;
+    font-family:var(--font-mono);
+    font-size:0.58rem;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    line-height:1.5;
+    padding-top:3px;
+  }
+  .dv-todo-evs{
+    flex:1;
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+  }
+  .dv-chip{
+    font-family:var(--font-body);
+    font-size:0.76rem;
+    color:var(--ink);
+    border:none;
+    border-left:3px solid;
+    border-radius:4px;
+    padding:4px 8px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .dv-chip.hecho{color:var(--ink-soft);text-decoration:line-through;}
+  .dv-cuerpo{position:relative;}
+  .dv-rejilla{position:relative;}
+  .dv-hora{
+    position:relative;
+    border-top:1px solid var(--line-soft);
+    box-sizing:border-box;
+  }
+  .dv-hora:last-child{border-bottom:1px solid var(--line-soft);}
+  .dv-hlbl{
+    position:absolute;
+    left:0; top:-7px;
+    width:48px;
+    font-family:var(--font-mono);
+    font-size:0.58rem;
+    color:var(--ink-soft);
+    background:var(--paper);
+    padding-right:4px;
+  }
+  .dv-capa{
+    position:absolute;
+    left:52px; right:0; top:0; bottom:0;
+    pointer-events:none;
+  }
+  .dv-ev{
+    position:absolute;
+    pointer-events:auto;
+    border:none;
+    border-left:3px solid;
+    border-radius:5px;
+    padding:4px 6px;
+    text-align:left;
+    font-family:inherit;
+    overflow:hidden;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .dv-ev:active{filter:brightness(0.95);}
+  .dv-tit{
+    font-size:0.78rem;
+    line-height:1.2;
+    color:var(--ink);
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+  .dv-sub{
+    font-family:var(--font-mono);
+    font-size:0.58rem;
+    color:var(--ink-soft);
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+  }
+  .dv-ev.hecho .dv-tit{color:var(--ink-soft);text-decoration:line-through;}
+  .dv-ahora{
+    position:absolute;
+    left:-52px; right:0;
+    height:0;
+    border-top:2px solid var(--examen);
+    pointer-events:none;
+    z-index:4;
+  }
+  .dv-ahora span{
+    position:absolute;
+    left:0; top:-8px;
+    font-family:var(--font-mono);
+    font-size:0.55rem;
+    font-weight:700;
+    color:var(--paper-card);
+    background:var(--examen);
+    border-radius:4px;
+    padding:1px 4px;
+  }
 
   /* ---------- Vista de mes (cuadrícula con nombres) ---------- */
   #mesVista{padding-bottom:24px;}
@@ -2039,6 +2157,7 @@
     <div class="vistas" id="vistas" data-actual="puntos">
       <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
       <button type="button" class="vista-btn" data-v="mes" aria-pressed="false">Mes</button>
+      <button type="button" class="vista-btn" data-v="dia" aria-pressed="false">Día</button>
       <button type="button" class="vista-btn" data-v="lista" aria-pressed="false">Lista</button>
     </div>
     <div class="legend"></div>
@@ -2047,6 +2166,7 @@
   <main id="years"></main>
   <main id="months" style="display:none"></main>
   <main id="mesVista" style="display:none"></main>
+  <main id="diaVista" style="display:none"></main>
   <main id="listaVista" style="display:none"></main>
 </div>
 
@@ -3725,6 +3845,13 @@ function irAFecha(iso){
     renderVista();
   }
 
+  if(vistaTipo === 'dia'){
+    diaActual = iso;
+    renderDia();
+    window.scrollTo({ top:0, behavior:'smooth' });
+    return;
+  }
+
   if(vistaTipo === 'mes'){
     mesActual = +iso.slice(5,7);
     renderMes();
@@ -3860,6 +3987,7 @@ function abrirAnio(y){
   ANIO = y;
   vista = 'anio';
   mesActual = mesPorOmision();
+  diaActual = diaPorOmision();
   if(selectMode) toggleSelectMode();
   renderVista();
   irAlMesDeHoy();
@@ -3902,6 +4030,7 @@ function renderVista(){
   const enAnio  = vista === 'anio';
   const enLista = enAnio && vistaTipo === 'lista';
   const enMes   = enAnio && vistaTipo === 'mes';
+  const enDia   = enAnio && vistaTipo === 'dia';
   const enMeses = enAnio && vistaTipo === 'puntos';
 
   // 1. Botones de vista: siempre desde el estado
@@ -3914,6 +4043,7 @@ function renderVista(){
     years:     !enAnio,
     months:    enMeses,
     mesVista:  enMes,
+    diaVista:  enDia,
     listaVista:enLista,
     timeline:  enMeses,
   };
@@ -3959,6 +4089,7 @@ function renderVista(){
     if(!enAnio) renderYears();
     else if(enLista) renderLista();
     else if(enMes) renderMes();
+    else if(enDia) renderDia();
     else{
       renderTimeline();
       renderMonths();
@@ -3998,6 +4129,12 @@ function irAHoy(){
   if(vistaTipo === 'mes'){
     mesActual = mesPorOmision();
     renderMes();
+    window.scrollTo({ top:0, behavior:'smooth' });
+    return;
+  }
+  if(vistaTipo === 'dia'){
+    diaActual = diaPorOmision();
+    renderDia();
     window.scrollTo({ top:0, behavior:'smooth' });
     return;
   }
@@ -4311,7 +4448,7 @@ function toggleCarga(){
 // prefieres, por dispositivo.
 // ══════════════════════════════════════════════════════════════
 const KEY_VISTA = 'semestre2026:vista';
-const VISTAS_OK = ['puntos','mes','lista'];
+const VISTAS_OK = ['puntos','mes','dia','lista'];
 let vistaTipo = 'puntos';
 
 // Los botones se pintan SIEMPRE desde vistaTipo, nunca a mano.
@@ -4329,6 +4466,7 @@ async function elegirVista(v){
   if(v === vistaTipo){ pintarVistas(); return; }
   vistaTipo = v;
   if(v === 'mes') mesActual = mesPorOmision();
+  if(v === 'dia') diaActual = diaPorOmision();
   renderVista();          // renderVista ya repinta los botones
   try{ await writeKey(KEY_VISTA, v); }catch(e){ console.warn('vista:', e); }
 }
@@ -4344,6 +4482,138 @@ async function cargarVista(){
 document.querySelectorAll('.vista-btn').forEach(b => {
   b.addEventListener('click', () => elegirVista(b.getAttribute('data-v')));
 });
+
+// ---------- Vista de día (con horas) ----------
+const ALTO_HORA = 58;   // píxeles por hora
+let diaActual = '';
+
+function diaPorOmision(){
+  const h = todayISO();
+  return (+h.slice(0,4) === ANIO) ? h : ANIO + '-01-01';
+}
+
+function cambiarDia(n){
+  const d = parseISO(diaActual || diaPorOmision());
+  d.setDate(d.getDate() + n);
+  const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+  if(!clampToSemester(iso)) return;
+  if(+iso.slice(0,4) !== ANIO){
+    ANIO = +iso.slice(0,4);
+    diaActual = iso;
+    renderVista();
+    return;
+  }
+  diaActual = iso;
+  renderDia();
+}
+
+// Reparte los eventos que caen a la misma hora en columnas
+function carriles(evs){
+  const puestos = [];
+  evs.forEach(ev => {
+    const h = safeHora(ev.hora);
+    let c = 0;
+    while(puestos.some(p => p.carril === c && p.hora === h)) c++;
+    puestos.push({ ev, hora:h, carril:c });
+  });
+  const total = puestos.length ? Math.max(...puestos.map(p => p.carril)) + 1 : 1;
+  return { puestos, total };
+}
+
+function renderDia(){
+  const el = document.getElementById('diaVista');
+  if(!el) return;
+  if(!diaActual || +diaActual.slice(0,4) !== ANIO) diaActual = diaPorOmision();
+
+  const iso = diaActual;
+  const hoy = todayISO();
+  const esHoy = iso === hoy;
+  const todos = eventosVisibles().filter(e => e.date === iso);
+  const conHora = todos.filter(e => safeHora(e.hora)).sort((a,b) => safeHora(a.hora).localeCompare(safeHora(b.hora)));
+  const todoDia = todos.filter(e => !safeHora(e.hora));
+
+  // El rango de horas se ajusta a lo que tengas ese día
+  let ini = 7, fin = 22;
+  conHora.forEach(e => {
+    const h = +safeHora(e.hora).slice(0,2);
+    if(h < ini) ini = Math.max(0, h);
+    if(h + 1 > fin) fin = Math.min(24, h + 2);
+  });
+  if(esHoy){
+    const ahora = new Date().getHours();
+    if(ahora < ini) ini = Math.max(0, ahora);
+    if(ahora + 1 > fin) fin = Math.min(24, ahora + 2);
+  }
+
+  // Franja de todo el día
+  const franja = todoDia.length ? `
+    <div class="dv-todo">
+      <span class="dv-todo-lbl">Todo el día</span>
+      <span class="dv-todo-evs">
+        ${todoDia.map(ev => {
+          const hecho = COMPLETED.has(evId(ev));
+          const col = safeColor(catColor(ev.type));
+          return `<button class="dv-chip${hecho ? ' hecho' : ''}" style="background:${col}24;border-left-color:${col}" onclick="dayTap('${iso}')">${esc(ev.title)}</button>`;
+        }).join('')}
+      </span>
+    </div>` : '';
+
+  // Rejilla de horas
+  let lineas = '';
+  for(let h = ini; h < fin; h++){
+    const et = h === 0 ? '12 am' : (h < 12 ? h + ' am' : (h === 12 ? '12 pm' : (h - 12) + ' pm'));
+    lineas += `<div class="dv-hora" style="height:${ALTO_HORA}px"><span class="dv-hlbl">${et}</span></div>`;
+  }
+
+  // Bloques de eventos
+  const { puestos, total } = carriles(conHora);
+  const bloques = puestos.map(({ ev, hora, carril }) => {
+    const hh = +hora.slice(0,2), mm = +hora.slice(3,5);
+    const top = ((hh - ini) + mm/60) * ALTO_HORA;
+    const ancho = 100 / total;
+    const hecho = COMPLETED.has(evId(ev));
+    const col = safeColor(catColor(ev.type));
+    const a = avance(ev);
+    return `
+      <button class="dv-ev${hecho ? ' hecho' : ''}"
+        style="top:${top}px;height:${ALTO_HORA - 3}px;left:${carril*ancho}%;width:calc(${ancho}% - 3px);background:${col}22;border-left-color:${col}"
+        onclick="dayTap('${iso}')">
+        <span class="dv-tit">${esc(ev.title)}</span>
+        <span class="dv-sub">${esc(fmtHora(ev.hora))}${a !== null ? ` · ${subsHechas(ev)}/${subsDe(ev).length}` : ''}${ev.lugar ? ' · ' + esc(ev.lugar) : ''}</span>
+      </button>`;
+  }).join('');
+
+  // Línea de ahora
+  let ahoraLinea = '';
+  if(esHoy){
+    const n = new Date();
+    const pos = ((n.getHours() - ini) + n.getMinutes()/60) * ALTO_HORA;
+    if(pos >= 0 && pos <= (fin - ini) * ALTO_HORA){
+      ahoraLinea = `<div class="dv-ahora" style="top:${pos}px"><span>${pad(n.getHours())}:${pad(n.getMinutes())}</span></div>`;
+    }
+  }
+
+  const dAnt = parseISO(iso); dAnt.setDate(dAnt.getDate()-1);
+  const dSig = parseISO(iso); dSig.setDate(dSig.getDate()+1);
+  const puedeAnt = clampToSemester(toISO(dAnt.getFullYear(), dAnt.getMonth()+1, dAnt.getDate()));
+  const puedeSig = clampToSemester(toISO(dSig.getFullYear(), dSig.getMonth()+1, dSig.getDate()));
+
+  el.innerHTML = `
+    <div class="mg-head">
+      <button class="mg-nav" onclick="cambiarDia(-1)" ${puedeAnt ? '' : 'disabled'} aria-label="Día anterior">‹</button>
+      <span class="mg-titulo ${esHoy ? 'es-hoy' : ''}">${esc(fechaLarga(iso))}</span>
+      <button class="mg-nav" onclick="cambiarDia(1)" ${puedeSig ? '' : 'disabled'} aria-label="Día siguiente">›</button>
+    </div>
+    ${franja}
+    <div class="dv-cuerpo">
+      <div class="dv-rejilla">${lineas}</div>
+      <div class="dv-capa">${bloques}${ahoraLinea}</div>
+    </div>
+    ${todos.length ? '' : '<div class="lista-vacia">No hay nada este día.</div>'}
+    <button class="btn add-here" onclick="dayTap('${iso}')">＋ Agregar en este día</button>
+    <div class="mg-pie">Desliza de lado para cambiar de día</div>
+  `;
+}
 
 // ---------- Vista de mes (cuadrícula con nombres) ----------
 let mesActual = 1;
@@ -4431,10 +4701,10 @@ function renderMes(){
   `;
 }
 
-// Deslizar de lado para cambiar de mes
+// Deslizar de lado para cambiar de mes o de día
 let tocX = 0, tocY = 0, tocando = false;
-(function activarDeslizar(){
-  const el = document.getElementById('mesVista');
+function activarDeslizarEn(id, alCambiar){
+  const el = document.getElementById(id);
   if(!el) return;
   el.addEventListener('touchstart', e => {
     if(e.touches.length !== 1) return;
@@ -4450,10 +4720,12 @@ let tocX = 0, tocY = 0, tocando = false;
     const dy = t.clientY - tocY;
     // Solo si el gesto fue claramente horizontal
     if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8){
-      cambiarMes(dx < 0 ? 1 : -1);
+      alCambiar(dx < 0 ? 1 : -1);
     }
   }, { passive:true });
-})();
+}
+activarDeslizarEn('mesVista', n => cambiarMes(n));
+activarDeslizarEn('diaVista', n => cambiarDia(n));
 
 // ---------- Vista de lista ----------
 let listaPasados = false;
@@ -6973,7 +7245,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.09';
+const VERSION = '2026.09.09-b';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
