@@ -114,15 +114,8 @@
     display:block;
     margin-bottom:4px;
   }
-  h1{
-    font-family:var(--font-display);
-    font-weight:700;
-    font-size:clamp(1.4rem, 5vw, 2rem);
-    letter-spacing:-0.01em;
-    margin:0 0 16px;
-  }
-  h1 .year{font-weight:500;color:var(--ink-soft);}
-
+  
+  h1 
   .timeline{
     position:relative;
     display:flex;
@@ -1213,6 +1206,9 @@
   .barra.en-anios .barra-mes,
   .barra.en-anios .barra-carga,
   .barra.en-anios .barra-hoy{display:none;}
+  /* Sin la cabecera, la barra necesita algo de aire arriba */
+  .masthead{padding-top:4px;}
+  .barra .icon-btn#optsBtn{margin-left:2px;}
 
   /* ---------- Vista de día (con horas) ---------- */
   #diaVista{padding-bottom:24px;}
@@ -1644,12 +1640,7 @@
   }
 
   /* ---------- Encabezado con botón de opciones ---------- */
-  .top-row{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px;
-  }
+  
   .icon-btn{
     flex:none;
     width:36px;height:36px;
@@ -1743,7 +1734,7 @@
   .sync-dot.busy{background:var(--entrega);animation:pulse 1s infinite;}
   .sync-dot.off{background:var(--line);}
 
-  .head-btns{display:flex;gap:7px;flex:none;}
+  
   .icon-btn.active{background:var(--accent);border-color:var(--accent);color:var(--paper);}
 
   /* ---------- Selección de rango ---------- */
@@ -2161,18 +2152,6 @@
   </div>
 
   <header class="masthead">
-    <div class="top-row">
-      <div>
-        <span class="tag" id="tagLine">Bitácora · Arquitectura UDEM</span>
-        <h1 id="tituloPrincipal">Calendario <span class="year">2026–2050</span></h1>
-      </div>
-      <div class="head-btns">
-        <button class="icon-btn" id="optsBtn" aria-label="Opciones">
-          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-        </button>
-      </div>
-    </div>
-
     <div class="timeline" id="timeline"></div>
     <div class="next-event" id="nextEvent"></div>
     <div class="progress" id="progress"></div>
@@ -2198,12 +2177,15 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20V8"/></svg>
       </button>
       <button class="icon-btn barra-hoy" id="hoyBtn" aria-label="Ir a hoy">Hoy</button>
+      <button class="icon-btn" id="optsBtn" aria-label="Opciones">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+      </button>
     </div>
     <div class="vistas" id="vistas" data-actual="puntos">
-      <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
       <button type="button" class="vista-btn" data-v="mes" aria-pressed="false">Mes</button>
       <button type="button" class="vista-btn" data-v="dia" aria-pressed="false">Día</button>
       <button type="button" class="vista-btn" data-v="lista" aria-pressed="false">Lista</button>
+      <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
     </div>
     <div class="legend"></div>
   </div>
@@ -4119,14 +4101,7 @@ function renderVista(){
   if(bAnio) bAnio.textContent = enAnio ? ANIO : `${ANIO_MIN}–${ANIO_MAX}`;
   const bMes = document.getElementById('barraMes');
   if(bMes && !enMeses) bMes.textContent = '';
-  const tit = document.getElementById('tituloPrincipal');
-  if(tit) tit.innerHTML = enAnio
-    ? `Año <span class="year">${ANIO}</span>`
-    : `Calendario <span class="year">${ANIO_MIN}–${ANIO_MAX}</span>`;
-  const tag = document.getElementById('tagLine');
-  if(tag) tag.textContent = enAnio
-    ? 'Bitácora · Arquitectura UDEM'
-    : 'Bitácora · toca un año para abrirlo';
+
 
   // 6. Dibujar. Si una vista truena, no arrastra a las demás.
   try{
@@ -4501,7 +4476,7 @@ function toggleCarga(){
 // prefieres, por dispositivo.
 // ══════════════════════════════════════════════════════════════
 const KEY_VISTA = 'semestre2026:vista';
-const VISTAS_OK = ['puntos','mes','dia','lista'];
+const VISTAS_OK = ['mes','dia','lista','puntos'];
 let vistaTipo = 'puntos';
 
 // Los botones se pintan SIEMPRE desde vistaTipo, nunca a mano.
@@ -7385,7 +7360,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.10-b';
+const VERSION = '2026.09.10-c';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
