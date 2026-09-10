@@ -1186,6 +1186,7 @@
   /* El botón activo se decide por el atributo del contenedor.
      Así solo puede haber uno encendido, pase lo que pase en el JS. */
   .vistas[data-actual="puntos"] .vista-btn[data-v="puntos"],
+  .vistas[data-actual="mes"]    .vista-btn[data-v="mes"],
   .vistas[data-actual="lista"]  .vista-btn[data-v="lista"],
   .vista-btn.on{
     background:var(--paper-card);
@@ -1195,6 +1196,7 @@
   }
   /* Y los demás se apagan aunque les quedara la clase pegada */
   .vistas[data-actual="puntos"] .vista-btn:not([data-v="puntos"]),
+  .vistas[data-actual="mes"]    .vista-btn:not([data-v="mes"]),
   .vistas[data-actual="lista"]  .vista-btn:not([data-v="lista"]){
     background:none;
     color:var(--ink-soft);
@@ -1208,6 +1210,125 @@
   .barra.en-anios .barra-mes,
   .barra.en-anios .barra-carga,
   .barra.en-anios .barra-hoy{display:none;}
+
+  /* ---------- Vista de mes (cuadrícula con nombres) ---------- */
+  #mesVista{padding-bottom:24px;}
+  .mg-head{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .mg-titulo{
+    flex:1;
+    text-align:center;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:1.02rem;
+    letter-spacing:-0.01em;
+    text-transform:capitalize;
+  }
+  .mg-titulo b{color:var(--ink-soft);font-weight:500;}
+  .mg-nav{
+    flex:none;
+    width:36px;height:36px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--paper-card);
+    color:var(--ink);
+    font-size:1.15rem;
+    line-height:1;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mg-nav:active{background:var(--accent-soft);border-color:var(--accent);}
+  .mg-nav:disabled{opacity:0.3;}
+  .mg-dias{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:2px;
+    margin-bottom:3px;
+  }
+  .mg-dias span{
+    text-align:center;
+    font-family:var(--font-mono);
+    font-size:0.6rem;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    padding:3px 0;
+  }
+  .mg-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:2px;
+  }
+  .mg-c{
+    min-height:82px;
+    background:var(--paper-card);
+    border:1px solid var(--line-soft);
+    border-radius:6px;
+    padding:3px 2px;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:2px;
+    font-family:inherit;
+    text-align:left;
+    cursor:pointer;
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mg-c.vacia{background:transparent;border-color:transparent;cursor:default;}
+  .mg-c.finde{background:var(--paper-alt);}
+  .mg-c.hoy{border-color:var(--accent);border-width:2px;padding:2px 1px;}
+  .mg-c:active{border-color:var(--accent);}
+  .mg-num{
+    font-family:var(--font-mono);
+    font-size:0.64rem;
+    color:var(--ink-soft);
+    padding-left:3px;
+    flex:none;
+  }
+  .mg-c.hoy .mg-num{color:var(--accent);font-weight:700;}
+  .mg-ev{
+    display:block;
+    font-size:0.53rem;
+    line-height:1.25;
+    color:var(--ink);
+    border-left:2px solid;
+    border-radius:2px;
+    padding:1px 2px 1px 3px;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    flex:none;
+  }
+  .mg-ev b{font-family:var(--font-mono);font-size:0.5rem;opacity:0.8;}
+  .mg-ev.hecho{
+    color:var(--ink-soft);
+    text-decoration:line-through;
+    opacity:0.7;
+  }
+  .mg-mas{
+    font-family:var(--font-mono);
+    font-size:0.52rem;
+    color:var(--ink-soft);
+    padding-left:4px;
+  }
+  .mg-c.destello{animation:destella 1.6s ease-out;}
+  .mg-pie{
+    text-align:center;
+    font-family:var(--font-mono);
+    font-size:0.58rem;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    margin-top:12px;
+    opacity:0.7;
+  }
+  @media (min-width:520px){
+    .mg-c{min-height:104px;}
+    .mg-ev{font-size:0.62rem;}
+  }
 
   /* ---------- Vista de lista ---------- */
   #listaVista{padding-bottom:20px;}
@@ -1917,6 +2038,7 @@
     </div>
     <div class="vistas" id="vistas" data-actual="puntos">
       <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
+      <button type="button" class="vista-btn" data-v="mes" aria-pressed="false">Mes</button>
       <button type="button" class="vista-btn" data-v="lista" aria-pressed="false">Lista</button>
     </div>
     <div class="legend"></div>
@@ -1924,6 +2046,7 @@
 
   <main id="years"></main>
   <main id="months" style="display:none"></main>
+  <main id="mesVista" style="display:none"></main>
   <main id="listaVista" style="display:none"></main>
 </div>
 
@@ -2006,7 +2129,7 @@
     <div class="opt-title">Versión</div>
     <div class="opt-desc">Estás usando la versión <b id="verNum">—</b>.<br>
       <b>Recargar de cero</b> baja el archivo saltándose lo guardado.<br>
-      <b>Vaciar guardado</b> borra la copia del teléfono y empieza limpio.</div>
+      <b>Vaciar guardado</b> borra la copia del teléfono y quita el service worker. Úsalo si subiste algo nuevo y la versión no cambia.</div>
     <div class="opt-actions">
       <button class="btn" id="btnRecargar">Recargar de cero</button>
       <button class="btn" id="btnVaciar">Vaciar guardado</button>
@@ -3602,6 +3725,19 @@ function irAFecha(iso){
     renderVista();
   }
 
+  if(vistaTipo === 'mes'){
+    mesActual = +iso.slice(5,7);
+    renderMes();
+    window.scrollTo({ top:0, behavior:'smooth' });
+    setTimeout(() => {
+      const celda = document.querySelector(`.mg-c[data-d="${iso}"]`);
+      if(!celda) return;
+      celda.classList.add('destello');
+      setTimeout(() => celda.classList.remove('destello'), 1600);
+    }, 320);
+    return;
+  }
+
   requestAnimationFrame(() => {
     const mes = document.getElementById(`mes-${y}-${iso.slice(5,7)}`);
     if(!mes) return;
@@ -3723,6 +3859,7 @@ function renderYears(){
 function abrirAnio(y){
   ANIO = y;
   vista = 'anio';
+  mesActual = mesPorOmision();
   if(selectMode) toggleSelectMode();
   renderVista();
   irAlMesDeHoy();
@@ -3764,6 +3901,7 @@ function renderVista(){
   // el botón diciendo una cosa y la pantalla mostrando otra.
   const enAnio  = vista === 'anio';
   const enLista = enAnio && vistaTipo === 'lista';
+  const enMes   = enAnio && vistaTipo === 'mes';
   const enMeses = enAnio && vistaTipo === 'puntos';
 
   // 1. Botones de vista: siempre desde el estado
@@ -3775,6 +3913,7 @@ function renderVista(){
   const mostrar = {
     years:     !enAnio,
     months:    enMeses,
+    mesVista:  enMes,
     listaVista:enLista,
     timeline:  enMeses,
   };
@@ -3819,6 +3958,7 @@ function renderVista(){
   try{
     if(!enAnio) renderYears();
     else if(enLista) renderLista();
+    else if(enMes) renderMes();
     else{
       renderTimeline();
       renderMonths();
@@ -3854,6 +3994,12 @@ function irAHoy(){
     vista = 'anio';
     if(selectMode) toggleSelectMode();
     renderVista();
+  }
+  if(vistaTipo === 'mes'){
+    mesActual = mesPorOmision();
+    renderMes();
+    window.scrollTo({ top:0, behavior:'smooth' });
+    return;
   }
   irAlMesDeHoy();
 }
@@ -4165,7 +4311,7 @@ function toggleCarga(){
 // prefieres, por dispositivo.
 // ══════════════════════════════════════════════════════════════
 const KEY_VISTA = 'semestre2026:vista';
-const VISTAS_OK = ['puntos','lista'];
+const VISTAS_OK = ['puntos','mes','lista'];
 let vistaTipo = 'puntos';
 
 // Los botones se pintan SIEMPRE desde vistaTipo, nunca a mano.
@@ -4182,6 +4328,7 @@ async function elegirVista(v){
   if(!VISTAS_OK.includes(v)) return;
   if(v === vistaTipo){ pintarVistas(); return; }
   vistaTipo = v;
+  if(v === 'mes') mesActual = mesPorOmision();
   renderVista();          // renderVista ya repinta los botones
   try{ await writeKey(KEY_VISTA, v); }catch(e){ console.warn('vista:', e); }
 }
@@ -4197,6 +4344,116 @@ async function cargarVista(){
 document.querySelectorAll('.vista-btn').forEach(b => {
   b.addEventListener('click', () => elegirVista(b.getAttribute('data-v')));
 });
+
+// ---------- Vista de mes (cuadrícula con nombres) ----------
+let mesActual = 1;
+
+function mesPorOmision(){
+  const h = new Date();
+  return (ANIO === h.getFullYear()) ? h.getMonth() + 1 : 1;
+}
+
+function cambiarMes(n){
+  let m = mesActual + n;
+  if(m < 1){
+    if(ANIO <= ANIO_MIN){ return; }
+    ANIO--; m = 12;
+    renderVista();
+    mesActual = 12;
+    renderMes();
+    return;
+  }
+  if(m > 12){
+    if(ANIO >= ANIO_MAX){ return; }
+    ANIO++; m = 1;
+    renderVista();
+    mesActual = 1;
+    renderMes();
+    return;
+  }
+  mesActual = m;
+  renderMes();
+}
+
+function renderMes(){
+  const el = document.getElementById('mesVista');
+  if(!el) return;
+  if(mesActual < 1 || mesActual > 12) mesActual = mesPorOmision();
+
+  const y = ANIO, mo = mesActual;
+  const byDate = eventsByDate();
+  const tope = daysInMonth(y, mo);
+  const arranque = firstWeekdayMon(y, mo);
+  const hoy = todayISO();
+
+  let celdas = '';
+  for(let i = 0; i < arranque; i++) celdas += '<div class="mg-c vacia"></div>';
+
+  for(let d = 1; d <= tope; d++){
+    const iso = toISO(y, mo, d);
+    const dow = (arranque + d - 1) % 7;
+    const finde = dow >= 5;
+    const esHoy = iso === hoy;
+    const evs = byDate[iso] || [];
+
+    // Caben unos tres nombres; el resto se resume
+    const cabidos = evs.slice(0, 3);
+    const barras = cabidos.map(ev => {
+      const hecho = COMPLETED.has(evId(ev));
+      const col = safeColor(catColor(ev.type));
+      const hora = ev.hora ? `<b>${esc(fmtHora(ev.hora).replace(':00',''))}</b> ` : '';
+      return `<span class="mg-ev${hecho ? ' hecho' : ''}" style="background:${col}24;border-left-color:${col}">${hora}${esc(ev.title)}</span>`;
+    }).join('');
+    const mas = evs.length > 3 ? `<span class="mg-mas">+${evs.length - 3}</span>` : '';
+
+    celdas += `
+      <button class="mg-c${finde ? ' finde' : ''}${esHoy ? ' hoy' : ''}" data-d="${iso}" onclick="dayTap('${iso}')">
+        <span class="mg-num">${d}</span>
+        ${barras}${mas}
+      </button>`;
+  }
+
+  const resto = (7 - ((arranque + tope) % 7)) % 7;
+  for(let i = 0; i < resto; i++) celdas += '<div class="mg-c vacia"></div>';
+
+  const antes = !(mo === 1 && y <= ANIO_MIN);
+  const desp  = !(mo === 12 && y >= ANIO_MAX);
+
+  el.innerHTML = `
+    <div class="mg-head">
+      <button class="mg-nav" onclick="cambiarMes(-1)" ${antes ? '' : 'disabled'} aria-label="Mes anterior">‹</button>
+      <span class="mg-titulo">${esc(MONTHS_ES[mo-1])} <b>${y}</b></span>
+      <button class="mg-nav" onclick="cambiarMes(1)" ${desp ? '' : 'disabled'} aria-label="Mes siguiente">›</button>
+    </div>
+    <div class="mg-dias">${WEEKDAYS.map(w => `<span>${w}</span>`).join('')}</div>
+    <div class="mg-grid">${celdas}</div>
+    <div class="mg-pie">Desliza de lado para cambiar de mes</div>
+  `;
+}
+
+// Deslizar de lado para cambiar de mes
+let tocX = 0, tocY = 0, tocando = false;
+(function activarDeslizar(){
+  const el = document.getElementById('mesVista');
+  if(!el) return;
+  el.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1) return;
+    tocX = e.touches[0].clientX;
+    tocY = e.touches[0].clientY;
+    tocando = true;
+  }, { passive:true });
+  el.addEventListener('touchend', e => {
+    if(!tocando) return;
+    tocando = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - tocX;
+    const dy = t.clientY - tocY;
+    // Solo si el gesto fue claramente horizontal
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8){
+      cambiarMes(dx < 0 ? 1 : -1);
+    }
+  }, { passive:true });
+})();
 
 // ---------- Vista de lista ----------
 let listaPasados = false;
@@ -6695,6 +6952,7 @@ document.getElementById('btnVaciar').addEventListener('click', async () => {
     if('serviceWorker' in navigator){
       const regs = await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map(r => r.unregister()));
+      swListo = false;
     }
   }catch(e){}
   recargarDeCero();
@@ -6715,7 +6973,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.02';
+const VERSION = '2026.09.09';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -7150,12 +7408,33 @@ if('serviceWorker' in navigator && navigator.serviceWorker.addEventListener){
   });
 }
 
-function registrarSW(){
+async function registrarSW(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol !== 'https:' && location.hostname !== 'localhost') return;
-  navigator.serviceWorker.register('./sw.js')
+
+  // El service worker viejo se quita a la fuerza. Si se queda,
+  // sigue sirviendo la copia vieja y la app nunca se actualiza.
+  try{
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => {
+      const url = (r.active && r.active.scriptURL) || '';
+      return url.includes('/sw.js') ? r.unregister() : Promise.resolve();
+    }));
+  }catch(e){}
+
+  // updateViaCache:'none' obliga al navegador a pedir el archivo
+  // del worker a la red, sin usar su propio caché. Sin esto,
+  // Safari puede quedarse con el viejo por horas.
+  navigator.serviceWorker.register('./sw2.js', { updateViaCache: 'none' })
     .then(reg => {
       swListo = true;
+
+      // Se revisa si hay versión nueva al abrir y al volver a la app
+      const revisar = () => { try{ reg.update(); }catch(e){} };
+      revisar();
+      document.addEventListener('visibilitychange', () => {
+        if(!document.hidden) revisar();
+      });
       // Si llega una versión nueva, se avisa en vez de cambiarla sola
       reg.addEventListener('updatefound', () => {
         const nuevo = reg.installing;
