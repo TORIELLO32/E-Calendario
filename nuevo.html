@@ -81,7 +81,7 @@
   [data-tema="oscuro"] .dot,
   [data-tema="oscuro"] .ev-dot,
   [data-tema="oscuro"] .mes-bar,
-  [data-tema="oscuro"] .tl-tick{ filter:var(--brillo-punto); }
+  [data-tema="oscuro"] 
 
   [data-tema="oscuro"] .month-head{ background:#0E1116; }
   [data-tema="oscuro"] .cell.weekend{ background:#1F242B; }
@@ -100,11 +100,11 @@
   .wrap{
     max-width:980px;
     margin:0 auto;
-    padding:calc(18px + env(safe-area-inset-top)) 14px 0;
+    padding:0 14px 0;
   }
 
   /* ---------- Masthead ---------- */
-  .masthead{border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:20px;}
+
   .tag{
     font-family:var(--font-mono);
     font-size:0.68rem;
@@ -113,80 +113,6 @@
     text-transform:uppercase;
     display:block;
     margin-bottom:4px;
-  }
-  
-  h1 
-  .timeline{
-    position:relative;
-    display:flex;
-    height:50px;
-    border-top:1px solid var(--line);
-    border-bottom:1px solid var(--line);
-    margin-bottom:10px;
-  }
-  .tl-segment{
-    flex:1;
-    position:relative;
-    border-right:1px solid var(--line-soft);
-  }
-  .tl-segment:last-child{border-right:none;}
-  .tl-label{
-    position:absolute;
-    left:3px;
-    bottom:4px;
-    font-family:var(--font-mono);
-    font-size:0.58rem;
-    letter-spacing:0.06em;
-    color:var(--ink-soft);
-    text-transform:uppercase;
-  }
-  .tl-marker{
-    position:absolute;
-    top:0;
-    bottom:0;
-    width:2px;
-    background:var(--accent);
-    z-index:2;
-  }
-  .tl-marker-flag{
-    position:absolute;
-    top:-16px;
-    left:50%;
-    transform:translateX(-50%);
-    font-family:var(--font-mono);
-    font-size:0.6rem;
-    font-weight:600;
-    letter-spacing:0.08em;
-    color:var(--accent);
-    white-space:nowrap;
-  }
-  .tl-tick{
-    position:absolute;
-    bottom:0;
-    width:3px;
-    height:9px;
-    border-radius:1px;
-    transform:translateX(-50%);
-  }
-
-  .next-event{
-    font-size:0.82rem;
-    color:var(--ink-soft);
-    margin-bottom:14px;
-    min-height:1.2em;
-  }
-  .next-event b{color:var(--ink);font-weight:600;}
-  .next-event .n-days{font-family:var(--font-mono);color:var(--accent);font-weight:600;}
-
-  .empty-note{
-    border-left:3px solid var(--accent);
-    background:var(--accent-soft);
-    padding:10px 12px;
-    font-size:0.84rem;
-    color:var(--ink-soft);
-    border-radius:0 6px 6px 0;
-    margin-bottom:14px;
-    line-height:1.45;
   }
 
   .legend{
@@ -230,7 +156,6 @@
     color:var(--accent);
   }
   .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;}
-
 
   /* ---------- Month cards ---------- */
   #months{
@@ -836,14 +761,6 @@
     margin-top:12px;
     font-style:italic;
   }
-  .progress{
-    font-family:var(--font-mono);
-    font-size:0.7rem;
-    letter-spacing:0.04em;
-    color:var(--ink-soft);
-    margin-bottom:12px;
-  }
-  .progress b{color:var(--accent);font-weight:600;}
 
   /* ---------- Tutorial ---------- */
   .tuto{
@@ -1103,6 +1020,7 @@
     position:sticky;
     top:0;
     z-index:8;
+    padding-top:calc(6px + env(safe-area-inset-top));
     /* Safari en iPhone no repinta lo pegado al cambiar su contenido.
        Darle su propia capa lo obliga a hacerlo. */
     transform:translateZ(0);
@@ -1129,6 +1047,7 @@
     font-family:var(--font-display);
     font-weight:700;
     font-size:1.05rem;
+    flex:none;
     color:var(--ink);
     letter-spacing:-0.01em;
   }
@@ -1201,14 +1120,16 @@
   }
   .barra.en-anios .vistas{display:none;}
   /* En la vista de años sobran el botón de volver y el de rango */
+  .barra.en-anios .barra-anio{flex:1;}
   .barra.en-anios .barra-back,
   .barra.en-anios .barra-sel,
   .barra.en-anios .barra-mes,
   .barra.en-anios .barra-carga,
   .barra.en-anios .barra-hoy{display:none;}
   /* Sin la cabecera, la barra necesita algo de aire arriba */
-  .masthead{padding-top:4px;}
   .barra .icon-btn#optsBtn{margin-left:2px;}
+  /* En la vista de años queda el año y el engrane, nada más */
+  .barra.en-anios .barra-top{justify-content:space-between;}
 
   /* ---------- Vista de día (con horas) ---------- */
   #diaVista{padding-bottom:24px;}
@@ -1640,7 +1561,7 @@
   }
 
   /* ---------- Encabezado con botón de opciones ---------- */
-  
+
   .icon-btn{
     flex:none;
     width:36px;height:36px;
@@ -1734,7 +1655,6 @@
   .sync-dot.busy{background:var(--entrega);animation:pulse 1s infinite;}
   .sync-dot.off{background:var(--line);}
 
-  
   .icon-btn.active{background:var(--accent);border-color:var(--accent);color:var(--paper);}
 
   /* ---------- Selección de rango ---------- */
@@ -2151,16 +2071,6 @@
     </div>
   </div>
 
-  <header class="masthead">
-    <div class="timeline" id="timeline"></div>
-    <div class="next-event" id="nextEvent"></div>
-    <div class="progress" id="progress"></div>
-
-    <div class="sel-hint" id="selHint"></div>
-    <div class="sel-hint" id="filtroVacio">Con ese filtro no hay nada aquí. Toca «Ver todo» para quitarlo.</div>
-    <div class="sel-hint" id="cargaHint"></div>
-  </header>
-
   <!-- Se pega arriba al bajar, para tener siempre a la mano
        el botón de volver y los filtros -->
   <div class="barra" id="barra">
@@ -2177,8 +2087,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20V8"/></svg>
       </button>
       <button class="icon-btn barra-hoy" id="hoyBtn" aria-label="Ir a hoy">Hoy</button>
-      <button class="icon-btn" id="optsBtn" aria-label="Opciones">
-        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+      <button class="icon-btn" id="optsBtn" aria-label="Ajustes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
     </div>
     <div class="vistas" id="vistas" data-actual="puntos">
@@ -2188,6 +2098,9 @@
       <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
     </div>
     <div class="legend"></div>
+    <div class="sel-hint" id="selHint"></div>
+    <div class="sel-hint" id="filtroVacio">Con ese filtro no hay nada aquí. Toca «Ver todo» para quitarlo.</div>
+    <div class="sel-hint" id="cargaHint"></div>
   </div>
 
   <main id="years"></main>
@@ -3200,8 +3113,6 @@ async function toggleDone(id){
   else COMPLETED.add(id);
   renderPanelBody();
   refrescarVista();
-  renderNextEvent();
-  renderProgress();
   await markChanged();
 }
 
@@ -3348,9 +3259,6 @@ async function saveEdit(oldId){
   editingId = null;
   if(date !== currentPanelDate) currentPanelDate = date;
   rebuildEvents();
-  renderTimeline();
-  renderNextEvent();
-  renderProgress();
   refrescarVista();
 
   document.getElementById('panelDate').textContent = fechaLarga(date, true);
@@ -3419,77 +3327,10 @@ function eventsByDate(){
 }
 
 // ---------- Timeline del semestre ----------
-function renderTimeline(){
-  const el = document.getElementById('timeline');
-  const start = new Date(ANIO, 0, 1);
-  const end   = new Date(ANIO, 11, 31);
-  const totalMs = end - start;
-
-  const pctFor = (d) => Math.min(100, Math.max(0, ((d - start) / totalMs) * 100));
-
-  let html = '';
-  mesesDelAnio().forEach(({y,m}) => {
-    const label = MONTHS_ES[m-1].slice(0,1).toUpperCase();
-    html += `<div class="tl-segment"><span class="tl-label">${label}</span></div>`;
-  });
-  el.innerHTML = html;
-
-  // Ticks de eventos de este año
-  eventosVisibles().filter(ev => +ev.date.slice(0,4) === ANIO).forEach(ev => {
-    const pct = pctFor(parseISO(ev.date));
-    const tick = document.createElement('div');
-    tick.className = 'tl-tick';
-    tick.style.left = pct + '%';
-    tick.style.background = catColor(ev.type);
-    el.appendChild(tick);
-  });
-
-  // Marcador de HOY (si cae dentro del semestre)
-  const today = new Date();
-  if(today >= start && today <= end){
-    const pct = pctFor(today);
-    const marker = document.createElement('div');
-    marker.className = 'tl-marker';
-    marker.style.left = pct + '%';
-    marker.innerHTML = '<span class="tl-marker-flag">HOY</span>';
-    el.appendChild(marker);
-  }
-}
 
 // ---------- Próximo evento ----------
-function renderNextEvent(){
-  const el = document.getElementById('nextEvent');
-  const emptyNote = document.getElementById('emptyNote');
-  const tISO = todayISO();
-
-  if(EVENTS.length === 0){
-    el.innerHTML = '';
-    return;
-  }
-
-  const upcoming = eventosVisibles()
-    .filter(ev => ev.date >= tISO && !COMPLETED.has(evId(ev)))
-    .sort((a,b) => a.date.localeCompare(b.date));
-
-  if(upcoming.length === 0){
-    el.innerHTML = 'Todo al corriente — no hay pendientes próximos.';
-    return;
-  }
-
-  const ev = upcoming[0];
-  const n = diffDays(parseISO(ev.date), parseISO(tISO));
-  const when = n === 0 ? 'hoy' : (n === 1 ? 'en 1 día' : `en <span class="n-days">${n}</span> días`);
-  el.innerHTML = `Próximo: <b>${esc(ev.title)}</b> — ${when}`;
-}
 
 // ---------- Contador de progreso ----------
-function renderProgress(){
-  const el = document.getElementById('progress');
-  const vis = eventosVisibles();
-  if(vis.length === 0){ el.textContent = ''; return; }
-  const done = vis.filter(ev => COMPLETED.has(evId(ev))).length;
-  el.innerHTML = `Completados: <b>${done}</b> / ${vis.length}`;
-}
 
 // ---------- Meses ----------
 function buildMonthCard(y, m, byDate){
@@ -4071,7 +3912,6 @@ function renderVista(){
     mesVista:  enMes,
     diaVista:  enDia,
     listaVista:enLista,
-    timeline:  enMeses,
   };
   Object.keys(mostrar).forEach(id => {
     const el = document.getElementById(id);
@@ -4110,7 +3950,6 @@ function renderVista(){
     else if(enMes) renderMes();
     else if(enDia) renderDia();
     else{
-      renderTimeline();
       renderMonths();
       requestAnimationFrame(actualizarMesEnBarra);
     }
@@ -4131,8 +3970,6 @@ function renderVista(){
       ? eventosVisibles().some(ev => +ev.date.slice(0,4) === ANIO)
       : eventosVisibles().length > 0;
     if(aviso) aviso.className = (filtros.size > 0 && !hay) ? 'sel-hint show' : 'sel-hint';
-    renderNextEvent();
-    renderProgress();
   }catch(e){
     console.error('Error en los avisos:', e);
   }
@@ -4247,7 +4084,6 @@ async function toggleSub(i, k){
   rebuildEvents();
   renderPanelBody();
   refrescarVista();
-  renderProgress();
   await markChanged();
 }
 
@@ -4279,7 +4115,6 @@ async function delSub(i, k){
   rebuildEvents();
   renderPanelBody();
   refrescarVista();
-  renderProgress();
   await markChanged();
 }
 
@@ -5149,15 +4984,6 @@ document.getElementById('panelClose').addEventListener('click', closePanel);
 document.getElementById('overlay').addEventListener('click', closePanel);
 
 // ---------- Nota de estado vacío ----------
-function renderEmptyNote(){
-  if(EVENTS.length > 0) return;
-  const header = document.querySelector('.masthead');
-  const note = document.createElement('div');
-  note.className = 'empty-note';
-  note.id = 'emptyNote';
-  note.textContent = 'Aún no hay eventos. Toca un año para abrirlo, o usa el botón + para agregar.';
-  header.insertBefore(note, document.querySelector('.legend'));
-}
 
 // ══════════════════════════════════════════════════════════════
 // ASISTENTE — convierte texto en español a eventos del calendario
@@ -7360,7 +7186,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.10-c';
+const VERSION = '2026.09.10-d';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -7942,7 +7768,6 @@ async function init(){
     renderLegend();
     ANIO = Math.min(Math.max(anioDeHoy(), ANIO_MIN), ANIO_MAX);
     renderVista();
-    renderEmptyNote();
     if(vista === 'anio') irAlMesDeHoy(true);
     const note = document.getElementById('emptyNote');
     if(note && EVENTS.length > 0) note.remove();
