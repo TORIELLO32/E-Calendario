@@ -1241,16 +1241,21 @@
     gap:4px;
   }
   .dv-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
     font-family:var(--font-body);
     font-size:0.76rem;
     color:var(--ink);
-    border:none;
+    background:var(--paper-card);
+    border:1px solid var(--line-soft);
     border-left:3px solid;
     border-radius:4px;
     padding:4px 8px;
     cursor:pointer;
     -webkit-tap-highlight-color:transparent;
   }
+  .dv-chip .mk-d{width:6px;height:6px;border-radius:50%;flex:none;}
   .dv-chip.hecho{color:var(--ink-soft);text-decoration:line-through;}
   .dv-cuerpo{position:relative;}
   .dv-rejilla{position:relative;}
@@ -1270,9 +1275,42 @@
     background:var(--paper);
     padding-right:4px;
   }
+  /* Tiras verticales de los eventos de todo el día */
+  .dv-tiras{
+    position:absolute;
+    left:52px; top:0;
+    pointer-events:none;
+  }
+  .dv-tira{
+    position:absolute;
+    top:0;
+    width:11px;
+    border:none;
+    border-radius:5px;
+    padding:0;
+    pointer-events:auto;
+    cursor:pointer;
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .dv-tira.hecho{opacity:0.5;}
+  .dv-tira-txt{
+    position:absolute;
+    top:8px; left:50%;
+    transform:translateX(-50%) rotate(90deg);
+    transform-origin:center;
+    white-space:nowrap;
+    font-family:var(--font-mono);
+    font-size:0.52rem;
+    letter-spacing:0.06em;
+    color:var(--paper-card);
+    text-shadow:0 0 2px rgba(0,0,0,0.35);
+    pointer-events:none;
+  }
+  .dv-tira.hecho .dv-tira-txt{text-decoration:line-through;}
   .dv-capa{
     position:absolute;
-    left:52px; right:0; top:0; bottom:0;
+    left:calc(52px + var(--tiras, 0px)); right:0; top:0; bottom:0;
     pointer-events:none;
   }
   .dv-ev{
@@ -1311,7 +1349,7 @@
   .dv-ev.hecho .dv-tit{color:var(--ink-soft);text-decoration:line-through;}
   .dv-ahora{
     position:absolute;
-    left:-52px; right:0;
+    left:calc(-52px - var(--tiras, 0px)); right:0;
     height:0;
     border-top:2px solid var(--examen);
     pointer-events:none;
@@ -3172,7 +3210,7 @@ async function toggleDone(id){
   if(COMPLETED.has(id)) COMPLETED.delete(id);
   else COMPLETED.add(id);
   renderPanelBody();
-  renderMonths();
+  refrescarVista();
   renderNextEvent();
   renderProgress();
   await markChanged();
@@ -3263,7 +3301,7 @@ async function saveRemAt(i){
 
   remindingId = null;
   rebuildEvents();
-  renderMonths();
+  refrescarVista();
   renderPanelBody();
   await markChanged();
 }
@@ -3324,7 +3362,7 @@ async function saveEdit(oldId){
   renderTimeline();
   renderNextEvent();
   renderProgress();
-  renderMonths();
+  refrescarVista();
 
   document.getElementById('panelDate').textContent = fechaLarga(date, true);
   renderPanelBody();
@@ -3598,7 +3636,7 @@ function toggleSelectMode(){
   document.getElementById('selBtn2').classList.toggle('active', selectMode);
   document.body.classList.toggle('selecting', selectMode);
   selHint(selectMode ? 'Toca el día en que empieza.' : '');
-  renderMonths();
+  refrescarVista();
 }
 
 // Un toque en cualquier día del calendario
@@ -3610,14 +3648,14 @@ function dayTap(iso){
     rangeStart = iso;
     rangeEnd = null;
     selHint('Ahora toca el día en que termina.');
-    renderMonths();
+    refrescarVista();
     return;
   }
 
   // segundo toque: cierra el rango
   rangeEnd = iso;
   if(rangeEnd < rangeStart){ const t = rangeStart; rangeStart = rangeEnd; rangeEnd = t; }
-  renderMonths();
+  refrescarVista();
   abrirRango();
 }
 
@@ -3675,7 +3713,7 @@ async function guardarRango(){
   document.getElementById('selBtn2').classList.remove('active');
   document.body.classList.remove('selecting');
   selHint('');
-  renderMonths();
+  refrescarVista();
 }
 
 document.getElementById('backBtn2').addEventListener('click', volverAnios);
@@ -3792,7 +3830,7 @@ async function borrarCategoria(id){
   USER_EVENTS.forEach(ev => { if(ev.type === id) ev.type = 'otro'; });
   rebuildEvents();
   renderLegend();
-  renderMonths();
+  refrescarVista();
   renderPanelBody();
   renderCatList();
   await markChanged();
@@ -4097,6 +4135,12 @@ function renderVista(){
     }
   }catch(e){
     console.error('Error al dibujar la vista:', e);
+    // Antes esto dejaba la pantalla en blanco sin decir nada.
+    const destino = enLista ? 'listaVista' : (enMes ? 'mesVista' : (enDia ? 'diaVista' : null));
+    const el = destino && document.getElementById(destino);
+    if(el) el.innerHTML = `<div class="lista-vacia">No se pudo dibujar esta vista.<br>
+      Prueba con otra desde los botones de arriba.<br>
+      <span style="font-size:0.72rem;opacity:0.7">${esc(String(e && e.message || e))}</span></div>`;
   }
 
   // 7. Aviso de filtro sin resultados
@@ -4218,7 +4262,7 @@ async function toggleSub(i, k){
   sincronizarHecho(u);
   rebuildEvents();
   renderPanelBody();
-  renderMonths();
+  refrescarVista();
   renderProgress();
   await markChanged();
 }
@@ -4236,7 +4280,7 @@ async function addSub(i){
   subsAbiertas.add(evId(u));
   rebuildEvents();
   renderPanelBody();
-  renderMonths();
+  refrescarVista();
   await markChanged();
   const nuevo = document.getElementById('subInput');
   if(nuevo){ nuevo.value = ''; nuevo.focus(); }
@@ -4250,7 +4294,7 @@ async function delSub(i, k){
   sincronizarHecho(u);
   rebuildEvents();
   renderPanelBody();
-  renderMonths();
+  refrescarVista();
   renderProgress();
   await markChanged();
 }
@@ -4439,7 +4483,7 @@ function toggleCarga(){
     el.innerHTML = cargaMode ? resumenCarga() : '';
     el.className = 'sel-hint' + (cargaMode ? ' show' : '');
   }
-  renderMonths();
+  refrescarVista();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -4482,6 +4526,21 @@ async function cargarVista(){
 document.querySelectorAll('.vista-btn').forEach(b => {
   b.addEventListener('click', () => elegirVista(b.getAttribute('data-v')));
 });
+
+// Redibuja la vista que esté puesta, sea la que sea.
+// Antes cada acción llamaba a renderMonths() a mano, así que al
+// agregar vistas nuevas ninguna se enteraba de los cambios.
+function refrescarVista(){
+  if(vista !== 'anio'){ renderYears(); return; }
+  try{
+    if(vistaTipo === 'lista') renderLista();
+    else if(vistaTipo === 'mes') renderMes();
+    else if(vistaTipo === 'dia') renderDia();
+    else renderMonths();
+  }catch(e){
+    console.error('Error al refrescar:', e);
+  }
+}
 
 // ---------- Vista de día (con horas) ----------
 const ALTO_HORA = 58;   // píxeles por hora
@@ -4545,18 +4604,9 @@ function renderDia(){
     if(ahora + 1 > fin) fin = Math.min(24, ahora + 2);
   }
 
-  // Franja de todo el día
-  const franja = todoDia.length ? `
-    <div class="dv-todo">
-      <span class="dv-todo-lbl">Todo el día</span>
-      <span class="dv-todo-evs">
-        ${todoDia.map(ev => {
-          const hecho = COMPLETED.has(evId(ev));
-          const col = safeColor(catColor(ev.type));
-          return `<button class="dv-chip${hecho ? ' hecho' : ''}" style="background:${col}24;border-left-color:${col}" onclick="dayTap('${iso}')">${esc(ev.title)}</button>`;
-        }).join('')}
-      </span>
-    </div>` : '';
+  // Los de todo el día se dibujan como tiras verticales delgadas,
+  // a lo largo de toda la jornada: se ve que ocupan el día entero
+  // sin robarle ancho a los eventos con hora.
 
   // Rejilla de horas
   let lineas = '';
@@ -4598,15 +4648,45 @@ function renderDia(){
   const puedeAnt = clampToSemester(toISO(dAnt.getFullYear(), dAnt.getMonth()+1, dAnt.getDate()));
   const puedeSig = clampToSemester(toISO(dSig.getFullYear(), dSig.getMonth()+1, dSig.getDate()));
 
+  const altoTotal = (fin - ini) * ALTO_HORA;
+
+  // Tiras verticales: una por evento de todo el día
+  const tiras = todoDia.map((ev, k) => {
+    const hecho = COMPLETED.has(evId(ev));
+    const col = safeColor(catColor(ev.type));
+    return `
+      <button class="dv-tira${hecho ? ' hecho' : ''}"
+        style="left:${k * 15}px;background:${col}${hecho ? '30' : ''};height:${altoTotal}px"
+        onclick="dayTap('${iso}')" aria-label="${esc(ev.title)}">
+        <span class="dv-tira-txt">${esc(ev.title)}</span>
+      </button>`;
+  }).join('');
+
+  // Encabezado con los nombres de lo que dura todo el día
+  const rotulo = todoDia.length ? `
+    <div class="dv-todo">
+      <span class="dv-todo-lbl">Todo el día</span>
+      <span class="dv-todo-evs">
+        ${todoDia.map(ev => {
+          const hecho = COMPLETED.has(evId(ev));
+          const col = safeColor(catColor(ev.type));
+          return `<button class="dv-chip${hecho ? ' hecho' : ''}" style="border-left-color:${col}" onclick="dayTap('${iso}')"><i class="mk-d" style="background:${col}"></i>${esc(ev.title)}</button>`;
+        }).join('')}
+      </span>
+    </div>` : '';
+
+  const anchoTiras = todoDia.length ? todoDia.length * 15 + 6 : 0;
+
   el.innerHTML = `
     <div class="mg-head">
       <button class="mg-nav" onclick="cambiarDia(-1)" ${puedeAnt ? '' : 'disabled'} aria-label="Día anterior">‹</button>
       <span class="mg-titulo ${esHoy ? 'es-hoy' : ''}">${esc(fechaLarga(iso))}</span>
       <button class="mg-nav" onclick="cambiarDia(1)" ${puedeSig ? '' : 'disabled'} aria-label="Día siguiente">›</button>
     </div>
-    ${franja}
-    <div class="dv-cuerpo">
+    ${rotulo}
+    <div class="dv-cuerpo" style="--tiras:${anchoTiras}px">
       <div class="dv-rejilla">${lineas}</div>
+      <div class="dv-tiras">${tiras}</div>
       <div class="dv-capa">${bloques}${ahoraLinea}</div>
     </div>
     ${todos.length ? '' : '<div class="lista-vacia">No hay nada este día.</div>'}
@@ -4695,7 +4775,7 @@ function renderMes(){
       <span class="mg-titulo">${esc(MONTHS_ES[mo-1])} <b>${y}</b></span>
       <button class="mg-nav" onclick="cambiarMes(1)" ${desp ? '' : 'disabled'} aria-label="Mes siguiente">›</button>
     </div>
-    <div class="mg-dias">${WEEKDAYS.map(w => `<span>${w}</span>`).join('')}</div>
+    <div class="mg-dias">${WEEKDAYS_SHORT.map(w => `<span>${w}</span>`).join('')}</div>
     <div class="mg-grid">${celdas}</div>
     <div class="mg-pie">Desliza de lado para cambiar de mes</div>
   `;
@@ -7245,7 +7325,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.09-b';
+const VERSION = '2026.09.10';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -7281,7 +7361,7 @@ async function elegirTema(v){
   aplicarTema();
   // Los días pintados llevan el color en línea: hay que redibujar
   // para que cambien de intensidad con el tema.
-  if(filtros.size > 0 && vista === 'anio') renderMonths();
+  if(filtros.size > 0 && vista === 'anio') refrescarVista();
   await writeKey(KEY_TEMA, temaElegido);
 }
 
@@ -7299,7 +7379,7 @@ if(window.matchMedia){
   const alCambiar = () => {
     if(temaElegido !== 'auto') return;
     aplicarTema();
-    if(filtros.size > 0 && vista === 'anio') renderMonths();
+    if(filtros.size > 0 && vista === 'anio') refrescarVista();
   };
   if(mq.addEventListener) mq.addEventListener('change', alCambiar);
   else if(mq.addListener) mq.addListener(alCambiar);
