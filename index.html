@@ -1183,11 +1183,23 @@
     white-space:nowrap;
     -webkit-tap-highlight-color:transparent;
   }
+  /* El botón activo se decide por el atributo del contenedor.
+     Así solo puede haber uno encendido, pase lo que pase en el JS. */
+  .vistas[data-actual="puntos"] .vista-btn[data-v="puntos"],
+  .vistas[data-actual="lista"]  .vista-btn[data-v="lista"],
   .vista-btn.on{
     background:var(--paper-card);
     color:var(--accent);
     font-weight:700;
     box-shadow:0 1px 3px -1px var(--sombra), inset 0 0 0 1px var(--accent);
+  }
+  /* Y los demás se apagan aunque les quedara la clase pegada */
+  .vistas[data-actual="puntos"] .vista-btn:not([data-v="puntos"]),
+  .vistas[data-actual="lista"]  .vista-btn:not([data-v="lista"]){
+    background:none;
+    color:var(--ink-soft);
+    font-weight:400;
+    box-shadow:none;
   }
   .barra.en-anios .vistas{display:none;}
   /* En la vista de años sobran el botón de volver y el de rango */
@@ -1903,7 +1915,7 @@
       </button>
       <button class="icon-btn barra-hoy" id="hoyBtn" aria-label="Ir a hoy">Hoy</button>
     </div>
-    <div class="vistas" id="vistas">
+    <div class="vistas" id="vistas" data-actual="puntos">
       <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
       <button type="button" class="vista-btn" data-v="lista" aria-pressed="false">Lista</button>
     </div>
@@ -1992,7 +2004,9 @@
 
   <div class="opt-block">
     <div class="opt-title">Versión</div>
-    <div class="opt-desc">Estás usando la versión <b id="verNum">—</b>. Si acabas de subir un archivo nuevo y no ves los cambios, toca Recargar.</div>
+    <div class="opt-desc">Estás usando la versión <b id="verNum">—</b>.<br>
+      <b>Recargar de cero</b> baja el archivo saltándose lo guardado.<br>
+      <b>Vaciar guardado</b> borra la copia del teléfono y empieza limpio.</div>
     <div class="opt-actions">
       <button class="btn" id="btnRecargar">Recargar de cero</button>
       <button class="btn" id="btnVaciar">Vaciar guardado</button>
@@ -3745,57 +3759,89 @@ function volverAnios(){
 
 // Ajusta encabezado, botones y qué se muestra
 function renderVista(){
+  // Todo lo que decide qué se ve, calculado de una vez.
+  // Antes esto estaba repartido y una falla a medio camino dejaba
+  // el botón diciendo una cosa y la pantalla mostrando otra.
+  const enAnio  = vista === 'anio';
+  const enLista = enAnio && vistaTipo === 'lista';
+  const enMeses = enAnio && vistaTipo === 'puntos';
+
+  // 1. Botones de vista: siempre desde el estado
+  const cont = document.getElementById('vistas');
+  if(cont) cont.setAttribute('data-actual', vistaTipo);
   pintarVistas();
-  const enAnio = vista === 'anio';
-  document.getElementById('years').style.display = enAnio ? 'none' : '';
-  document.getElementById('months').style.display = enAnio ? '' : 'none';
-  document.getElementById('timeline').style.display = enAnio ? '' : 'none';
-  document.getElementById('barra').classList.toggle('en-anios', !enAnio);
-  if(!enAnio && cargaMode){
+
+  // 2. Qué bloque se muestra. En un solo lugar, sin repetir.
+  const mostrar = {
+    years:     !enAnio,
+    months:    enMeses,
+    listaVista:enLista,
+    timeline:  enMeses,
+  };
+  Object.keys(mostrar).forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = mostrar[id] ? '' : 'none';
+  });
+
+  // 3. Botones de la barra que no aplican en cada vista
+  const ocultar = { selBtn2: !enMeses, cargaBtn: !enMeses };
+  Object.keys(ocultar).forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = ocultar[id] ? 'none' : '';
+  });
+
+  // 4. El modo carga solo vive en la vista de puntos
+  if(!enMeses && cargaMode){
     cargaMode = false;
-    document.getElementById('cargaBtn').classList.remove('active');
+    const b = document.getElementById('cargaBtn');
+    if(b) b.classList.remove('active');
     const h = document.getElementById('cargaHint');
     if(h){ h.innerHTML = ''; h.className = 'sel-hint'; }
   }
-  document.getElementById('barraAnio').textContent = enAnio ? ANIO : `${ANIO_MIN}–${ANIO_MAX}`;
-  if(!enAnio) document.getElementById('barraMes').textContent = '';
 
-  document.getElementById('tituloPrincipal').innerHTML = enAnio
+  // 5. Encabezados
+  const barra = document.getElementById('barra');
+  if(barra) barra.classList.toggle('en-anios', !enAnio);
+  const bAnio = document.getElementById('barraAnio');
+  if(bAnio) bAnio.textContent = enAnio ? ANIO : `${ANIO_MIN}–${ANIO_MAX}`;
+  const bMes = document.getElementById('barraMes');
+  if(bMes && !enMeses) bMes.textContent = '';
+  const tit = document.getElementById('tituloPrincipal');
+  if(tit) tit.innerHTML = enAnio
     ? `Año <span class="year">${ANIO}</span>`
     : `Calendario <span class="year">${ANIO_MIN}–${ANIO_MAX}</span>`;
-  document.getElementById('tagLine').textContent = enAnio
+  const tag = document.getElementById('tagLine');
+  if(tag) tag.textContent = enAnio
     ? 'Bitácora · Arquitectura UDEM'
     : 'Bitácora · toca un año para abrirlo';
 
-  const enLista = enAnio && vistaTipo === 'lista';
-  document.getElementById('listaVista').style.display = enLista ? '' : 'none';
-  document.getElementById('months').style.display = (enAnio && !enLista) ? '' : 'none';
-  document.getElementById('timeline').style.display = (enAnio && !enLista) ? '' : 'none';
-  document.getElementById('selBtn2').style.display = enLista ? 'none' : '';
-  document.getElementById('cargaBtn').style.display = enLista ? 'none' : '';
-
-  if(enAnio){
-    if(enLista){
-      renderLista();
-      document.getElementById('barraMes').textContent = '';
-    }else{
+  // 6. Dibujar. Si una vista truena, no arrastra a las demás.
+  try{
+    if(!enAnio) renderYears();
+    else if(enLista) renderLista();
+    else{
       renderTimeline();
       renderMonths();
       requestAnimationFrame(actualizarMesEnBarra);
     }
-  }else{
-    renderYears();
+  }catch(e){
+    console.error('Error al dibujar la vista:', e);
   }
 
-  // Si el filtro deja el año sin nada, decirlo en vez de mostrar vacío
-  const aviso = document.getElementById('filtroVacio');
-  const hayEnVista = enAnio
-    ? eventosVisibles().some(ev => +ev.date.slice(0,4) === ANIO)
-    : eventosVisibles().length > 0;
-  if(aviso) aviso.className = (filtros.size > 0 && !hayEnVista) ? 'sel-hint show' : 'sel-hint';
-  renderNextEvent();
-  renderProgress();
+  // 7. Aviso de filtro sin resultados
+  try{
+    const aviso = document.getElementById('filtroVacio');
+    const hay = enAnio
+      ? eventosVisibles().some(ev => +ev.date.slice(0,4) === ANIO)
+      : eventosVisibles().length > 0;
+    if(aviso) aviso.className = (filtros.size > 0 && !hay) ? 'sel-hint show' : 'sel-hint';
+    renderNextEvent();
+    renderProgress();
+  }catch(e){
+    console.error('Error en los avisos:', e);
+  }
 }
+
 
 // ══════════════════════════════════════════════════════════════
 // BARRA FIJA — muestra el mes que estás viendo y te deja volver
@@ -6669,7 +6715,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.08.11';
+const VERSION = '2026.09.02';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -7097,6 +7143,13 @@ document.getElementById('tutoNext').addEventListener('click', () => tutoAvanza(1
 // ══════════════════════════════════════════════════════════════
 let swListo = false;
 
+// El service worker avisa cuando bajó una versión distinta
+if('serviceWorker' in navigator && navigator.serviceWorker.addEventListener){
+  navigator.serviceWorker.addEventListener('message', e => {
+    if(e.data === 'version-nueva') avisoVersionNueva();
+  });
+}
+
 function registrarSW(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol !== 'https:' && location.hostname !== 'localhost') return;
@@ -7122,8 +7175,8 @@ function avisoVersionNueva(){
   const el = document.createElement('div');
   el.id = 'avisoSW';
   el.className = 'aviso-sw';
-  el.innerHTML = `<span>Hay una versión nueva.</span>
-    <button class="btn" onclick="aplicarVersionNueva()">Actualizar</button>`;
+  el.innerHTML = `<span>Hay una versión nueva lista.</span>
+    <button class="btn primary" onclick="aplicarVersionNueva()">Actualizar</button>`;
   document.body.appendChild(el);
 }
 
@@ -7131,7 +7184,8 @@ function aplicarVersionNueva(){
   if(navigator.serviceWorker && navigator.serviceWorker.controller){
     navigator.serviceWorker.controller.postMessage('actualizar');
   }
-  setTimeout(() => location.reload(), 200);
+  // Con ?v= el service worker espera a la red, no usa la copia
+  setTimeout(recargarDeCero, 200);
 }
 
 // Se registra sin bloquear el arranque
