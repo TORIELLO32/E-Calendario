@@ -1088,9 +1088,9 @@
     border:none;
     background:none;
     border-radius:7px;
-    padding:6px 9px;
+    padding:6px 4px;
     font-family:var(--font-body);
-    font-size:0.76rem;
+    font-size:0.7rem;
     color:var(--ink-soft);
     cursor:pointer;
     white-space:nowrap;
@@ -1100,6 +1100,7 @@
      Así solo puede haber uno encendido, pase lo que pase en el JS. */
   .vistas[data-actual="puntos"] .vista-btn[data-v="puntos"],
   .vistas[data-actual="mes"]    .vista-btn[data-v="mes"],
+  .vistas[data-actual="semana"] .vista-btn[data-v="semana"],
   .vistas[data-actual="dia"]    .vista-btn[data-v="dia"],
   .vistas[data-actual="lista"]  .vista-btn[data-v="lista"],
   .vista-btn.on{
@@ -1111,6 +1112,7 @@
   /* Y los demás se apagan aunque les quedara la clase pegada */
   .vistas[data-actual="puntos"] .vista-btn:not([data-v="puntos"]),
   .vistas[data-actual="mes"]    .vista-btn:not([data-v="mes"]),
+  .vistas[data-actual="semana"] .vista-btn:not([data-v="semana"]),
   .vistas[data-actual="dia"]    .vista-btn:not([data-v="dia"]),
   .vistas[data-actual="lista"]  .vista-btn:not([data-v="lista"]){
     background:none;
@@ -1130,6 +1132,144 @@
   .barra .icon-btn#optsBtn{margin-left:2px;}
   /* En la vista de años queda el año y el engrane, nada más */
   .barra.en-anios .barra-top{justify-content:space-between;}
+
+  /* ---------- Vista de semana ---------- */
+  #semanaVista{padding-bottom:24px;}
+  .sv-esq{flex:none;width:26px;}
+  .sv-cabecera{
+    display:flex;
+    gap:1px;
+    margin-bottom:2px;
+  }
+  .sv-dia{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1px;
+    padding:5px 0;
+    background:var(--paper-card);
+    border:1px solid var(--line-soft);
+    border-radius:6px;
+    cursor:pointer;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .sv-dia:active{border-color:var(--accent);}
+  .sv-dia.hoy{border-color:var(--accent);border-width:2px;padding:4px 0;}
+  .sv-dia.fuera{opacity:0.4;}
+  .sv-dia-wd{
+    font-family:var(--font-mono);
+    font-size:0.54rem;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+  }
+  .sv-dia-n{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:0.82rem;
+    color:var(--ink);
+  }
+  .sv-dia.hoy .sv-dia-n{color:var(--accent);}
+  .sv-franja{
+    display:flex;
+    gap:1px;
+    align-items:stretch;
+    margin-bottom:3px;
+  }
+  .sv-todo-lbl{
+    font-family:var(--font-mono);
+    font-size:0.5rem;
+    color:var(--ink-soft);
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    padding-right:3px;
+  }
+  .sv-todo{display:flex;gap:1px;flex:1;}
+  .sv-todo-c{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    padding:2px 1px;
+  }
+  .sv-tira{
+    height:5px;
+    border:none;
+    border-radius:3px;
+    padding:0;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .sv-tira.hecho{opacity:0.45;}
+  .sv-cuerpo{display:flex;gap:0;}
+  .sv-horas{flex:none;width:26px;}
+  .sv-hora{
+    position:relative;
+    border-top:1px solid var(--line-soft);
+    box-sizing:border-box;
+  }
+  .sv-hora span{
+    position:absolute;
+    top:-6px; right:3px;
+    font-family:var(--font-mono);
+    font-size:0.5rem;
+    color:var(--ink-soft);
+    background:var(--paper);
+    padding:0 1px;
+  }
+  .sv-rejilla{
+    flex:1;
+    display:flex;
+    gap:1px;
+    min-width:0;
+  }
+  .sv-col{
+    flex:1;
+    min-width:0;
+    position:relative;
+    border-left:1px solid var(--line-soft);
+    background:repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 45px,
+      var(--line-soft) 45px,
+      var(--line-soft) 46px
+    );
+  }
+  .sv-col:last-child{border-right:1px solid var(--line-soft);}
+  .sv-col.hoy{background-color:var(--accent-soft);}
+  .sv-ev{
+    position:absolute;
+    border:none;
+    border-left:2px solid;
+    border-radius:3px;
+    padding:2px 2px 2px 3px;
+    font-family:inherit;
+    font-size:0.5rem;
+    line-height:1.15;
+    color:var(--ink);
+    text-align:left;
+    overflow:hidden;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .sv-ev.hecho{color:var(--ink-soft);text-decoration:line-through;}
+  .sv-ahora{
+    position:absolute;
+    left:0; right:0;
+    height:0;
+    border-top:2px solid var(--examen);
+    z-index:3;
+    pointer-events:none;
+  }
+  @media (min-width:520px){
+    .sv-ev{font-size:0.6rem;}
+    .sv-esq, .sv-horas{width:34px;}
+  }
 
   /* ---------- Vista de día (con horas) ---------- */
   #diaVista{padding-bottom:24px;}
@@ -2093,6 +2233,7 @@
     </div>
     <div class="vistas" id="vistas" data-actual="puntos">
       <button type="button" class="vista-btn" data-v="mes" aria-pressed="false">Mes</button>
+      <button type="button" class="vista-btn" data-v="semana" aria-pressed="false">Semana</button>
       <button type="button" class="vista-btn" data-v="dia" aria-pressed="false">Día</button>
       <button type="button" class="vista-btn" data-v="lista" aria-pressed="false">Lista</button>
       <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
@@ -2107,6 +2248,7 @@
   <main id="months" style="display:none"></main>
   <main id="mesVista" style="display:none"></main>
   <main id="diaVista" style="display:none"></main>
+  <main id="semanaVista" style="display:none"></main>
   <main id="listaVista" style="display:none"></main>
 </div>
 
@@ -3720,6 +3862,13 @@ function irAFecha(iso){
     return;
   }
 
+  if(vistaTipo === 'semana'){
+    semanaLunes = lunesDe(iso);
+    renderSemana();
+    window.scrollTo({ top:0, behavior:'smooth' });
+    return;
+  }
+
   if(vistaTipo === 'mes'){
     mesActual = +iso.slice(5,7);
     renderMes();
@@ -3856,6 +4005,7 @@ function abrirAnio(y){
   vista = 'anio';
   mesActual = mesPorOmision();
   diaActual = diaPorOmision();
+  semanaLunes = semanaPorOmision();
   if(selectMode) toggleSelectMode();
   renderVista();
   irAlMesDeHoy();
@@ -3900,6 +4050,7 @@ function renderVista(){
   const enLista = enAnio && vistaTipo === 'lista';
   const enMes   = enAnio && vistaTipo === 'mes';
   const enDia   = enAnio && vistaTipo === 'dia';
+  const enSem   = enAnio && vistaTipo === 'semana';
   const enMeses = enAnio && vistaTipo === 'puntos';
 
   // 1. Botones de vista: siempre desde el estado
@@ -3911,6 +4062,7 @@ function renderVista(){
     months:    enMeses,
     mesVista:  enMes,
     diaVista:  enDia,
+    semanaVista: enSem,
     listaVista:enLista,
   };
   Object.keys(mostrar).forEach(id => {
@@ -3949,6 +4101,7 @@ function renderVista(){
     else if(enLista) renderLista();
     else if(enMes) renderMes();
     else if(enDia) renderDia();
+    else if(enSem) renderSemana();
     else{
       renderMonths();
       requestAnimationFrame(actualizarMesEnBarra);
@@ -3956,7 +4109,7 @@ function renderVista(){
   }catch(e){
     console.error('Error al dibujar la vista:', e);
     // Antes esto dejaba la pantalla en blanco sin decir nada.
-    const destino = enLista ? 'listaVista' : (enMes ? 'mesVista' : (enDia ? 'diaVista' : null));
+    const destino = enLista ? 'listaVista' : (enMes ? 'mesVista' : (enDia ? 'diaVista' : (enSem ? 'semanaVista' : null)));
     const el = destino && document.getElementById(destino);
     if(el) el.innerHTML = `<div class="lista-vacia">No se pudo dibujar esta vista.<br>
       Prueba con otra desde los botones de arriba.<br>
@@ -4000,6 +4153,12 @@ function irAHoy(){
   if(vistaTipo === 'dia'){
     diaActual = diaPorOmision();
     renderDia();
+    window.scrollTo({ top:0, behavior:'smooth' });
+    return;
+  }
+  if(vistaTipo === 'semana'){
+    semanaLunes = semanaPorOmision();
+    renderSemana();
     window.scrollTo({ top:0, behavior:'smooth' });
     return;
   }
@@ -4311,7 +4470,7 @@ function toggleCarga(){
 // prefieres, por dispositivo.
 // ══════════════════════════════════════════════════════════════
 const KEY_VISTA = 'semestre2026:vista';
-const VISTAS_OK = ['mes','dia','lista','puntos'];
+const VISTAS_OK = ['mes','semana','dia','lista','puntos'];
 let vistaTipo = 'puntos';
 
 // Los botones se pintan SIEMPRE desde vistaTipo, nunca a mano.
@@ -4335,7 +4494,7 @@ let repintando = false;
 function forzarRepintado(){
   if(repintando) return;
   repintando = true;
-  ['barra','years','months','mesVista','diaVista','listaVista'].forEach(id => {
+  ['barra','years','months','mesVista','semanaVista','diaVista','listaVista'].forEach(id => {
     const el = document.getElementById(id);
     if(!el || el.style.display === 'none') return;
     // Leer una medida obliga al navegador a recalcular ya
@@ -4343,7 +4502,7 @@ function forzarRepintado(){
     el.style.transform = 'translateZ(0)';
   });
   requestAnimationFrame(() => {
-    ['barra','years','months','mesVista','diaVista','listaVista'].forEach(id => {
+    ['barra','years','months','mesVista','semanaVista','diaVista','listaVista'].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.style.transform = '';
     });
@@ -4368,6 +4527,7 @@ async function elegirVista(v){
   vistaTipo = v;
   if(v === 'mes') mesActual = mesPorOmision();
   if(v === 'dia') diaActual = diaPorOmision();
+  if(v === 'semana') semanaLunes = semanaPorOmision();
 
   // Se sube primero: si te quedas abajo, la vista nueva empieza
   // fuera de la pantalla y parece que no cambió nada.
@@ -4406,10 +4566,149 @@ function refrescarVista(){
     if(vistaTipo === 'lista') renderLista();
     else if(vistaTipo === 'mes') renderMes();
     else if(vistaTipo === 'dia') renderDia();
+    else if(vistaTipo === 'semana') renderSemana();
     else renderMonths();
   }catch(e){
     console.error('Error al refrescar:', e);
   }
+}
+
+// ---------- Vista de semana (7 columnas con horas) ----------
+const ALTO_HORA_SEM = 46;
+let semanaLunes = '';
+
+function semanaPorOmision(){
+  const h = todayISO();
+  return (+h.slice(0,4) === ANIO) ? lunesDe(h) : lunesDe(ANIO + '-01-01');
+}
+
+function cambiarSemana(n){
+  const d = parseISO(semanaLunes || semanaPorOmision());
+  d.setDate(d.getDate() + n * 7);
+  const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+  if(!clampToSemester(iso) && !clampToSemester(masDias(iso, 6))) return;
+  if(+iso.slice(0,4) !== ANIO && clampToSemester(iso)){
+    ANIO = +iso.slice(0,4);
+    semanaLunes = iso;
+    renderVista();
+    return;
+  }
+  semanaLunes = iso;
+  renderSemana();
+}
+
+function renderSemana(){
+  const el = document.getElementById('semanaVista');
+  if(!el) return;
+  if(!semanaLunes) semanaLunes = semanaPorOmision();
+
+  const hoy = todayISO();
+  const dias = [];
+  for(let i = 0; i < 7; i++) dias.push(masDias(semanaLunes, i));
+
+  const porDia = {};
+  dias.forEach(d => { porDia[d] = eventosVisibles().filter(e => e.date === d); });
+
+  // Rango de horas: lo que haya esa semana
+  let ini = 7, fin = 22;
+  dias.forEach(d => porDia[d].forEach(e => {
+    const h = safeHora(e.hora);
+    if(!h) return;
+    const n = +h.slice(0,2);
+    if(n < ini) ini = Math.max(0, n);
+    if(n + 1 > fin) fin = Math.min(24, n + 2);
+  }));
+  if(dias.includes(hoy)){
+    const a = new Date().getHours();
+    if(a < ini) ini = Math.max(0, a);
+    if(a + 1 > fin) fin = Math.min(24, a + 2);
+  }
+  const altoTotal = (fin - ini) * ALTO_HORA_SEM;
+
+  // Encabezado con los días
+  const cabecera = dias.map(d => {
+    const p = parseISO(d);
+    const esHoy = d === hoy;
+    const fuera = !clampToSemester(d);
+    return `
+      <button class="sv-dia${esHoy ? ' hoy' : ''}${fuera ? ' fuera' : ''}" onclick="verDiaDeSemana('${d}')">
+        <span class="sv-dia-wd">${WEEKDAYS_SHORT[(p.getDay()+6)%7]}</span>
+        <span class="sv-dia-n">${p.getDate()}</span>
+      </button>`;
+  }).join('');
+
+  // Franja de los de todo el día
+  const hayTodoDia = dias.some(d => porDia[d].some(e => !safeHora(e.hora)));
+  const franja = hayTodoDia ? `
+    <div class="sv-todo">
+      ${dias.map(d => `
+        <div class="sv-todo-c">
+          ${porDia[d].filter(e => !safeHora(e.hora)).slice(0,3).map(ev => {
+            const col = safeColor(catColor(ev.type));
+            const hecho = COMPLETED.has(evId(ev));
+            return `<button class="sv-tira${hecho ? ' hecho' : ''}" style="background:${col}" onclick="dayTap('${d}')" aria-label="${esc(ev.title)}"></button>`;
+          }).join('')}
+        </div>`).join('')}
+    </div>` : '';
+
+  // Horas
+  let horas = '';
+  for(let h = ini; h < fin; h++){
+    const et = h === 0 ? '12a' : (h < 12 ? h + 'a' : (h === 12 ? '12p' : (h - 12) + 'p'));
+    horas += `<div class="sv-hora" style="height:${ALTO_HORA_SEM}px"><span>${et}</span></div>`;
+  }
+
+  // Columnas con los eventos
+  const columnas = dias.map(d => {
+    const conHora = porDia[d].filter(e => safeHora(e.hora))
+      .sort((a,b) => safeHora(a.hora).localeCompare(safeHora(b.hora)));
+    const { puestos, total } = carriles(conHora);
+    const bloques = puestos.map(({ ev, hora, carril }) => {
+      const hh = +hora.slice(0,2), mm = +hora.slice(3,5);
+      const top = ((hh - ini) + mm/60) * ALTO_HORA_SEM;
+      const ancho = 100 / total;
+      const hecho = COMPLETED.has(evId(ev));
+      const col = safeColor(catColor(ev.type));
+      return `<button class="sv-ev${hecho ? ' hecho' : ''}"
+        style="top:${top}px;height:${ALTO_HORA_SEM - 2}px;left:${carril*ancho}%;width:calc(${ancho}% - 2px);background:${col}2E;border-left-color:${col}"
+        onclick="dayTap('${d}')">${esc(ev.title)}</button>`;
+    }).join('');
+
+    let linea = '';
+    if(d === hoy){
+      const n = new Date();
+      const pos = ((n.getHours() - ini) + n.getMinutes()/60) * ALTO_HORA_SEM;
+      if(pos >= 0 && pos <= altoTotal) linea = `<div class="sv-ahora" style="top:${pos}px"></div>`;
+    }
+    return `<div class="sv-col${d === hoy ? ' hoy' : ''}" style="height:${altoTotal}px">${bloques}${linea}</div>`;
+  }).join('');
+
+  const a = parseISO(semanaLunes), b = parseISO(dias[6]);
+  const rango = a.getMonth() === b.getMonth()
+    ? `${a.getDate()}–${b.getDate()} ${MONTHS_ES[a.getMonth()].slice(0,3)}`
+    : `${a.getDate()} ${MONTHS_ES[a.getMonth()].slice(0,3)} – ${b.getDate()} ${MONTHS_ES[b.getMonth()].slice(0,3)}`;
+
+  el.innerHTML = `
+    <div class="mg-head">
+      <button class="mg-nav" onclick="cambiarSemana(-1)" aria-label="Semana anterior">‹</button>
+      <span class="mg-titulo">${esc(rango)}</span>
+      <button class="mg-nav" onclick="cambiarSemana(1)" aria-label="Semana siguiente">›</button>
+    </div>
+    <div class="sv-cabecera"><span class="sv-esq"></span>${cabecera}</div>
+    ${hayTodoDia ? `<div class="sv-franja"><span class="sv-esq sv-todo-lbl">día</span>${franja}</div>` : ''}
+    <div class="sv-cuerpo">
+      <div class="sv-horas">${horas}</div>
+      <div class="sv-rejilla">${columnas}</div>
+    </div>
+    <div class="mg-pie">Toca un día para verlo completo · desliza para cambiar de semana</div>
+  `;
+}
+
+function verDiaDeSemana(iso){
+  if(!clampToSemester(iso)) return;
+  diaActual = iso;
+  if(+iso.slice(0,4) !== ANIO) ANIO = +iso.slice(0,4);
+  elegirVista('dia');
 }
 
 // ---------- Vista de día (con horas) ----------
@@ -4676,6 +4975,7 @@ function activarDeslizarEn(id, alCambiar){
 }
 activarDeslizarEn('mesVista', n => cambiarMes(n));
 activarDeslizarEn('diaVista', n => cambiarDia(n));
+activarDeslizarEn('semanaVista', n => cambiarSemana(n));
 
 // ---------- Vista de lista ----------
 let listaPasados = false;
@@ -7186,7 +7486,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.10-d';
+const VERSION = '2026.09.11';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
