@@ -7486,7 +7486,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.11';
+const VERSION = '2026.09.11-b';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -7615,7 +7615,7 @@ const TUTO_PASOS = [
             <i class="mes-bar" style="background:${COL.en};height:55%"></i>
             <i class="mes-bar" style="background:${COL.va};height:80%"></i>
           </span>
-          <span class="year-count">23 eventos</span>
+          <span class="year-count">49 eventos</span>
         </div>
         <div class="year-card" style="pointer-events:none">
           <span class="year-num">2027</span>
@@ -7631,7 +7631,65 @@ const TUTO_PASOS = [
       </div>`,
     texto: `
       <p>Cada tarjeta trae <b>doce barritas</b>, una por mes. La altura te dice cuánto tienes ahí, y el color de qué es. Así ves de un vistazo que octubre está apretado sin entrar.</p>
-      <p>El año actual va con <b>borde azul</b>. Al abrirlo baja solo al mes en curso, para que no andes buscando.</p>`
+      <p>El año actual va con <b>borde azul</b>. Al abrirlo baja solo al mes en curso.</p>
+      <p>Arriba a la derecha está el <b>engrane ⚙︎</b>: ahí vive todo lo de ajustes, el respaldo y este tutorial.</p>`
+  },
+  {
+    titulo: 'Cinco formas de ver el año',
+    sub: 'Arriba eliges cómo quieres verlo. Se recuerda tu preferencia.',
+    visual: `
+      <div class="vistas" data-actual="mes" style="pointer-events:none;margin-bottom:12px">
+        <button class="vista-btn" data-v="mes">Mes</button>
+        <button class="vista-btn" data-v="semana">Semana</button>
+        <button class="vista-btn" data-v="dia">Día</button>
+        <button class="vista-btn" data-v="lista">Lista</button>
+        <button class="vista-btn" data-v="puntos">Puntos</button>
+      </div>
+      <div class="mk-cap">Mes · un mes a la vez, con los nombres</div>
+      ${mkSemana(
+        mkC(14)+mkC(15)+mkC(16,{dot:COL.ex})+mkC(17)+mkC(18,{dot:COL.en})+mkC(19,{fin:1})+mkC(20,{fin:1})
+      )}
+      <div class="mk-cap">Puntos · el año completo, compacto</div>
+      <div class="mk-fila">
+        <span style="font-size:0.78rem;color:var(--ink-soft)">Los doce meses seguidos, con puntitos de color.</span>
+      </div>`,
+    texto: `
+      <ul class="tuto-lista">
+        <li><b>Mes</b> — un mes a la vez con los nombres de los eventos. Deslizas de lado para cambiar.</li>
+        <li><b>Semana</b> — siete columnas con las horas. Tocas un día y lo abres completo.</li>
+        <li><b>Día</b> — las horas del día con la línea de «ahora».</li>
+        <li><b>Lista</b> — lo que viene, en orden, con cuánto falta para cada cosa.</li>
+        <li><b>Puntos</b> — el año entero en una pantalla, compacto.</li>
+      </ul>`
+  },
+  {
+    titulo: 'Semana y día, con horas',
+    sub: 'Para cuando necesitas saber a qué hora exacta es algo.',
+    visual: `
+      <div class="mk-cap">En la vista de día</div>
+      <div style="display:flex;gap:6px;border:1px solid var(--line-soft);border-radius:8px;padding:8px">
+        <div style="flex:none;width:34px;font-family:var(--font-mono);font-size:0.55rem;color:var(--ink-soft);line-height:34px">
+          9a<br>10a<br>11a
+        </div>
+        <div style="flex:none;width:18px;background:${COL.va};border-radius:5px;position:relative">
+          <span style="writing-mode:vertical-rl;font-size:0.5rem;color:#fff;padding:5px 0;display:block">Vacaciones</span>
+        </div>
+        <div style="flex:1;position:relative;height:102px">
+          <div style="position:absolute;top:0;left:0;right:0;height:32px;background:${COL.dep}2E;border-left:3px solid ${COL.dep};border-radius:4px;padding:3px 5px">
+            <div style="font-size:0.7rem">Gimnasio</div>
+            <div style="font-family:var(--font-mono);font-size:0.52rem;color:var(--ink-soft)">9:00 am</div>
+          </div>
+          <div style="position:absolute;top:44px;left:0;right:0;border-top:2px solid ${COL.ex}"></div>
+          <div style="position:absolute;top:68px;left:0;right:0;height:32px;background:${COL.en}2E;border-left:3px solid ${COL.en};border-radius:4px;padding:3px 5px">
+            <div style="font-size:0.7rem">Entrega láminas</div>
+            <div style="font-family:var(--font-mono);font-size:0.52rem;color:var(--ink-soft)">11:00 am</div>
+          </div>
+        </div>
+      </div>`,
+    texto: `
+      <p>Lo que <b>dura todo el día</b> se dibuja como una tira vertical de lado a lado de la jornada. Lo que tiene hora cae en su lugar exacto.</p>
+      <p>La <b>línea roja</b> marca la hora actual, y solo sale si estás viendo hoy.</p>
+      <p>Si dos cosas coinciden a la misma hora, se parten a la mitad para que veas ambas.</p>`
   },
   {
     titulo: 'Agregar tocando un día',
@@ -7653,32 +7711,26 @@ const TUTO_PASOS = [
       <p>Escribes qué es, opcionalmente una hora, eliges categoría y listo.</p>`
   },
   {
-    titulo: 'Varios días de un jalón',
-    sub: 'Para vacaciones, viajes o cualquier cosa que dure varios días.',
+    titulo: 'Lugar, liga y notas',
+    sub: 'Para el salón, el Zoom de la clase o qué llevar.',
     visual: `
-      <div class="mk-cap">Botón de rango, arriba</div>
-      <div class="mk-fila" style="margin-bottom:12px">
-        <span class="mk-btn on">▦</span>
-        <span style="font-size:0.8rem;color:var(--ink-soft)">Toca el día en que empieza</span>
+      <div class="mk-cap">Al agregar o editar, «＋ Más detalles»</div>
+      <div style="border:1px solid var(--line);border-radius:9px;padding:11px;margin-bottom:12px">
+        <div class="campo"><span class="campo-lbl">Lugar</span>
+          <div style="border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:0.78rem">Aula 302, CETEC</div></div>
+        <div style="height:6px"></div>
+        <div class="campo"><span class="campo-lbl">Liga</span>
+          <div style="border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:0.78rem;color:var(--ink-soft)">https://meet.google.com/…</div></div>
       </div>
-      ${mkSemana(
-        mkC(17)+
-        mkC(18,{bg:'var(--accent-soft)'})+
-        mkC(19,{bg:'var(--accent-soft)'})+
-        mkC(20,{bg:'var(--accent-soft)'})+
-        mkC(21,{bg:'var(--accent-soft)'})+
-        mkC(22,{bg:'var(--accent-soft)',fin:1})+
-        mkC(23,{bg:'var(--accent-soft)',fin:1})
-      )}
-      <div style="font-size:0.78rem;color:var(--ink-soft);margin-top:9px">Se pintan los días y sale un cuadro para poner qué va en todos.</div>`,
+      <div class="mk-cap">Y en el evento quedan tocables</div>
+      <div class="mk-fila">
+        <span class="det-chip">🔗 Meet</span>
+        <span class="det-chip">📍 Aula 302, CETEC</span>
+      </div>`,
     texto: `
-      <ol class="tuto-lista" style="counter-reset:n">
-        <li>Tocas el botón del calendario punteado</li>
-        <li>Tocas el día en que <b>empieza</b></li>
-        <li>Tocas el día en que <b>termina</b></li>
-        <li>Escribes qué es y se agrega en todos</li>
-      </ol>
-      <p style="margin-top:10px">Si te equivocas y tocas primero el final, lo acomoda solo.</p>`
+      <p>La liga reconoce de dónde es: <b>Zoom, Meet, Teams, Drive, Classroom</b> y más. Le picas y abre.</p>
+      <p>El lugar abre <b>Mapas</b> con esa dirección.</p>
+      <p>Si le pegas una liga al asistente dentro de la frase, la detecta sola y la guarda en su campo.</p>`
   },
   {
     titulo: 'El asistente: escribir normal',
@@ -7690,6 +7742,7 @@ const TUTO_PASOS = [
       <span class="tuto-frase">Vacaciones del 23 de diciembre al 8 de enero</span>
       <span class="tuto-frase">Pago de renta todos los 10 de cada mes</span>
       <span class="tuto-frase">Cita el siguiente 21</span>
+      <span class="tuto-frase">Entrega la primera semana de octubre</span>
       <div class="mk-cap">Y te enseña qué va a hacer antes</div>
       <div style="border:1px solid var(--line);border-radius:9px;padding:11px;font-size:0.8rem">
         <div style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px">Se va a agregar 1 evento</div>
@@ -7697,7 +7750,7 @@ const TUTO_PASOS = [
       </div>`,
     texto: `
       <p>Nunca agrega sin enseñarte primero. Si algo salió mal, cancelas.</p>
-      <p>Entiende <b>rangos</b> (del 5 al 9), <b>repeticiones</b> (todos los martes, cada quincena, cada tercer día), <b>meses cruzados</b> (23 de diciembre al 8 de enero) y <b>horas</b> (a las 2, a las 8 de la mañana, al mediodía).</p>`
+      <p>Entiende <b>rangos</b>, <b>repeticiones</b> (todos los martes, cada quincena, cada tercer día, todos los 10 de cada mes), <b>cruces de año</b> y <b>horas</b> (a las 2, a las 8 de la mañana, al mediodía, temprano, en la noche).</p>`
   },
   {
     titulo: 'El asistente también contesta',
@@ -7715,26 +7768,27 @@ const TUTO_PASOS = [
         <div class="mk-row"><i class="mk-d" style="background:${COL.en}"></i><span>Maqueta</span><span class="mk-tag">en 6 d</span></div>
       </div>`,
     texto: `
-      <p>Cada renglón es <b>tocable</b>: le picas y te lleva a ese día.</p>
+      <p>Cada renglón es <b>tocable</b>: le picas y te lleva a ese día con un destello.</p>
       <p>Te dice cuánto falta para cada cosa, y lo que ya palomeaste sale tachado.</p>`
   },
   {
     titulo: 'Quitar y editar hablando',
-    sub: 'No tienes que ir uno por uno.',
+    sub: 'Una frase en vez de cuarenta ediciones.',
     visual: `
       <div class="mk-cap">Quitar</div>
       <span class="tuto-frase">Quítame la creatina</span>
       <span class="tuto-frase">Borra el examen del 15 de octubre</span>
       <div class="mk-cap">Cambiar de categoría</div>
       <span class="tuto-frase">Cambia los partidos de fútbol a Deporte</span>
+      <span class="tuto-frase">Partidos fútbol en categoría Deporte</span>
       <div class="mk-cap">Editar toda una serie</div>
       <span class="tuto-frase">Cambia la hora del gimnasio a las 7 am</span>
       <span class="tuto-frase">Renombra gimnasio a gym</span>
       <span class="tuto-frase">Recorre las prácticas una semana</span>
       <span class="tuto-frase">Mueve el examen del 15 al 20 de octubre</span>`,
     texto: `
-      <p>Si tienes 39 días de gimnasio, cambiarles la hora es <b>una sola frase</b>, no 39 ediciones.</p>
-      <p>Todo pasa por vista previa: te enseña el antes y el después, y confirmas. Lo que borres se puede deshacer.</p>`
+      <p>Si tienes 39 días de gimnasio, cambiarles la hora es <b>una sola frase</b>.</p>
+      <p>Todo pasa por vista previa con el antes y el después. Lo que borres se puede <b>deshacer</b>.</p>`
   },
   {
     titulo: 'Categorías y colores',
@@ -7757,7 +7811,8 @@ const TUTO_PASOS = [
       </div>`,
     texto: `
       <p>Al agregar algo, en <b>Categoría</b> está «＋ Nueva categoría…». Ahí eliges una de la lista o creas la tuya con nombre y color.</p>
-      <p>Lo bueno: las del catálogo traen <b>palabras clave</b>. Agregas «Salud» y luego escribes «cita con el doctor» — se va sola a Salud sin que la nombres.</p>`
+      <p>Las del catálogo traen <b>palabras clave</b>: agregas «Salud» y luego escribes «cita con el doctor» — se va sola a Salud.</p>
+      <p>Para verlas o borrarlas: <b>⚙︎ → Mis categorías</b>.</p>`
   },
   {
     titulo: 'Filtrar por categoría',
@@ -7775,8 +7830,9 @@ const TUTO_PASOS = [
       )}
       <div style="font-size:0.78rem;color:var(--ink-soft);margin-top:9px">Con filtro, el día se pinta completo del color.</div>`,
     texto: `
-      <p>Tocas <b>Entrega</b> y el calendario se queda solo con entregas, con el <b>recuadro pintado</b> en vez del puntito, que es mucho más fácil de ver.</p>
-      <p>Además <b>te lleva a la más cercana</b> que falte por hacer, con un destello. Puedes combinar varias, y «Ver todo ✕» las quita.</p>`
+      <p>Tocas <b>Entrega</b> y el calendario se queda solo con entregas, con el <b>recuadro pintado</b> en vez del puntito.</p>
+      <p>Además <b>te lleva a la más cercana que falte por hacer</b>, con un destello. Las ya terminadas se las salta.</p>
+      <p>Puedes combinar varias, y «Ver todo ✕» las quita.</p>`
   },
   {
     titulo: 'Marcar hecho y subtareas',
@@ -7797,10 +7853,12 @@ const TUTO_PASOS = [
       <div class="mk-fila">
         <i style="width:11px;height:11px;border-radius:50%;background:conic-gradient(${COL.en} 50%, ${COL.en}33 0);display:inline-block"></i>
         <span style="font-size:0.78rem;color:var(--ink-soft)">se llena según tu avance</span>
+        <i style="width:11px;height:11px;border-radius:50%;background:${COL.en}2E;display:inline-flex;align-items:center;justify-content:center;color:${COL.en};font-size:7px;font-weight:900">✓</i>
+        <span style="font-size:0.78rem;color:var(--ink-soft)">y al terminar, palomita</span>
       </div>`,
     texto: `
       <p>Cada evento tiene un botón de lista. Ahí pones los pasos y los vas tachando.</p>
-      <p>El punto del calendario <b>se llena como una barra circular</b> conforme avanzas. Al terminar el último paso, el evento se marca solo, y aparece una <b>palomita</b> dentro del punto.</p>`
+      <p>Al terminar el último, el evento <b>se marca solo</b>. Y si destachas uno, se desmarca.</p>`
   },
   {
     titulo: 'Recordatorios',
@@ -7819,8 +7877,9 @@ const TUTO_PASOS = [
         <span style="color:var(--ink-soft);font-size:0.78rem">Después ya no suena.</span>
       </div>`,
     texto: `
-      <p><b>El paso que no te puedes saltar:</b> después de poner los recordatorios, ve a <b>⋯ → Exportar eventos</b> y mándalos a la app Calendario. Sin eso no suena nada.</p>
-      <p>Si el evento tiene hora, el aviso llega a esa hora. Si no, a las 9:00 de la mañana.</p>`
+      <p><b>El paso que no te puedes saltar:</b> después de poner los recordatorios, ve a <b>⚙︎ → Exportar eventos</b> y mándalos a la app Calendario. Sin eso no suena nada.</p>
+      <p>Si el evento tiene hora, el aviso llega a esa hora. Si no, a las 9:00 de la mañana.</p>
+      <p>Exporta solo desde un dispositivo: iCloud lo pasa a los demás.</p>`
   },
   {
     titulo: 'Mapa de carga',
@@ -7828,7 +7887,7 @@ const TUTO_PASOS = [
     visual: `
       <div class="mk-fila" style="margin-bottom:11px">
         <span class="mk-btn on">▮▮</span>
-        <span style="font-size:0.8rem;color:var(--ink-soft)">Botón de barritas, arriba</span>
+        <span style="font-size:0.8rem;color:var(--ink-soft)">Botón de barritas, en la barra</span>
       </div>
       ${mkSemana(
         mkC(12,{bg:'#C9702B1F',num:1})+
@@ -7841,29 +7900,57 @@ const TUTO_PASOS = [
       <div style="font-size:0.78rem;color:var(--accent);margin-top:10px">Semana más cargada: <b>12–18 oct</b> con 12 pendientes</div>`,
     texto: `
       <p>Los días se pintan más fuerte según cuánto tengas <b>pendiente</b>, con el número encima.</p>
-      <p>Lo que ya palomeaste deja de pesar, así que el mapa se aclara conforme avanzas. Sirve para adelantar trabajo antes de que se junte todo.</p>`
+      <p>Lo que ya palomeaste deja de pesar, así que el mapa se aclara conforme avanzas.</p>
+      <p>Solo funciona en la vista de <b>Puntos</b>.</p>`
+  },
+  {
+    titulo: 'Varios días de un jalón',
+    sub: 'Para vacaciones, viajes o cualquier cosa que dure varios días.',
+    visual: `
+      <div class="mk-fila" style="margin-bottom:12px">
+        <span class="mk-btn on">▦</span>
+        <span style="font-size:0.8rem;color:var(--ink-soft)">Toca el día en que empieza</span>
+      </div>
+      ${mkSemana(
+        mkC(17)+
+        mkC(18,{bg:'var(--accent-soft)'})+
+        mkC(19,{bg:'var(--accent-soft)'})+
+        mkC(20,{bg:'var(--accent-soft)'})+
+        mkC(21,{bg:'var(--accent-soft)'})+
+        mkC(22,{bg:'var(--accent-soft)',fin:1})+
+        mkC(23,{bg:'var(--accent-soft)',fin:1})
+      )}`,
+    texto: `
+      <ul class="tuto-lista">
+        <li>Tocas el botón del calendario punteado</li>
+        <li>Tocas el día en que <b>empieza</b></li>
+        <li>Tocas el día en que <b>termina</b></li>
+        <li>Escribes qué es y se agrega en todos</li>
+      </ul>
+      <p style="margin-top:10px">Si te equivocas y tocas primero el final, lo acomoda solo. Está en la vista de <b>Puntos</b>.</p>`
   },
   {
     titulo: 'Tus datos están seguros',
     sub: 'Todo vive en la nube, ligado a tu cuenta.',
     visual: `
-      <div class="mk-cap">El puntito de arriba te dice cómo va</div>
+      <div class="mk-cap">El puntito de la barra te dice cómo va</div>
       <div style="font-size:0.84rem;line-height:2">
         <div class="mk-fila"><i class="mk-d" style="background:#3F7A56;width:8px;height:8px"></i> Verde — todo guardado</div>
         <div class="mk-fila"><i class="mk-d" style="background:#C98A2B;width:8px;height:8px"></i> Amarillo — subiendo</div>
         <div class="mk-fila"><i class="mk-d" style="background:#B23A2F;width:8px;height:8px"></i> Rojo — sin conexión</div>
       </div>
-      <div class="mk-cap">En ⋯ también encuentras</div>
+      <div class="mk-cap">En el engrane ⚙︎ encuentras</div>
       <ul class="tuto-lista" style="margin:0">
         <li>Copiar respaldo — un código con todo</li>
         <li>Exportar al Calendario de Apple</li>
         <li>Apariencia — claro, oscuro o automático</li>
         <li>Mis categorías — ver y borrar las tuyas</li>
-        <li>Recargar de cero — si no ves los cambios</li>
+        <li>Versión, Recargar de cero y Vaciar guardado</li>
       </ul>`,
     texto: `
       <p>Tus eventos <b>no viven en el teléfono</b>: viven en tu cuenta. Puedes borrar la app, cambiar de teléfono o entrar desde el iPad, y ahí están.</p>
-      <p>Aun así, de vez en cuando copia el respaldo y pégalo en Notas. Nunca sobra.</p>`
+      <p>La app también se guarda en el teléfono, así que abre al instante aunque no tengas señal.</p>
+      <p>Aun así, de vez en cuando copia el respaldo y pégalo en Notas.</p>`
   },
 ];
 
