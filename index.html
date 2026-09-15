@@ -100,7 +100,7 @@
   .wrap{
     max-width:980px;
     margin:0 auto;
-    padding:0 14px 0;
+    padding:0 10px 0;
   }
 
   /* ---------- Masthead ---------- */
@@ -115,11 +115,41 @@
     margin-bottom:4px;
   }
 
+  .legend-wrap{
+    display:flex;
+    align-items:flex-start;
+    gap:5px;
+  }
   .legend{
+    flex:1;
+    min-width:0;
     display:flex;
     flex-wrap:wrap;
-    gap:7px;
+    gap:6px;
+    /* Cerrado se ve un solo renglón; la flecha muestra el resto */
+    max-height:30px;
+    overflow:hidden;
+    transition:max-height 0.2s ease;
   }
+  .legend-wrap.abierto .legend{max-height:340px;overflow-y:auto;}
+  .legend-toggle{
+    flex:none;
+    width:28px;height:30px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--paper-alt);
+    border:none;
+    border-radius:8px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .legend-toggle svg{width:15px;height:15px;transition:transform 0.2s ease;}
+  .legend-wrap.abierto .legend-toggle svg{transform:rotate(180deg);}
+  .legend-toggle:active{background:var(--accent-soft);color:var(--accent);}
+  /* Si hay filtros puestos, la flecha lo avisa aunque esté cerrado */
+  .legend-toggle.hay{color:var(--accent);background:var(--accent-soft);}
   .legend-item{
     display:flex;
     align-items:center;
@@ -1020,15 +1050,15 @@
     position:sticky;
     top:0;
     z-index:8;
-    padding-top:calc(6px + env(safe-area-inset-top));
+    padding-top:calc(4px + env(safe-area-inset-top));
     /* Safari en iPhone no repinta lo pegado al cambiar su contenido.
        Darle su propia capa lo obliga a hacerlo. */
     transform:translateZ(0);
     -webkit-transform:translateZ(0);
     will-change:transform;
     background:var(--paper);
-    padding:9px 0 10px;
-    margin-bottom:14px;
+    padding:4px 0 7px;
+    margin-bottom:8px;
     border-bottom:1px solid transparent;
     transition:border-color 0.15s ease, box-shadow 0.15s ease;
   }
@@ -1040,8 +1070,8 @@
   .barra-top{
     display:flex;
     align-items:center;
-    gap:7px;
-    margin-bottom:9px;
+    gap:6px;
+    margin-bottom:7px;
   }
   .barra-anio{
     font-family:var(--font-display);
@@ -1080,7 +1110,7 @@
     background:var(--paper-alt);
     border-radius:9px;
     padding:3px;
-    margin-bottom:9px;
+    margin-bottom:7px;
   }
   .vista-btn{
     flex:1;
@@ -1437,7 +1467,7 @@
     display:flex;
     align-items:center;
     gap:8px;
-    margin-bottom:10px;
+    margin-bottom:7px;
   }
   .mg-titulo{
     flex:1;
@@ -1451,7 +1481,7 @@
   .mg-titulo b{color:var(--ink-soft);font-weight:500;}
   .mg-nav{
     flex:none;
-    width:36px;height:36px;
+    width:32px;height:32px;
     border:1px solid var(--line);
     border-radius:9px;
     background:var(--paper-card);
@@ -1480,10 +1510,10 @@
   .mg-grid{
     display:grid;
     grid-template-columns:repeat(7,1fr);
-    gap:2px;
+    gap:3px;
   }
   .mg-c{
-    min-height:82px;
+    min-height:92px;
     background:var(--paper-card);
     border:1px solid var(--line-soft);
     border-radius:6px;
@@ -1512,7 +1542,7 @@
   .mg-c.hoy .mg-num{color:var(--accent);font-weight:700;}
   .mg-ev{
     display:block;
-    font-size:0.53rem;
+    font-size:0.56rem;
     line-height:1.25;
     color:var(--ink);
     border-left:2px solid;
@@ -1539,14 +1569,15 @@
   .mg-pie{
     text-align:center;
     font-family:var(--font-mono);
-    font-size:0.58rem;
-    letter-spacing:0.05em;
+    font-size:0.54rem;
+    letter-spacing:0.04em;
     color:var(--ink-soft);
-    margin-top:12px;
-    opacity:0.7;
+    margin-top:7px;
+    opacity:0.55;
   }
+  .mg-pie.oculto{display:none;}
   @media (min-width:520px){
-    .mg-c{min-height:104px;}
+    .mg-c{min-height:118px;}
     .mg-ev{font-size:0.62rem;}
   }
 
@@ -2238,7 +2269,12 @@
       <button type="button" class="vista-btn" data-v="lista" aria-pressed="false">Lista</button>
       <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
     </div>
-    <div class="legend"></div>
+    <div class="legend-wrap" id="legendWrap">
+      <div class="legend"></div>
+      <button type="button" class="legend-toggle" id="legendToggle" aria-label="Ver todas las categorías" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
     <div class="sel-hint" id="selHint"></div>
     <div class="sel-hint" id="filtroVacio">Con ese filtro no hay nada aquí. Toca «Ver todo» para quitarlo.</div>
     <div class="sel-hint" id="cargaHint"></div>
@@ -3688,6 +3724,7 @@ async function guardarRango(){
   refrescarVista();
 }
 
+document.getElementById('legendToggle').addEventListener('click', toggleLeyenda);
 document.getElementById('backBtn2').addEventListener('click', volverAnios);
 document.getElementById('selBtn2').addEventListener('click', toggleSelectMode);
 document.getElementById('hoyBtn').addEventListener('click', irAHoy);
@@ -3922,13 +3959,31 @@ function limpiarFiltros(){
   renderVista();
 }
 
+let filtrosAbiertos = false;
+
+function toggleLeyenda(){
+  filtrosAbiertos = !filtrosAbiertos;
+  const w = document.getElementById('legendWrap');
+  const b = document.getElementById('legendToggle');
+  if(w) w.classList.toggle('abierto', filtrosAbiertos);
+  if(b) b.setAttribute('aria-expanded', filtrosAbiertos ? 'true' : 'false');
+  forzarRepintado();
+}
+
 // ---------- Leyenda: es también el filtro ----------
 function renderLegend(){
   const el = document.querySelector('.legend');
   if(!el) return;
   const hayFiltro = filtros.size > 0;
 
-  let html = categorias().map(k => {
+  // Los que tengas prendidos van primero: así se ven aunque
+  // la lista esté cerrada en un solo renglón.
+  const orden = categorias().slice().sort((a,b) => {
+    const A = filtros.has(a.id) ? 0 : 1, B = filtros.has(b.id) ? 0 : 1;
+    return A - B;
+  });
+
+  let html = orden.map(k => {
     const activo = filtros.has(k.id);
     const clases = 'legend-item' + (activo ? ' activo' : (hayFiltro ? ' apagado' : ''));
     const n = EVENTS.filter(ev => ev.type === k.id).length;
@@ -3938,9 +3993,12 @@ function renderLegend(){
   }).join('');
 
   if(hayFiltro){
-    html += `<button class="legend-item limpiar" onclick="limpiarFiltros()">Ver todo ✕</button>`;
+    html = `<button class="legend-item limpiar" onclick="limpiarFiltros()">Ver todo ✕</button>` + html;
   }
   el.innerHTML = html;
+
+  const b = document.getElementById('legendToggle');
+  if(b) b.classList.toggle('hay', hayFiltro);
 }
 
 // ---------- Lista de categorías en Opciones ----------
@@ -4573,6 +4631,10 @@ function refrescarVista(){
   }
 }
 
+// Una vez que descubres el gesto de deslizar, el aviso deja de
+// ocupar espacio en pantalla.
+let yaDeslizo = false;
+
 // ---------- Vista de semana (7 columnas con horas) ----------
 const ALTO_HORA_SEM = 46;
 let semanaLunes = '';
@@ -4700,7 +4762,7 @@ function renderSemana(){
       <div class="sv-horas">${horas}</div>
       <div class="sv-rejilla">${columnas}</div>
     </div>
-    <div class="mg-pie">Toca un día para verlo completo · desliza para cambiar de semana</div>
+    ${yaDeslizo ? '' : '<div class="mg-pie">Toca un día para verlo completo · desliza para cambiar de semana</div>'}
   `;
 }
 
@@ -4860,7 +4922,7 @@ function renderDia(){
     </div>
     ${todos.length ? '' : '<div class="lista-vacia">No hay nada este día.</div>'}
     <button class="btn add-here" onclick="dayTap('${iso}')">＋ Agregar en este día</button>
-    <div class="mg-pie">Desliza de lado para cambiar de día</div>
+    ${yaDeslizo ? '' : '<div class="mg-pie">Desliza de lado para cambiar de día</div>'}
   `;
 }
 
@@ -4946,7 +5008,7 @@ function renderMes(){
     </div>
     <div class="mg-dias">${WEEKDAYS_SHORT.map(w => `<span>${w}</span>`).join('')}</div>
     <div class="mg-grid">${celdas}</div>
-    <div class="mg-pie">Desliza de lado para cambiar de mes</div>
+    ${yaDeslizo ? '' : '<div class="mg-pie">Desliza de lado para cambiar de mes</div>'}
   `;
 }
 
@@ -4969,6 +5031,7 @@ function activarDeslizarEn(id, alCambiar){
     const dy = t.clientY - tocY;
     // Solo si el gesto fue claramente horizontal
     if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8){
+      yaDeslizo = true;
       alCambiar(dx < 0 ? 1 : -1);
     }
   }, { passive:true });
@@ -7486,7 +7549,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.11-b';
+const VERSION = '2026.09.15';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
