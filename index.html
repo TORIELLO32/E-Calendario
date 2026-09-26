@@ -2464,8 +2464,81 @@
   .ls-sec-acc{display:flex;gap:4px;}
   .ls-sec-acc button{font:inherit;font-weight:500;font-size:0.8rem;color:var(--accent);background:none;border:none;padding:4px 6px;cursor:pointer;}
   .ls-sec + .ls-items .ls-item{opacity:0.8;}
-  .ls-repetir{display:flex;align-items:center;gap:8px;font-size:0.84rem;margin:2px 0 6px;}
-  .ls-repetir input{width:18px;height:18px;margin:0;}
+  /* Editar lista */
+  .ls-editar{
+    font:inherit;font-size:0.86rem;font-weight:600;color:var(--accent);background:var(--paper-card);
+    border:1px solid var(--line);border-radius:18px;padding:7px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .ls-editar.on{background:var(--accent-soft);border-color:var(--accent);}
+  .ls-nota-lbl{font-weight:400;text-transform:none;letter-spacing:0;opacity:0.85;}
+  .ls-rapidos{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0 8px;}
+  .ls-rapidos input[type=date]{
+    flex:1;min-width:140px;margin:0 !important;font:inherit;font-size:16px;color:var(--ink);
+    background:var(--paper-card);border:1px solid var(--line);border-radius:10px;padding:7px 9px;
+  }
+  .ls-todo{display:flex;align-items:center;gap:9px;font-size:0.92rem;margin:4px 0 10px;cursor:pointer;}
+  .ls-todo input{width:20px;height:20px;margin:0;accent-color:var(--accent);}
+  .ls-quitar-aviso{font:inherit;font-size:0.82rem;color:var(--examen);background:none;border:none;padding:2px 0 8px;cursor:pointer;}
+  /* Cámara */
+  .ls-cam{
+    flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+    border:none;background:none;color:var(--accent);cursor:pointer;padding:0;border-radius:10px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .ls-cam svg{width:23px;height:23px;}
+  .ls-cam:active{background:var(--accent-soft);}
+  .ls-cam:disabled{opacity:0.3;}
+  .ls-add.escribiendo .ls-cam{display:none;}
+  .ls-fila-nueva{padding:0 6px 0 0;gap:0;cursor:default;}
+  .ls-nueva-btn{
+    flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;font:inherit;color:var(--ink);
+    background:none;border:none;padding:12px 12px 12px 14px;cursor:pointer;min-height:56px;-webkit-tap-highlight-color:transparent;
+  }
+  .ls-nueva-btn:active{background:var(--paper-alt);}
+  .ls-fila-nueva:active{background:none;}
+  .ls-nueva-form .ls-cam{width:36px;}
+  /* Fotos en la lista */
+  .ls-fotos{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;padding:2px 1px 4px;-webkit-overflow-scrolling:touch;}
+  .ls-foto{
+    flex:none;height:112px;max-width:200px;min-width:64px;padding:0;border:1px solid var(--line-soft);border-radius:12px;
+    overflow:hidden;background:var(--paper-alt);cursor:pointer;-webkit-tap-highlight-color:transparent;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ls-foto img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ls-foto.sin-foto::after{content:'Sin conexión';font-size:0.7rem;color:var(--ink-soft);}
+  .ls-foto.sin-foto img{display:none;}
+  .ls-foto.cargando{width:84px;font-size:0.72rem;color:var(--ink-soft);animation:parpadeo 1.2s ease-in-out infinite;}
+  @keyframes parpadeo{50%{opacity:0.5;}}
+  /* Visor de foto a pantalla completa */
+  .foto-visor{position:fixed;inset:0;z-index:300;background:#0B0D10;display:none;flex-direction:column;color:#fff;}
+  .foto-visor.open{display:flex;}
+  body.visor-abierto{overflow:hidden;}
+  .fv-barra{
+    flex:none;display:flex;align-items:center;gap:8px;
+    padding:calc(8px + env(safe-area-inset-top, 0px)) 10px 8px;
+  }
+  .fv-tit{flex:1;min-width:0;text-align:center;font-size:0.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .fv-btn{
+    flex:none;min-width:40px;height:38px;font:inherit;font-size:0.88rem;color:#fff;background:rgba(255,255,255,0.12);
+    border:none;border-radius:19px;padding:0 12px;cursor:pointer;
+  }
+  .fv-lienzo{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
+  .fv-lienzo img{max-width:100%;max-height:100%;object-fit:contain;display:block;}
+  .fv-lienzo.zoom{display:block;}
+  .fv-lienzo.zoom img{max-width:none;max-height:none;width:260%;}
+  .fv-flecha{
+    position:absolute;top:50%;transform:translateY(-50%);width:42px;height:60px;font-size:2rem;line-height:1;
+    color:#fff;background:rgba(0,0,0,0.35);border:none;cursor:pointer;
+  }
+  .fv-flecha.izq{left:0;border-radius:0 10px 10px 0;}
+  .fv-flecha.der{right:0;border-radius:10px 0 0 10px;}
+  .fv-flecha:disabled{opacity:0.2;}
+  .fv-pie{
+    flex:none;display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:10px 12px calc(12px + env(safe-area-inset-bottom, 0px));font-size:0.9rem;
+  }
+  .fv-pie .btn{min-width:96px;}
+  .fv-borrar{background:rgba(255,255,255,0.1) !important;color:#fff !important;border-color:transparent !important;}
   .ls-borrar{width:100%;margin-top:12px;color:var(--examen);}
   .ls-form{margin-bottom:12px;}
   #listasVista .deshacer{margin:0 0 10px;}
@@ -2585,6 +2658,8 @@
   <main id="semanaVista" style="display:none"></main>
   <main id="listaVista" style="display:none"></main>
   <main id="listasVista" style="display:none"></main>
+  <input type="file" id="lsFotoInput" accept="image/*" multiple hidden onchange="fotoElegida(this)">
+  <div class="foto-visor" id="fotoVisor" role="dialog" aria-label="Foto de la lista"></div>
 </div>
 
 <div class="overlay" id="overlay"></div>
@@ -3641,11 +3716,13 @@ async function syncPull(){
   if(!syncEnabled()) return;
   if(!await sesionValida()){ setSyncState('error'); return; }
   setSyncState('busy');
+  let bajoBien = false;
   try{
     const url = `${SYNC.url}/rest/v1/calendario?user_id=eq.${encodeURIComponent(sesion.user_id)}&select=datos`;
     const r = await fetch(url, { headers: syncHeaders(), signal: AbortSignal.timeout(12000) });
     if(!r.ok) throw new Error('HTTP ' + r.status);
     const rows = await r.json();
+    bajoBien = Array.isArray(rows);
     if(rows.length && rows[0].datos){
       const remote = rows[0].datos;
       const remoteStamp = remote.stamp || 0;
@@ -3669,6 +3746,9 @@ async function syncPull(){
     setSyncState('ok');
   }catch(e){
     setSyncState('error');
+  }finally{
+    // Solo se limpian fotos viejas si de verdad se leyó la nube
+    setTimeout(() => mantenerFotos(bajoBien), 3000);
   }
 }
 
@@ -3985,7 +4065,6 @@ async function saveEdit(oldId){
     rems: leerRems('ed'), remDiario: leerDiario('ed'), fav: favEnForm('ed'),
   });
   const newId = evId(nuevo);
-  moverLigaListas(oldId, newId);
 
   // Se retira el original y se guarda la versión editada
   DELETED.add(oldId);
@@ -6029,7 +6108,6 @@ function renderPanelBody(){
         <button class="del-btn" onclick="pedirBorrar(${i})" aria-label="Borrar">&times;</button>
       </div>
       ${subsHTML(ev, i)}
-      ${listasDeEventoHTML(ev)}
     `;
   }).join('');
 
@@ -7875,7 +7953,6 @@ async function confirmarMod(){
     const idViejo = evId(viejo);
     const idNuevo = evId(nuevo);
     const estabaHecho = COMPLETED.has(idViejo);
-    moverLigaListas(idViejo, idNuevo);
 
     // Fuera el viejo
     USER_EVENTS = USER_EVENTS.filter(x => evId(x) !== idViejo);
@@ -8557,7 +8634,7 @@ function ayudaAgente(){
       <div class="agent-msg"><b>Editar</b>: “cambia la hora del gym a las 7 am”, “mueve el examen del 15 al 20”, “recorre las prácticas una semana”, “cambia los partidos a Deporte”.</div>
       <div class="agent-msg"><b>Quitar</b>: “quítame la creatina”, “borra todo del 20 de octubre”.</div>
       <div class="agent-msg"><b>Preguntar</b>: “¿qué tengo esta semana?”, “¿cuándo es el examen de estructuras?”, “¿qué es importante este mes?”, “¿de qué me vas a avisar?”.</div>
-      <div class="agent-msg"><b>Listas</b>: “agrega leche y huevos al súper”, “ya compré el pan”, “¿qué me falta de la maleta?”, “haz una lista para la fiesta con carne y hielo”, “recuérdame la lista del súper cada sábado a las 10”.</div>
+      <div class="agent-msg"><b>Listas</b>: “agrega leche y huevos al súper”, “ya compré el pan”, “¿qué me falta de la maleta?”, “haz una lista para la fiesta con carne y hielo”, “recuérdame la lista del súper el sábado a las 10”, “recuérdame la lista del súper hoy todo el día”.</div>
       <div class="agent-msg"><b>Pantalla</b>: “busca láminas”, “muéstrame solo los importantes”, “quita los filtros”.</div>
     </div>`;
 }
@@ -8713,11 +8790,17 @@ function intentoListas(texto){
       const l = buscarListaPorTexto(pref);
       // el nombre solo se lleva palabras que de verdad son de la lista
       if(!l || !prefijoEsDeLista(pref, l)) continue;
-      const cola = palabras.slice(k).join(' ');
-      const fechas = cola ? localParse(cola) : [];
+      let cola = palabras.slice(k).join(' ');
+      let fechas = cola ? localParse(cola) : [];
+      // "del súper el sábado": el "el" se quedó pegado al nombre
+      if(!fechas.length && k > 1 && /^(?:el|la|este|esta|para|pal)$/.test(palabras[k-1])){
+        const c2 = palabras.slice(k-1).join(' ');
+        const f2 = localParse(c2);
+        if(f2.length){ cola = c2; fechas = f2; }
+      }
       const hora = extraerHora(cola);
-      const repetir = /\b(?:cada|todos\s+los|todas\s+las|diario|semanal)\b/.test(cola) ? 'semana' : 'no';
-      return { tipo:'recordar', lista:l, fecha: fechas[0] ? fechas[0].date : null, hora: hora ? hora.hora : (fechas[0] && fechas[0].hora) || null, repetir };
+      const todoDia = /\btodo\s+el\s+dia\b/.test(m[1]);
+      return { tipo:'recordar', lista:l, fecha: fechas[0] ? fechas[0].date : (todoDia ? todayISO() : null), hora: hora ? hora.hora : (fechas[0] && fechas[0].hora) || null, todoDia };
     }
     return { tipo:'noExiste', nombre: recuperarOriginal(orig, m[1].split(' ').slice(0, 3).join(' ')) };
   }
@@ -8917,11 +9000,11 @@ async function ejecutarListas(a){
   }
   if(a.tipo === 'recordar'){
     if(!a.fecha){
-      agentSetResult(`<div class="agent-msg err">¿Cuándo? Por ejemplo «recuérdame la lista ${esc(a.lista.nombre.toLowerCase())} el sábado a las 10» o «cada sábado».</div>`);
+      agentSetResult(`<div class="agent-msg err">¿Cuándo? Por ejemplo «recuérdame la lista ${esc(a.lista.nombre.toLowerCase())} el sábado a las 10» o «hoy todo el día».</div>`);
       return;
     }
     recordarListas();
-    a.lista.aviso = sanitizeAvisoLista({ fecha:a.fecha, hora:a.hora || '09:00', repetir:a.repetir });
+    a.lista.aviso = sanitizeAvisoLista({ fecha:a.fecha, hora:a.hora || '09:00', todoDia: a.todoDia && !a.hora });
     await guardarListas();
     resultadoLista(`Listo: te aviso de ${a.lista.emoji} <b>${esc(a.lista.nombre)}</b> ${esc(textoAvisoLista(a.lista.aviso))}, si quedan cosas sin tachar. ${esc(notaAvisos())}`, a.lista, true);
     return;
@@ -9489,7 +9572,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.26d';
+const VERSION = '2026.09.26e';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -9675,10 +9758,10 @@ const TUTO_PASOS = [
     visual: `
       <div class="ls-grupo" style="pointer-events:none;margin-bottom:12px">
         <div class="ls-fila"><span class="ls-emoji">🛒</span>
-          <span class="ls-fila-txt"><span class="ls-nombre">Súper</span><span class="ls-cuenta">7 pendientes · 🔔 cada sábado, 10:00 am</span></span>
+          <span class="ls-fila-txt"><span class="ls-nombre">Súper</span><span class="ls-cuenta">7 pendientes · 🔔 sábado, 10:00 am</span></span>
           <span class="ls-num">5/12</span></div>
         <div class="ls-fila"><span class="ls-emoji">🧳</span>
-          <span class="ls-fila-txt"><span class="ls-nombre">Maleta Orlando</span><span class="ls-cuenta">17 pendientes · 📅 Viaje a Orlando · 23 dic</span></span>
+          <span class="ls-fila-txt"><span class="ls-nombre">Maleta Orlando</span><span class="ls-cuenta">17 pendientes · 📷 1</span></span>
           <span class="ls-num">1/18</span></div>
       </div>
       <div class="mk-cap">O dícelo al asistente</div>
@@ -9689,7 +9772,8 @@ const TUTO_PASOS = [
       <p>Tocas <b>＋ Nueva lista</b>, le pones nombre y listo; o tocas una de las ideas (Súper, Maleta, Útiles…) y ya viene con lo típico. Adentro escribes en el renglón <b>＋ Agregar</b>; para varias cosas de un jalón, sepáralas con comas.</p>
       <p>Lo tachado baja a su sección. Con <b>Desmarcar</b> la vuelves a usar el próximo viaje.</p>
       <p>Para borrar listas que ya no usas: <b>Seleccionar</b> arriba, marcas las que quieras y <b>Borrar</b>. Te pregunta antes, y si te equivocas tienes <b>Deshacer</b>.</p>
-      <p>En los <b>⋯</b> de cada lista la puedes <b>ligar a un evento</b> y ponerle un <b>recordatorio</b> que solo suena si quedan cosas sin tachar.</p>`
+      <p>¿Hiciste la lista en el pizarrón? Toca la <b>📷 cámara</b>, tómale foto y queda pegada a la lista. Toca la foto para verla en grande.</p>
+      <p>En <b>Editar lista</b> cambias el nombre y el ícono, y pones un <b>recordatorio</b>: hoy, mañana u otro día, a una hora o <b>todo el día</b> (te aviso cada hora). Solo suena si quedan cosas sin tachar.</p>`
   },
   {
     titulo: 'Semana y día, con horas',
@@ -10324,8 +10408,8 @@ function avisoCarga(){
 // LISTAS
 // Listas sueltas (súper, maleta, útiles…) con casillas para tachar.
 // Se guardan en tu cuenta junto con los eventos. Una lista puede
-// ligarse a un evento (aparece en ese día) y tener un recordatorio
-// (una vez o cada semana) que avisa si quedan cosas sin tachar.
+// tener fotos (p. ej. la del pizarrón) y un recordatorio
+// (a una hora o todo el día) que avisa si quedan cosas sin tachar.
 // ══════════════════════════════════════════════════════════════
 const MAX_LISTAS = 60;
 const MAX_ITEMS_LISTA = 300;
@@ -10377,7 +10461,28 @@ function sanitizeAvisoLista(a){
   if(typeof a.fecha !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(a.fecha)) return null;
   const [y, m, d] = a.fecha.split('-').map(Number);
   if(m < 1 || m > 12 || d < 1 || d > daysInMonth(y, m) || !clampToSemester(a.fecha)) return null;
-  return { fecha: a.fecha, hora: safeHora(a.hora) || '09:00', repetir: a.repetir === 'semana' ? 'semana' : 'no' };
+  // Todo el día: avisa cada hora ese día. Si no, a la hora que elegiste.
+  const todoDia = a.todoDia === true;
+  return { fecha: a.fecha, hora: todoDia ? null : (safeHora(a.hora) || '09:00'), todoDia };
+}
+// Fotos pegadas a una lista (la imagen vive aparte; aquí solo sus datos)
+const MAX_FOTOS_LISTA = 6;
+function idFotoValido(id){ return typeof id === 'string' && /^f_[a-z0-9]{1,24}$/.test(id); }
+function sanitizeFotosLista(arr){
+  if(!Array.isArray(arr)) return [];
+  const out = [], vistos = new Set();
+  for(const f of arr){
+    if(out.length >= MAX_FOTOS_LISTA) break;
+    if(!f || typeof f !== 'object' || !idFotoValido(f.id) || vistos.has(f.id)) continue;
+    vistos.add(f.id);
+    out.push({
+      id: f.id,
+      w: Math.max(1, Math.min(4000, Math.round(numeroSeguro(Number(f.w), 1)))),
+      h: Math.max(1, Math.min(4000, Math.round(numeroSeguro(Number(f.h), 1)))),
+      t: numeroSeguro(Number(f.t), 0),
+    });
+  }
+  return out;
 }
 function sanitizeListas(arr){
   if(!Array.isArray(arr)) return [];
@@ -10389,14 +10494,13 @@ function sanitizeListas(arr){
     if(!nombre) continue;
     let id = idListaValido(l.id) && !vistos.has(l.id) ? l.id : nuevoIdLista('l');
     vistos.add(id);
-    const evento = (typeof l.evento === 'string' && /^\d{4}-\d{2}-\d{2}\|.{1,80}$/.test(l.evento)) ? l.evento : null;
     out.push({
       id, nombre,
       emoji: EMOJIS_LISTA.includes(l.emoji) ? l.emoji : '📝',
       tpl: PLANTILLAS_LISTA.some(p => p.id === l.tpl) ? l.tpl : null,
-      evento,
       aviso: sanitizeAvisoLista(l.aviso),
       items: sanitizeItemsLista(l.items),
+      fotos: sanitizeFotosLista(l.fotos),
       creada: numeroSeguro(Number(l.creada), 0),
     });
   }
@@ -10405,27 +10509,15 @@ function sanitizeListas(arr){
 
 function listaPorId(id){ return LISTAS.find(l => l.id === id) || null; }
 function pendientesDe(l){ return l.items.filter(x => !x.d); }
-function listasDeEvento(id){ return LISTAS.filter(l => l.evento === id); }
 
-// Si un evento cambia de nombre o de fecha, su lista lo sigue
-function moverLigaListas(viejo, nuevo){
-  if(!viejo || viejo === nuevo) return;
-  LISTAS.forEach(l => { if(l.evento === viejo) l.evento = nuevo; });
-}
 
 function textoAvisoLista(a){
   if(!a) return '';
+  const hoy = todayISO();
   const d = parseISO(a.fecha);
-  const dia = WEEKDAYS_FULL[(d.getDay() + 6) % 7];
-  const h = fmtHora(a.hora);
-  if(a.repetir === 'semana') return `cada ${dia}, ${h}`;
-  return `${dia} ${d.getDate()} ${MONTHS_ES[d.getMonth()].slice(0,3)}, ${h}`;
-}
-function textoEventoLista(l){
-  if(!l.evento) return '';
-  const ev = EVENTS.find(e => evId(e) === l.evento);
-  if(!ev) return 'evento que ya no existe';
-  return `${ev.title} · ${shortDate(ev.date)}`;
+  const dia = a.fecha === hoy ? 'hoy' : (a.fecha === masDias(hoy, 1) ? 'mañana'
+    : `${WEEKDAYS_FULL[(d.getDay() + 6) % 7]} ${d.getDate()} ${MONTHS_ES[d.getMonth()].slice(0,3)}`);
+  return `${dia}, ${a.todoDia ? 'todo el día' : fmtHora(a.hora)}`;
 }
 
 // Separa "leche, huevos y pan" en tres cosas
@@ -10450,6 +10542,7 @@ function renderListas(){
   const l = listaAbierta ? listaPorId(listaAbierta) : null;
   if(listaAbierta && !l){ listaAbierta = null; listaConfig = false; }
   el.innerHTML = l ? detalleListaHTML(l) : indiceListasHTML();
+  pintarFotos();
 }
 
 // Chevron ›
@@ -10506,8 +10599,8 @@ async function deshacerBorrarListas(){
 function subListaTxt(l){
   const total = l.items.length, pend = pendientesDe(l).length;
   const partes = [total ? (pend ? `${pend} pendiente${pend === 1 ? '' : 's'}` : '✓ Todo listo') : 'Vacía'];
-  if(l.evento) partes.push('📅 ' + textoEventoLista(l));
   if(l.aviso) partes.push('🔔 ' + textoAvisoLista(l.aviso));
+  if(l.fotos && l.fotos.length) partes.push('📷 ' + l.fotos.length);
   return partes.join(' · ');
 }
 
@@ -10528,8 +10621,12 @@ function indiceListasHTML(){
         <div>Súper, maleta, útiles, lo que quieras.</div>
       </div>
       <div class="ls-grupo">
-        <button class="ls-fila ls-fila-nueva" onclick="nuevaListaForm()"><span class="ls-mas">＋</span><span class="ls-fila-txt"><span class="ls-nombre">Nueva lista</span></span></button>
+        <div class="ls-fila ls-fila-nueva">
+          <button class="ls-nueva-btn" onclick="nuevaListaForm()"><span class="ls-mas">＋</span><span class="ls-fila-txt"><span class="ls-nombre">Nueva lista</span></span></button>
+          <button class="ls-cam" onclick="crearConFoto()" aria-label="Nueva lista con foto">${CAMARA_SVG}</button>
+        </div>
       </div>
+      <div class="ls-vacio-nota">📷 La cámara crea la lista con una foto (por ejemplo, la del pizarrón).</div>
       <div class="ls-sec"><span>O empieza con una de estas</span></div>
       <div class="ls-plantillas">
         ${PLANTILLAS_LISTA.filter(p => p.id !== 'vacia').map(p =>
@@ -10568,7 +10665,10 @@ function indiceListasHTML(){
   }).join('');
 
   const nueva = selListas ? '' : (creandoLista ? formNuevaListaHTML() : `
-    <button class="ls-fila ls-fila-nueva" onclick="nuevaListaForm()"><span class="ls-mas">＋</span><span class="ls-fila-txt"><span class="ls-nombre">Nueva lista</span></span></button>`);
+    <div class="ls-fila ls-fila-nueva">
+      <button class="ls-nueva-btn" onclick="nuevaListaForm()"><span class="ls-mas">＋</span><span class="ls-fila-txt"><span class="ls-nombre">Nueva lista</span></span></button>
+      <button class="ls-cam" onclick="crearConFoto()" aria-label="Nueva lista con foto">${CAMARA_SVG}</button>
+    </div>`);
 
   const nombresSel = orden.filter(l => listasSel.has(l.id)).map(l => l.nombre);
   const barraSel = selListas ? (pidiendoBorrarListas ? `
@@ -10594,6 +10694,7 @@ function formNuevaListaHTML(){
       <input type="text" id="lsNombre" maxlength="${MAX_NOMBRE_LISTA}" value="${esc(f.nombre)}" placeholder="Nombre de la lista" enterkeyhint="done"
         oninput="formLista.nombre = this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();crearListaUI()}">
       <button class="btn primary" onclick="crearListaUI()">Crear</button>
+      <button class="ls-cam" onclick="crearConFoto()" aria-label="Crear con foto">${CAMARA_SVG}</button>
       <button class="ls-x" onclick="cancelarNuevaLista()" aria-label="Cancelar">&times;</button>
     </div>
     <div class="ls-nueva-tpl">
@@ -10626,23 +10727,23 @@ function detalleListaHTML(l){
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         Listas
       </button>
-      <button class="icon-btn${listaConfig ? ' active' : ''}" onclick="toggleConfigLista()" aria-label="Ajustes de la lista">
-        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-      </button>
+      <button class="ls-editar${listaConfig ? ' on' : ''}" onclick="toggleConfigLista()">${listaConfig ? 'Cerrar' : 'Editar lista'}</button>
     </div>
     <div class="ls-h1"><span>${l.emoji}</span> ${esc(l.nombre)}</div>
     <div class="ls-sub">${sub}</div>
-    ${(l.evento || l.aviso) && !listaConfig ? `<div class="ls-chips">${l.evento ? `<button class="ls-chip" onclick="irAEventoDeLista('${l.id}')">📅 ${esc(textoEventoLista(l))}</button>` : ''}${l.aviso ? `<span class="ls-chip">🔔 ${esc(textoAvisoLista(l.aviso))}</span>` : ''}</div>` : ''}
+    ${l.aviso && !listaConfig ? `<div class="ls-chips"><button class="ls-chip" onclick="toggleConfigLista()">🔔 ${esc(textoAvisoLista(l.aviso))}</button></div>` : ''}
     ${listaConfig ? configListaHTML(l) : ''}
+    ${fotosListaHTML(l)}
     <div class="ls-items">
       ${pend.map(fila).join('')}
       <div class="ls-item ls-add">
         <label class="ls-check" for="lsNuevo"><span class="ls-mas">＋</span>
           <input type="text" id="lsNuevo" maxlength="400" placeholder="Agregar… (ej: leche, pan)" enterkeyhint="done" autocomplete="off"
             onkeydown="if(event.key==='Enter'){event.preventDefault();agregarItemsUI('${l.id}')}"
-            oninput="var b=document.getElementById('lsAddOk');if(b)b.classList.toggle('ver', !!this.value.trim())">
+            oninput="var b=document.getElementById('lsAddOk');if(b)b.classList.toggle('ver', !!this.value.trim());var c=this.closest&&this.closest('.ls-add');if(c)c.classList.toggle('escribiendo', !!this.value.trim())">
         </label>
         <button class="btn primary ls-add-ok" id="lsAddOk" onclick="agregarItemsUI('${l.id}')">Agregar</button>
+        <button class="ls-cam" onclick="elegirFotoLista('${l.id}')" aria-label="Agregar foto" ${l.fotos.length >= MAX_FOTOS_LISTA ? 'disabled' : ''}>${CAMARA_SVG}</button>
       </div>
     </div>
     ${sugerir}
@@ -10658,24 +10759,19 @@ function detalleListaHTML(l){
 }
 
 function configListaHTML(l){
-  const hoy = todayISO();
-  const futuros = EVENTS.filter(e => e.date >= hoy).slice(0, 250);
-  const ligado = l.evento && !futuros.some(e => evId(e) === l.evento) ? EVENTS.find(e => evId(e) === l.evento) : null;
-  const opciones = [`<option value="">Sin ligar</option>`]
-    .concat(ligado ? [`<option value="${esc(evId(ligado))}" selected>${esc(shortDate(ligado.date) + ' · ' + ligado.title)}</option>`] : [])
-    .concat(futuros.map(e => `<option value="${esc(evId(e))}" ${evId(e) === l.evento ? 'selected' : ''}>${esc(shortDate(e.date) + ' · ' + e.title)}</option>`))
-    .join('');
   const a = l.aviso;
+  const hoy = todayISO(), manana = masDias(hoy, 1);
   if(borrandoLista){
     return `
       <div class="conf-borrar">
-        <div class="conf-txt">¿Borrar la lista <b>${esc(l.nombre)}</b> con sus ${l.items.length} cosas?</div>
+        <div class="conf-txt">¿Borrar la lista <b>${esc(l.nombre)}</b> con sus ${l.items.length} cosas${l.fotos.length ? ' y ' + l.fotos.length + ' foto' + (l.fotos.length === 1 ? '' : 's') : ''}?</div>
         <div class="prev-actions">
           <button class="btn" onclick="borrandoLista=false;renderListas()">Cancelar</button>
           <button class="btn peligro" onclick="borrarLista('${l.id}')">Sí, borrar</button>
         </div>
       </div>`;
   }
+  const todo = !!(a && a.todoDia);
   return `
     <div class="edit-form ls-form">
       <label class="campo">
@@ -10684,23 +10780,43 @@ function configListaHTML(l){
       </label>
       <div class="campo-lbl">Ícono</div>
       <div class="ls-emojis">${EMOJIS_LISTA.map(e => `<button type="button" class="ls-emo${l.emoji === e ? ' on' : ''}" onclick="emojiLista('${l.id}','${e}')">${e}</button>`).join('')}</div>
-      <label class="campo">
-        <span class="campo-lbl">Ligar a un evento</span>
-        <select id="lsCfgEvento">${opciones}</select>
-      </label>
-      <div class="campo-lbl">Recordatorio (si quedan cosas sin tachar)</div>
-      <div class="edit-row">
-        <label class="campo"><span class="campo-lbl">Día</span><input type="date" id="lsCfgFecha" value="${a ? esc(a.fecha) : ''}" min="${ANIO_MIN}-01-01" max="${ANIO_MAX}-12-31"></label>
-        <label class="campo"><span class="campo-lbl">Hora</span><input type="time" id="lsCfgHora" value="${a ? esc(a.hora) : '09:00'}"></label>
+      <div class="campo-lbl">Recordatorio <span class="ls-nota-lbl">· solo suena si falta algo por tachar</span></div>
+      <div class="ls-rapidos">
+        <button type="button" class="ls-tpl${a && a.fecha === hoy ? ' on' : ''}" onclick="fechaRapidaLista('${hoy}', this)">Hoy</button>
+        <button type="button" class="ls-tpl${a && a.fecha === manana ? ' on' : ''}" onclick="fechaRapidaLista('${manana}', this)">Mañana</button>
+        <input type="date" id="lsCfgFecha" value="${a ? esc(a.fecha) : ''}" min="${ANIO_MIN}-01-01" max="${ANIO_MAX}-12-31" aria-label="Otro día"
+          onchange="document.querySelectorAll('.ls-rapidos .ls-tpl').forEach(function(b){b.classList.remove('on')})">
       </div>
-      <label class="ls-repetir"><input type="checkbox" id="lsCfgSemana" ${a && a.repetir === 'semana' ? 'checked' : ''}> Repetir cada semana</label>
+      <label class="ls-todo"><input type="checkbox" id="lsCfgTodo" ${todo ? 'checked' : ''} onchange="cambiarTodoDiaLista(this.checked)"> Todo el día <span class="ls-nota-lbl">(te aviso cada hora)</span></label>
+      <label class="campo" id="lsCfgHoraCampo" ${todo ? 'style="display:none"' : ''}>
+        <span class="campo-lbl">¿A qué hora?</span>
+        <input type="time" id="lsCfgHora" value="${a && a.hora ? esc(a.hora) : '09:00'}">
+      </label>
+      ${a ? `<button type="button" class="ls-quitar-aviso" onclick="quitarAvisoLista('${l.id}')">Quitar recordatorio</button>` : ''}
       <div class="rem-note">${notaAvisos()}</div>
       <div class="prev-actions">
-        <button class="btn" onclick="toggleConfigLista()">Cerrar</button>
+        <button class="btn" onclick="toggleConfigLista()">Cancelar</button>
         <button class="btn primary" onclick="guardarConfigLista('${l.id}')">Guardar</button>
       </div>
       <button class="btn ls-borrar" onclick="borrandoLista=true;renderListas()">Borrar esta lista</button>
     </div>`;
+}
+function fechaRapidaLista(iso, btn){
+  const f = document.getElementById('lsCfgFecha');
+  if(f) f.value = iso;
+  document.querySelectorAll('.ls-rapidos .ls-tpl').forEach(b => b.classList.remove('on'));
+  if(btn && btn.classList) btn.classList.add('on');
+}
+function cambiarTodoDiaLista(on){
+  const c = document.getElementById('lsCfgHoraCampo');
+  if(c) c.style.display = on ? 'none' : '';
+}
+async function quitarAvisoLista(id){
+  const l = listaPorId(id);
+  if(!l) return;
+  l.aviso = null;
+  cerrarAvisosDe('lista|' + l.id);
+  await guardarListas();
 }
 
 // ---------- Acciones ----------
@@ -10857,12 +10973,12 @@ async function guardarConfigLista(id){
   const g = k => document.getElementById(k);
   const nombre = limpiarTexto(g('lsCfgNombre') ? g('lsCfgNombre').value : '', MAX_NOMBRE_LISTA);
   if(nombre) l.nombre = nombre;
-  const ev = g('lsCfgEvento') ? g('lsCfgEvento').value : '';
-  l.evento = (ev && EVENTS.some(e => evId(e) === ev)) ? ev : (ev === l.evento ? l.evento : null);
-  const fecha = g('lsCfgFecha') ? g('lsCfgFecha').value : '';
+  const todoDia = !!(g('lsCfgTodo') && g('lsCfgTodo').checked);
+  let fecha = g('lsCfgFecha') ? g('lsCfgFecha').value : '';
+  // Marcaste "todo el día" sin elegir fecha: se entiende que es hoy
+  if(!fecha && todoDia) fecha = todayISO();
   l.aviso = fecha ? sanitizeAvisoLista({
-    fecha, hora: g('lsCfgHora') ? g('lsCfgHora').value : '09:00',
-    repetir: g('lsCfgSemana') && g('lsCfgSemana').checked ? 'semana' : 'no',
+    fecha, todoDia, hora: g('lsCfgHora') ? g('lsCfgHora').value : '09:00',
   }) : null;
   listaConfig = false;
   await guardarListas();
@@ -10873,16 +10989,7 @@ async function borrarLista(id){
   cerrarAvisosDe('lista|' + id);
   await guardarListas();
 }
-function irAEventoDeLista(id){
-  const l = listaPorId(id);
-  if(!l || !l.evento) return;
-  const fecha = l.evento.slice(0, 10);
-  vistaTipo = 'dia';
-  diaActual = fecha;
-  renderVista();
-  openPanel(fecha);
-}
-// Desde el día: abrir la lista ligada
+// Abrir una lista desde fuera (p. ej. al tocar una notificación)
 function irALista(id){
   if(!listaPorId(id)) return;
   closePanel();
@@ -10892,14 +10999,371 @@ function irALista(id){
   renderVista();
   window.scrollTo({ top:0, behavior:'instant' });
 }
-// Chips de listas debajo de un evento, en el panel del día
-function listasDeEventoHTML(ev){
-  const ls = listasDeEvento(evId(ev));
-  if(!ls.length) return '';
-  return `<div class="ls-en-dia">${ls.map(l => {
-    const total = l.items.length, hechas = total - pendientesDe(l).length;
-    return `<button class="ls-chip grande" onclick="irALista('${l.id}')">${l.emoji} ${esc(l.nombre)} · ${hechas}/${total}</button>`;
-  }).join('')}</div>`;
+
+// ══════════════════════════════════════════════════════════════
+// FOTOS EN LAS LISTAS
+// Ej.: le tomas foto a la lista del pizarrón y la pegas a "Súper".
+// · La foto se achica (lado mayor 1600 px, JPG) para que pese poco.
+// · Se guarda en este teléfono (IndexedDB) para verla sin internet,
+//   y se sube a tu cuenta (Supabase Storage, carpeta privada tuya)
+//   para verla en tus otros dispositivos.
+// · En la lista solo viaja su id y medidas, nunca la imagen.
+// ══════════════════════════════════════════════════════════════
+const BUCKET_FOTOS = 'listas-fotos';
+const LADO_FOTO = 1600;
+const CALIDAD_FOTO = 0.78;
+const CAMARA_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.4-2h7l1.4 2h1.6A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.8"/></svg>';
+
+const fotoURL = new Map();        // id → blob: URL ya lista para <img>
+let fotoListaDestino = null;      // a qué lista va la foto que se está tomando
+let fotosGuardando = 0;           // cuántas se están procesando
+
+// ---------- Guardado local (IndexedDB) ----------
+let _fotosDB = null;
+function fotosDB(){
+  if(_fotosDB) return _fotosDB;
+  _fotosDB = new Promise(res => {
+    try{
+      if(!window.indexedDB){ res(null); return; }
+      const r = window.indexedDB.open('ecal-fotos', 1);
+      r.onupgradeneeded = () => { try{ r.result.createObjectStore('fotos'); }catch(e){} };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(null);
+      r.onblocked = () => res(null);
+    }catch(e){ res(null); }
+  });
+  return _fotosDB;
+}
+async function idbFoto(op, id, val){
+  const db = await fotosDB();
+  if(!db) return null;
+  return new Promise(res => {
+    try{
+      const tx = db.transaction('fotos', (op === 'get' || op === 'keys') ? 'readonly' : 'readwrite');
+      const st = tx.objectStore('fotos');
+      const r = op === 'get' ? st.get(id) : op === 'put' ? st.put(val, id) : op === 'del' ? st.delete(id) : st.getAllKeys();
+      r.onsuccess = () => res((op === 'get' || op === 'keys') ? r.result : true);
+      r.onerror = () => res(null);
+    }catch(e){ res(null); }
+  });
+}
+
+// ---------- Nube (Supabase Storage) ----------
+function rutaFoto(id){
+  if(!idFotoValido(id) || !sesion || !RX_UUID.test(sesion.user_id || '')) return null;
+  return sesion.user_id + '/' + id + '.jpg';
+}
+function headersFoto(extra){
+  return Object.assign({
+    'apikey': SYNC.key,
+    'Authorization': 'Bearer ' + (sesion ? sesion.access_token : SYNC.key),
+  }, extra || {});
+}
+function senalTiempo(ms){
+  try{ return (window.AbortSignal && AbortSignal.timeout) ? AbortSignal.timeout(ms) : undefined; }catch(e){ return undefined; }
+}
+async function subirFoto(id, blob){
+  try{
+    if(!syncEnabled() || !await sesionValida()) return false;
+    const ruta = rutaFoto(id);
+    if(!ruta) return false;
+    const r = await fetch(`${SYNC.url}/storage/v1/object/${BUCKET_FOTOS}/${ruta}`, {
+      method:'POST', body: blob, signal: senalTiempo(60000),
+      headers: headersFoto({ 'Content-Type':'image/jpeg', 'x-upsert':'true', 'cache-control':'31536000' }),
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
+async function bajarFoto(id){
+  try{
+    if(!syncEnabled() || !await sesionValida()) return null;
+    const ruta = rutaFoto(id);
+    if(!ruta) return null;
+    const r = await fetch(`${SYNC.url}/storage/v1/object/authenticated/${BUCKET_FOTOS}/${ruta}`,
+      { headers: headersFoto(), signal: senalTiempo(30000) });
+    if(!r.ok) return null;
+    const b = await r.blob();
+    return (b && b.size && /^image\//.test(b.type || 'image/jpeg')) ? b : null;
+  }catch(e){ return null; }
+}
+async function borrarFotosNube(ids){
+  try{
+    const rutas = ids.map(rutaFoto).filter(Boolean);
+    if(!rutas.length || !syncEnabled() || !await sesionValida()) return false;
+    const r = await fetch(`${SYNC.url}/storage/v1/object/${BUCKET_FOTOS}`, {
+      method:'DELETE', headers: headersFoto({ 'Content-Type':'application/json' }),
+      body: JSON.stringify({ prefixes: rutas }), signal: senalTiempo(20000),
+    });
+    return r.ok;
+  }catch(e){ return false; }
+}
+
+// URL para mostrar una foto: primero la de este teléfono, si no, la baja
+const bajandoFoto = new Map();
+function urlDeFoto(id){
+  if(fotoURL.has(id)) return Promise.resolve(fotoURL.get(id));
+  if(bajandoFoto.has(id)) return bajandoFoto.get(id);
+  const p = (async () => {
+    const rec = await idbFoto('get', id);
+    let blob = rec && rec.blob;
+    if(!blob){
+      blob = await bajarFoto(id);
+      if(blob) await idbFoto('put', id, { blob, subida:true, t: Date.now() });
+    }
+    if(!blob) return null;
+    const u = URL.createObjectURL(blob);
+    fotoURL.set(id, u);
+    return u;
+  })();
+  bajandoFoto.set(id, p);
+  p.then(() => bajandoFoto.delete(id), () => bajandoFoto.delete(id));
+  return p;
+}
+// Pone las imágenes en los <img data-foto> que haya en pantalla
+function pintarFotos(){
+  try{
+    document.querySelectorAll('img[data-foto]').forEach(img => {
+      const id = img.getAttribute('data-foto');
+      if(!idFotoValido(id)) return;
+      if(fotoURL.has(id)){ img.src = fotoURL.get(id); return; }
+      urlDeFoto(id).then(u => {
+        if(u) img.src = u;
+        else if(img.parentNode && img.parentNode.classList) img.parentNode.classList.add('sin-foto');
+      });
+    });
+  }catch(e){ console.warn('fotos:', e); }
+}
+
+// ---------- Tomar / elegir foto ----------
+function elegirFotoLista(id){
+  const l = listaPorId(id);
+  if(!l) return;
+  if(l.fotos.length >= MAX_FOTOS_LISTA){ alert(`Cada lista puede tener hasta ${MAX_FOTOS_LISTA} fotos. Borra una para agregar otra.`); return; }
+  fotoListaDestino = id;
+  const inp = document.getElementById('lsFotoInput');
+  if(inp){ inp.value = ''; inp.click(); }
+}
+// Nueva lista directo con foto (un solo toque desde "Mis listas")
+function crearConFoto(){
+  const inp = document.getElementById('lsNombre');
+  let nombre = limpiarTexto(inp ? inp.value : '', MAX_NOMBRE_LISTA);
+  if(!nombre){
+    const d = parseISO(todayISO());
+    nombre = `Lista del ${d.getDate()} ${MONTHS_ES[d.getMonth()].slice(0,3).toLowerCase()}`;
+  }
+  const l = crearLista(nombre, formLista.emoji || '📷', null, []);
+  if(!l){ alert('Ya tienes el máximo de listas (' + MAX_LISTAS + ').'); return; }
+  if(l.emoji === '📝') l.emoji = '📷';
+  creandoLista = false; selListas = false;
+  listaAbierta = l.id; listaConfig = false;
+  renderListas();
+  elegirFotoLista(l.id);        // tiene que ser en el mismo toque para que abra la cámara
+  guardarListas();
+}
+async function comprimirFoto(file){
+  let url = null;
+  try{
+    url = URL.createObjectURL(file);
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('no se pudo leer la imagen'));
+      i.src = url;
+    });
+    let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    if(!w || !h) return null;
+    const k = Math.min(1, LADO_FOTO / Math.max(w, h));
+    w = Math.max(1, Math.round(w * k)); h = Math.max(1, Math.round(h * k));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', CALIDAD_FOTO));
+    return blob ? { blob, w, h } : null;
+  }catch(e){
+    console.warn('foto:', e);
+    return null;
+  }finally{
+    if(url) URL.revokeObjectURL(url);
+  }
+}
+async function fotoElegida(inp){
+  const archivos = Array.prototype.slice.call((inp && inp.files) || []);
+  if(inp) inp.value = '';
+  const l = listaPorId(fotoListaDestino);
+  if(!l || !archivos.length) return;
+  const libres = MAX_FOTOS_LISTA - l.fotos.length;
+  const tomar = archivos.filter(f => !f.type || /^image\//.test(f.type)).slice(0, Math.max(0, libres));
+  if(!tomar.length) return;
+  fotosGuardando += tomar.length;
+  renderListas();
+  let fallo = 0;
+  for(const f of tomar){
+    const r = await comprimirFoto(f);
+    fotosGuardando--;
+    if(!r){ fallo++; continue; }
+    const id = nuevoIdLista('f');
+    await idbFoto('put', id, { blob:r.blob, subida:false, t: Date.now() });
+    fotoURL.set(id, URL.createObjectURL(r.blob));
+    l.fotos.push({ id, w:r.w, h:r.h, t: Date.now() });
+    subirFoto(id, r.blob).then(ok => { if(ok) idbFoto('put', id, { blob:r.blob, subida:true, t: Date.now() }); });
+  }
+  fotosGuardando = Math.max(0, fotosGuardando);
+  await guardarListas();
+  if(fallo) alert(fallo === 1 ? 'No se pudo leer esa foto. Prueba con otra.' : `No se pudieron leer ${fallo} fotos.`);
+}
+
+// ---------- Tira de fotos dentro de la lista ----------
+function fotosListaHTML(l){
+  if(!l.fotos.length && !fotosGuardando) return '';
+  const minis = l.fotos.map((f, k) => `
+    <button class="ls-foto" onclick="abrirVisor('${l.id}',${k})" aria-label="Ver foto ${k + 1}" style="aspect-ratio:${f.w} / ${f.h}">
+      <img data-foto="${f.id}" alt="">
+    </button>`).join('');
+  const cargando = fotosGuardando ? `<span class="ls-foto cargando" style="aspect-ratio:3 / 4"><span>Guardando…</span></span>` : '';
+  return `<div class="ls-fotos">${minis}${cargando}</div>`;
+}
+
+// ---------- Ver en grande ----------
+let visor = null;   // { lista, k, zoom, borrando }
+function abrirVisor(lid, k){
+  const l = listaPorId(lid);
+  if(!l || !l.fotos[k]) return;
+  visor = { lista: lid, k, zoom:false, borrando:false };
+  pintarVisor();
+}
+function cerrarVisor(){
+  visor = null;
+  const v = document.getElementById('fotoVisor');
+  if(v){ v.classList.remove('open'); v.innerHTML = ''; }
+  document.body.classList.remove('visor-abierto');
+}
+function moverVisor(n){
+  const l = visor && listaPorId(visor.lista);
+  if(!l) return;
+  const k = visor.k + n;
+  if(k < 0 || k >= l.fotos.length) return;
+  visor.k = k; visor.zoom = false; visor.borrando = false;
+  pintarVisor();
+}
+function zoomVisor(){
+  if(!visor) return;
+  visor.zoom = !visor.zoom;
+  const c = document.getElementById('fvLienzo');
+  if(c && c.classList) c.classList.toggle('zoom', visor.zoom);
+  const b = document.getElementById('fvZoom');
+  if(b) b.textContent = visor.zoom ? 'Alejar' : 'Acercar';
+}
+function pintarVisor(){
+  const v = document.getElementById('fotoVisor');
+  const l = visor && listaPorId(visor.lista);
+  if(!v || !l || !l.fotos[visor.k]){ cerrarVisor(); return; }
+  const f = l.fotos[visor.k];
+  const n = l.fotos.length;
+  v.innerHTML = `
+    <div class="fv-barra">
+      <button class="fv-btn" onclick="cerrarVisor()" aria-label="Cerrar">✕</button>
+      <span class="fv-tit">${l.emoji} ${esc(l.nombre)}${n > 1 ? ` · ${visor.k + 1}/${n}` : ''}</span>
+      <button class="fv-btn" id="fvZoom" onclick="zoomVisor()">${visor.zoom ? 'Alejar' : 'Acercar'}</button>
+    </div>
+    <div class="fv-lienzo${visor.zoom ? ' zoom' : ''}" id="fvLienzo" onclick="tocarLienzo(event)">
+      <img data-foto="${f.id}" alt="Foto de la lista">
+    </div>
+    ${n > 1 ? `
+      <button class="fv-flecha izq" onclick="moverVisor(-1)" ${visor.k ? '' : 'disabled'} aria-label="Anterior">‹</button>
+      <button class="fv-flecha der" onclick="moverVisor(1)" ${visor.k < n - 1 ? '' : 'disabled'} aria-label="Siguiente">›</button>` : ''}
+    <div class="fv-pie">
+      ${visor.borrando ? `
+        <span>¿Borrar esta foto?</span>
+        <button class="btn" onclick="visor.borrando=false;pintarVisor()">Cancelar</button>
+        <button class="btn peligro" onclick="borrarFotoVisor()">Borrar</button>` : `
+        <button class="btn fv-borrar" onclick="visor.borrando=true;pintarVisor()">🗑 Borrar foto</button>`}
+    </div>`;
+  v.classList.add('open');
+  document.body.classList.add('visor-abierto');
+  pintarFotos();
+}
+// Doble toque en la foto: acercar / alejar
+let ultimoToqueLienzo = 0;
+function tocarLienzo(e){
+  const t = Date.now();
+  if(t - ultimoToqueLienzo < 320){ ultimoToqueLienzo = 0; zoomVisor(); return; }
+  ultimoToqueLienzo = t;
+}
+async function borrarFotoVisor(){
+  const l = visor && listaPorId(visor.lista);
+  if(!l) return;
+  const f = l.fotos[visor.k];
+  if(!f) return;
+  l.fotos = l.fotos.filter(x => x.id !== f.id);
+  if(fotoURL.has(f.id)){ try{ URL.revokeObjectURL(fotoURL.get(f.id)); }catch(e){} fotoURL.delete(f.id); }
+  idbFoto('del', f.id);
+  borrarFotosNube([f.id]);
+  if(!l.fotos.length) cerrarVisor();
+  else{ visor.k = Math.min(visor.k, l.fotos.length - 1); visor.borrando = false; pintarVisor(); }
+  await guardarListas();
+}
+// Deslizar de lado en el visor cambia de foto (si no está acercada)
+(function(){
+  const v = document.getElementById('fotoVisor');
+  if(!v) return;
+  let x0 = 0, y0 = 0;
+  v.addEventListener('touchstart', e => { if(e.touches.length === 1){ x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } }, { passive:true });
+  v.addEventListener('touchend', e => {
+    if(!visor || visor.zoom || !e.changedTouches || !e.changedTouches[0]) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) moverVisor(dx < 0 ? 1 : -1);
+  }, { passive:true });
+})();
+
+// ---------- Mantenimiento ----------
+// Sube las que se tomaron sin internet y, de vez en cuando, borra de
+// la nube las fotos que ya no están en ninguna lista (solo si tienen
+// más de un día: así "Deshacer" y los otros dispositivos alcanzan).
+let ultimaLimpiezaFotos = 0;
+function fotosEnUso(){
+  const s = new Set();
+  LISTAS.forEach(l => (l.fotos || []).forEach(f => s.add(f.id)));
+  return s;
+}
+async function mantenerFotos(puedeLimpiar){
+  try{
+    if(!syncEnabled() || !sesion) return;
+    const usadas = fotosEnUso();
+    const claves = (await idbFoto('keys')) || [];
+    const DIA = 86400000;
+    for(const id of claves){
+      if(!idFotoValido(id)) continue;
+      const rec = await idbFoto('get', id);
+      if(!rec) continue;
+      if(!usadas.has(id)){
+        if(Date.now() - (rec.t || 0) > DIA) await idbFoto('del', id);
+        continue;
+      }
+      if(!rec.subida && rec.blob && await subirFoto(id, rec.blob)){
+        await idbFoto('put', id, { blob: rec.blob, subida:true, t: rec.t || Date.now() });
+      }
+    }
+    if(puedeLimpiar !== true || !LISTAS.length) return;
+    if(Date.now() - ultimaLimpiezaFotos < 6 * 3600000) return;
+    ultimaLimpiezaFotos = Date.now();
+    if(!await sesionValida()) return;
+    const r = await fetch(`${SYNC.url}/storage/v1/object/list/${BUCKET_FOTOS}`, {
+      method:'POST', headers: headersFoto({ 'Content-Type':'application/json' }),
+      body: JSON.stringify({ prefix: sesion.user_id + '/', limit: 1000, offset: 0 }),
+      signal: senalTiempo(20000),
+    });
+    if(!r.ok) return;
+    const lista = await r.json();
+    if(!Array.isArray(lista)) return;
+    const viejas = lista.filter(o => {
+      const id = String(o && o.name || '').replace(/\.jpg$/, '');
+      const t = Date.parse(o && o.created_at || '');
+      return idFotoValido(id) && !usadas.has(id) && t && Date.now() - t > DIA;
+    }).map(o => String(o.name).replace(/\.jpg$/, ''));
+    if(viejas.length) await borrarFotosNube(viejas.slice(0, 100));
+  }catch(e){ console.warn('fotos:', e); }
 }
 
 // ══════════════════════════════════════════════════════════════
