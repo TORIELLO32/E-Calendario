@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Semestre">
 <meta name="theme-color" content="#F6F4EE">
 <link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
 <!-- El guardado lo maneja sw.js: primero red, y si tarda, la copia
      del teléfono. Así abre siempre y se actualiza cuando hay señal. -->
 <title>Bitácora · Calendario 2026–2050</title>
@@ -2293,6 +2294,10 @@
   .rem-diario.on{color:var(--ink);}
   .rem-diario.on .rem-caja{background:var(--accent);border-color:var(--accent);}
 
+  /* ══════════ Notificaciones ══════════ */
+  #pushBtns:empty,#pushMsg:empty{display:none;}
+  #pushTxt b{color:var(--ink);}
+
   /* ══════════ Asistente: extras ══════════ */
   .prev-extras{margin:8px 0 2px;}
   .prev-extras .fav-form{margin:0 0 6px;}
@@ -2485,6 +2490,13 @@
     </div>
   </div>
 
+  <div class="opt-block" id="pushBlock">
+    <div class="opt-title"><i class="sync-dot off" id="pushDot"></i>Notificaciones</div>
+    <div class="opt-desc" id="pushTxt">Revisando…</div>
+    <div class="opt-actions" id="pushBtns"></div>
+    <div class="opt-msg" id="pushMsg"></div>
+  </div>
+
   <div class="opt-block">
     <div class="opt-title">Cómo se usa</div>
     <div class="opt-desc">Un recorrido corto por todo lo que sabe hacer el calendario.</div>
@@ -2519,7 +2531,7 @@
 
   <div class="opt-block">
     <div class="opt-title">Pasar al Calendario de Apple</div>
-    <div class="opt-desc">Manda tus eventos y sus recordatorios a la app Calendario. Ahí llegan las notificaciones y iCloud los pasa a tu iPad solo. Vuelve a exportar cuando agregues o cambies cosas.</div>
+    <div class="opt-desc">Manda tus eventos y sus recordatorios a la app Calendario. Si ya activaste las <b>Notificaciones</b> de arriba, no hace falta: esto es solo si también los quieres ver en el Calendario de Apple.</div>
     <button class="btn primary" id="btnIcs">Exportar eventos</button>
   </div>
 
@@ -3011,6 +3023,7 @@ function traducirErrorAuth(msg){
 }
 
 async function cerrarSesion(){
+  await bajaAlSalir();
   await borrarSesion();
   closeOpts();
   authMsg('', '');
@@ -3321,7 +3334,7 @@ function remsFormHTML(pre){
       <span class="rem-caja">${x.diario ? '✓' : ''}</span> Y avisarme diario hasta el día</button>` : ''}
     <div class="rem-note">${x.rems.length
       ? `Sonará: <b>${esc(remsLabel(x.rems))}${x.diario && puedeDiario ? ', y diario' : ''}</b>. Hasta ${MAX_REMS} avisos.`
-      : `Elige uno o varios (hasta ${MAX_REMS}).`} Llegan por el Calendario de Apple al exportar desde ⚙︎.</div>`;
+      : `Elige uno o varios (hasta ${MAX_REMS}).`} ${notaAvisos()}</div>`;
 }
 function favFormHTML(pre){
   const on = extraDe(pre).fav;
@@ -8069,8 +8082,8 @@ function showPreviewExtras(lista, accion){
       ${cambio ? `<div class="prev-row prev-sub">${cambio}</div>` : ''}`;
   }).join('');
   const extra = lista.length > 6 ? `<div class="agent-msg">…y ${lista.length - 6} más</div>` : '';
-  const nota = (accion.tipo === 'rems' && accion.modo !== 'quitar')
-    ? `<div class="conf-nota">Para que suenen, después exporta desde ⚙︎ → Exportar eventos.</div>` : '';
+  const nota = (accion.tipo === 'rems' && accion.modo !== 'quitar' && !pushActivo())
+    ? `<div class="conf-nota">${notaAvisos()}</div>` : '';
   agentSetResult(`
     <div class="prev-card">
       <div class="prev-head">${esc(describirAccion(accion))} · ${lista.length === 1 ? '1 evento' : lista.length + ' eventos'}</div>
@@ -8119,7 +8132,7 @@ async function confirmarExtras(){
   const uno = accion.tipo === 'fav' ? (accion.valor ? 'marcó como importante' : 'le quitó la estrella')
             : accion.tipo === 'hecho' ? (accion.valor ? 'marcó como hecho' : 'marcó como pendiente')
             : (accion.modo === 'quitar' ? 'le quitaron los avisos' : 'actualizaron los avisos');
-  agentSetResult(`<div class="agent-msg ok">Listo — ${n === 1 ? 'se ' + uno + ' 1 evento' : 'se ' + que + ' ' + n + ' eventos'}.${accion.tipo === 'rems' && accion.modo !== 'quitar' ? ' Recuerda exportar desde ⚙︎ para que suenen.' : ''}</div>`);
+  agentSetResult(`<div class="agent-msg ok">Listo — ${n === 1 ? 'se ' + uno + ' 1 evento' : 'se ' + que + ' ' + n + ' eventos'}.${accion.tipo === 'rems' && accion.modo !== 'quitar' && !pushActivo() ? ' ' + notaAvisos() : ''}</div>`);
   document.getElementById('agentInput').value = '';
 }
 
@@ -8616,6 +8629,9 @@ function openOpts(){
   aplicarTema();
   setSyncState(syncEnabled() ? syncState : 'off');
   document.getElementById('pasteZone').style.display = 'none';
+  pushMsg('', '');
+  pintarPush();
+  precargarLlave();
   document.getElementById('opts').classList.add('open');
   document.getElementById('optsOverlay').classList.add('open');
 }
@@ -8667,7 +8683,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.25b';
+const VERSION = '2026.09.25c';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -9128,8 +9144,30 @@ const TUTO_PASOS = [
       </div>`,
     texto: `
       <p>Los eliges con la <b>campana</b> del evento, o desde que lo <b>agregas o editas</b>. Debajo del nombre se ve cuáles tiene: «🔔 1 semana antes · 1 día antes».</p>
-      <p><b>El paso que no te puedes saltar:</b> después de ponerlos, ve a <b>⚙︎ → Exportar eventos</b> y mándalos a la app Calendario. Sin eso no suena nada.</p>
-      <p>Si el evento tiene hora, el aviso llega a esa hora; si no, a las 9:00. Tus recordatorios de antes siguen igual. Exporta solo desde un dispositivo: iCloud lo pasa a los demás.</p>`
+      <p>Para que suenen, activa una vez las <b>notificaciones</b> en ⚙︎ (el paso siguiente te dice cómo). Desde ahí te llegan solas.</p>
+      <p>Si el evento tiene hora, el aviso llega a esa hora; si no, a las 9:00 de la mañana. Tus recordatorios de antes siguen igual.</p>`
+  },
+  {
+    titulo: 'Notificaciones en el teléfono',
+    sub: 'Te llegan aunque la app esté cerrada. Se activan una vez.',
+    visual: `
+      <div style="border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:12px;background:var(--paper-card);box-shadow:0 2px 10px #0000001a">
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.7rem;color:var(--ink-soft);margin-bottom:4px">
+          <span style="width:16px;height:16px;border-radius:4px;background:var(--accent);display:inline-block"></span>SEMESTRE<span style="margin-left:auto">ahora</span>
+        </div>
+        <div style="font-weight:600;font-size:0.9rem">★ Examen de estructuras</div>
+        <div style="font-size:0.82rem;color:var(--ink-soft)">Mañana a las 10:00 AM · Salón 204</div>
+      </div>
+      <div class="mk-cap">Para activarlas (una sola vez)</div>
+      <ol class="tuto-lista" style="margin:0;padding-left:0">
+        <li>Abre el calendario <b>desde su ícono</b> en la pantalla de inicio</li>
+        <li>⚙︎ → <b>Notificaciones</b> → Activar</li>
+        <li>Acepta el permiso del iPhone</li>
+      </ol>`,
+    texto: `
+      <p>Llegan a la hora de cada recordatorio, <b>con la app cerrada</b>. Al tocarla se abre ese día.</p>
+      <p>Si ya lo palomeaste, <b>no te avisa</b>. Si cambias la fecha o los avisos, se ajusta solo: ya no hay que exportar nada.</p>
+      <p>En iPhone solo funcionan desde el ícono de la pantalla de inicio (no desde Safari) y con iOS 16.4 o más nuevo. Actívalas en cada teléfono o iPad donde las quieras.</p>`
   },
   {
     titulo: 'Mapa de carga',
@@ -9191,6 +9229,7 @@ const TUTO_PASOS = [
       </div>
       <div class="mk-cap">En el engrane ⚙︎ encuentras</div>
       <ul class="tuto-lista" style="margin:0">
+        <li>Notificaciones — activarlas en este teléfono</li>
         <li>Copiar respaldo — un código con todo</li>
         <li>Exportar al Calendario de Apple</li>
         <li>Apariencia — claro, oscuro o automático</li>
@@ -9255,6 +9294,7 @@ let swListo = false;
 if('serviceWorker' in navigator && navigator.serviceWorker.addEventListener){
   navigator.serviceWorker.addEventListener('message', e => {
     if(e.data === 'version-nueva') avisoVersionNueva();
+    else if(e.data && e.data.tipo === 'abrir-dia') abrirDiaPedido(e.data.fecha);
   });
 }
 
@@ -9414,6 +9454,7 @@ async function init(){
   cerrarRescate();
   quitarCargando();
   if(!cargoBien) avisoCarga();
+  abrirDiaDeUrl();
 
   // 7. Nube
   if(syncEnabled() && sesion){
@@ -9428,6 +9469,7 @@ async function init(){
       try{ vale = await sesionValida(); }catch(e){}
       if(!vale) mostrarGate();
     }
+    if(sesion) sincronizarPush();
   }
 }
 
@@ -9562,6 +9604,296 @@ document.getElementById('buscarBorrar').addEventListener('click', () => {
   renderBusqueda();
   inp.focus();
 });
+
+// ══════════════════════════════════════════════════════════════
+// NOTIFICACIONES
+// Te llegan al teléfono a la hora de cada recordatorio, aunque la
+// app esté cerrada. Las manda la función "avisos" de Supabase.
+// En iPhone solo funcionan si abres el calendario desde el ícono
+// de la pantalla de inicio (iOS 16.4 o más nuevo).
+// ══════════════════════════════════════════════════════════════
+const AVISOS_URL = SYNC.url + '/functions/v1/avisos';
+const KEY_PUSH = 'semestre2026:push';
+let pushLlave = null;
+let pushOcupado = false;
+let pushSincronizado = false;
+
+function esIOS(){
+  const ua = navigator.userAgent || '';
+  return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+}
+function enPantallaInicio(){
+  return window.navigator.standalone === true ||
+    !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+}
+function pushPosible(){
+  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+}
+function pushActivo(){
+  try{ return localStorage.getItem(KEY_PUSH) === 'on'; }catch(e){ return false; }
+}
+function marcarPush(on){
+  try{ if(on) localStorage.setItem(KEY_PUSH, 'on'); else localStorage.removeItem(KEY_PUSH); }catch(e){}
+}
+function nombreEquipo(){
+  const ua = navigator.userAgent || '';
+  if(/iPad/.test(ua) || (/Macintosh/.test(ua) && (navigator.maxTouchPoints || 0) > 1)) return 'iPad';
+  if(/iPhone|iPod/.test(ua)) return 'iPhone';
+  if(/Android/.test(ua)) return 'Android';
+  if(/Macintosh/.test(ua)) return 'Mac';
+  if(/Windows/.test(ua)) return 'Windows';
+  return 'Computadora';
+}
+function zonaHoraria(){
+  try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Mexico_City'; }
+  catch(e){ return 'America/Mexico_City'; }
+}
+// Texto que acompaña a los recordatorios en toda la app
+function notaAvisos(){
+  return pushActivo()
+    ? 'Te llegan como notificación a este teléfono.'
+    : 'Para que suenen, activa las notificaciones en ⚙︎.';
+}
+
+async function llamarAvisos(cuerpo){
+  if(!syncEnabled() || !sesion || !await sesionValida()){
+    const e = new Error('sin sesión'); e.status = 401; throw e;
+  }
+  const r = await fetch(AVISOS_URL, {
+    method: 'POST',
+    headers: syncHeaders(),
+    body: JSON.stringify(cuerpo),
+    signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(15000) : undefined,
+  });
+  let j = {};
+  try{ j = await r.json(); }catch(e){}
+  if(!r.ok){
+    const e = new Error((j && j.error) || ('HTTP ' + r.status));
+    e.status = r.status;
+    throw e;
+  }
+  return j || {};
+}
+
+function b64aBytes(b64){
+  const relleno = '='.repeat((4 - b64.length % 4) % 4);
+  const s = atob((b64 + relleno).replace(/-/g, '+').replace(/_/g, '/'));
+  const out = new Uint8Array(s.length);
+  for(let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+  return out;
+}
+function mismosBytes(a, b){
+  if(!a || !b) return false;
+  const x = new Uint8Array(a), y = new Uint8Array(b);
+  if(x.length !== y.length) return false;
+  for(let i = 0; i < x.length; i++) if(x[i] !== y[i]) return false;
+  return true;
+}
+
+async function precargarLlave(){
+  if(pushLlave || !sesion || !pushPosible()) return;
+  try{
+    const j = await llamarAvisos({ accion:'llave' });
+    if(typeof j.llave === 'string' && /^[A-Za-z0-9_-]{80,100}$/.test(j.llave)) pushLlave = j.llave;
+  }catch(e){}
+}
+
+// El service worker listo, sin esperar para siempre
+async function workerListo(){
+  let reg = null;
+  try{ reg = await navigator.serviceWorker.getRegistration(); }catch(e){}
+  if(!reg){
+    try{ reg = await navigator.serviceWorker.register('./sw2.js', { updateViaCache:'none' }); }catch(e){}
+  }
+  return await Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((_, rej) => setTimeout(() => rej(new Error('worker')), 10000)),
+  ]);
+}
+
+async function suscripcionActual(){
+  if(!pushPosible()) return null;
+  try{
+    const reg = await navigator.serviceWorker.getRegistration();
+    return reg ? await reg.pushManager.getSubscription() : null;
+  }catch(e){ return null; }
+}
+
+function pushMsg(txt, cls){
+  const el = document.getElementById('pushMsg');
+  if(!el) return;
+  el.className = 'opt-msg ' + (cls || '');
+  el.textContent = txt || '';
+}
+
+function textoErrorPush(e){
+  const st = e && e.status;
+  if(st === 401) return 'Tu sesión venció. Cierra sesión y vuelve a entrar.';
+  if(st === 404 || (e && (e.name === 'TypeError' || /llave|Failed to fetch|Load failed/i.test(e.message || ''))))
+    return 'No encontré el servicio de avisos en Supabase. Revisa que la función «avisos» esté publicada.';
+  if(st === 429) return 'Espera unos segundos y vuelve a intentar.';
+  if(st >= 500) return 'El servidor de avisos tuvo un problema. Intenta en un momento.';
+  if(e && e.message === 'worker') return 'La app no terminó de cargar. Ciérrala, ábrela otra vez e intenta de nuevo.';
+  if(e && e.name === 'NotAllowedError') return 'El teléfono no dio permiso. Revisa Ajustes → Notificaciones → Semestre.';
+  return 'No se pudo activar. Intenta otra vez.';
+}
+
+async function pintarPush(){
+  const txt = document.getElementById('pushTxt');
+  const btns = document.getElementById('pushBtns');
+  const dot = document.getElementById('pushDot');
+  if(!txt || !btns) return;
+  const poner = (t, b, d) => { txt.innerHTML = t; btns.innerHTML = b || ''; if(dot) dot.className = 'sync-dot ' + (d || 'off'); };
+
+  if(!syncEnabled() || !sesion){
+    poner('Entra con tu cuenta para recibir avisos en el teléfono.');
+    return;
+  }
+  if(!pushPosible()){
+    if(esIOS() && !enPantallaInicio()){
+      poner('Para que te lleguen en el iPhone, abre el calendario <b>desde su ícono en la pantalla de inicio</b>. Si no lo tienes: en Safari toca <b>Compartir → Agregar a inicio</b>.');
+    }else if(esIOS()){
+      poner('Tu ícono de la pantalla de inicio es de una versión anterior. <b>Bórralo y vuelve a agregarlo</b> desde Safari (Compartir → Agregar a inicio). Tus eventos están en la nube, no se pierden. Necesitas iOS 16.4 o más nuevo.');
+    }else{
+      poner('Este navegador no puede recibir notificaciones. Usa Safari, Chrome o Edge actualizados.');
+    }
+    return;
+  }
+  if(Notification.permission === 'denied'){
+    poner('Las notificaciones están bloqueadas para esta app. Actívalas en <b>Ajustes del iPhone → Notificaciones → Semestre</b> y regresa aquí.');
+    return;
+  }
+  const sub = await suscripcionActual();
+  if(sub && Notification.permission === 'granted'){
+    marcarPush(true);
+    poner('<b>Activadas en este dispositivo.</b> Te llegan a la hora de cada recordatorio, aunque la app esté cerrada. Si ya lo palomeaste, no te avisa.',
+      `<button class="btn" onclick="probarPush()">Mandar una de prueba</button>
+       <button class="btn" onclick="desactivarPush()">Desactivar</button>`, 'ok');
+    return;
+  }
+  marcarPush(false);
+  poner('Recibe tus recordatorios como notificación, aunque la app esté cerrada. Ya no hace falta exportar al Calendario de Apple.',
+    `<button class="btn primary" style="width:100%" onclick="activarPush()">Activar notificaciones</button>`);
+}
+
+async function activarPush(){
+  if(pushOcupado) return;
+  pushOcupado = true;
+  pushMsg('Activando…', '');
+  try{
+    // El permiso se pide PRIMERO, pegado al toque (el iPhone lo exige)
+    const permiso = await Notification.requestPermission();
+    if(permiso !== 'granted'){
+      pushMsg(permiso === 'denied'
+        ? 'No diste permiso. Puedes activarlo en Ajustes → Notificaciones → Semestre.'
+        : 'No se activaron.', 'err');
+      return;
+    }
+    const reg = await workerListo();
+    if(!pushLlave) await precargarLlave();
+    if(!pushLlave){ const e = new Error('llave'); throw e; }
+    const llave = b64aBytes(pushLlave);
+
+    let sub = await reg.pushManager.getSubscription();
+    // Si quedó una suscripción con otra llave, se rehace
+    if(sub && sub.options && sub.options.applicationServerKey && !mismosBytes(sub.options.applicationServerKey, llave)){
+      try{ await sub.unsubscribe(); }catch(e){}
+      sub = null;
+    }
+    if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:llave });
+
+    await llamarAvisos({ accion:'suscribir', sub: sub.toJSON(), tz: zonaHoraria(), equipo: nombreEquipo() });
+    marcarPush(true);
+    pushSincronizado = true;
+    pushMsg('Listo. Te mandé una de prueba: debe llegarte en unos segundos.', 'ok');
+    try{ await llamarAvisos({ accion:'probar' }); }catch(e){}
+  }catch(e){
+    console.warn('push:', e);
+    pushMsg(textoErrorPush(e), 'err');
+  }finally{
+    pushOcupado = false;
+    await pintarPush();
+    refrescarNotasAviso();
+  }
+}
+
+async function desactivarPush(){
+  if(pushOcupado) return;
+  pushOcupado = true;
+  try{
+    const sub = await suscripcionActual();
+    const endpoint = sub ? sub.endpoint : '';
+    if(sub){ try{ await sub.unsubscribe(); }catch(e){} }
+    marcarPush(false);
+    if(endpoint){ try{ await llamarAvisos({ accion:'baja', endpoint }); }catch(e){} }
+    pushMsg('Desactivadas en este dispositivo.', 'ok');
+  }finally{
+    pushOcupado = false;
+    await pintarPush();
+    refrescarNotasAviso();
+  }
+}
+
+async function probarPush(){
+  try{
+    const j = await llamarAvisos({ accion:'probar' });
+    pushMsg(j.ok ? 'Mandada. Debe llegarte en unos segundos.' : 'No se pudo entregar. Desactiva y vuelve a activar.', j.ok ? 'ok' : 'err');
+  }catch(e){
+    pushMsg(textoErrorPush(e), 'err');
+  }
+}
+
+// Al abrir la app: si este teléfono tiene notificaciones, se le
+// recuerda al servidor (por si cambió la zona horaria o la cuenta).
+// Si el sistema las quitó, se apaga la marca para no mentir.
+async function sincronizarPush(){
+  if(pushSincronizado || !sesion || !pushPosible()) return;
+  pushSincronizado = true;
+  const sub = await suscripcionActual();
+  if(!sub || Notification.permission !== 'granted'){
+    if(pushActivo()){ marcarPush(false); refrescarNotasAviso(); }
+    return;
+  }
+  marcarPush(true);
+  try{ await llamarAvisos({ accion:'suscribir', sub: sub.toJSON(), tz: zonaHoraria(), equipo: nombreEquipo() }); }catch(e){}
+}
+
+// Al cerrar sesión, este teléfono deja de recibir los avisos de esa cuenta
+async function bajaAlSalir(){
+  try{
+    const sub = await suscripcionActual();
+    if(!sub) return;
+    const endpoint = sub.endpoint;
+    await Promise.race([
+      llamarAvisos({ accion:'baja', endpoint }),
+      new Promise(r => setTimeout(r, 3000)),
+    ]);
+    try{ await sub.unsubscribe(); }catch(e){}
+  }catch(e){}
+  marcarPush(false);
+  pushSincronizado = false;
+}
+
+function refrescarNotasAviso(){
+  ['rm','ed','ad','rg'].forEach(pre => { if(formExtra[pre]) pintarExtra(pre); });
+}
+
+// Tocar una notificación abre ese día
+function abrirDiaPedido(fecha){
+  if(typeof fecha !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !clampToSemester(fecha)) return;
+  if(document.getElementById('authGate').classList.contains('show')) return;
+  irAFecha(fecha);
+  setTimeout(() => openPanel(fecha), 300);
+}
+function abrirDiaDeUrl(){
+  try{
+    const p = new URLSearchParams(location.search);
+    const d = p.get('dia');
+    if(!d) return;
+    history.replaceState(null, '', location.pathname);
+    abrirDiaPedido(d);
+  }catch(e){}
+}
 
 // ---------- Pantalla de rescate ----------
 // Si el arranque se atora del todo, en vez de dejar un calendario

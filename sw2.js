@@ -15,9 +15,9 @@
 // app "bajaba de versión" sola.
 // ══════════════════════════════════════════════════════════════
 
-const VERSION  = 'cal-2026-09-25b';
+const VERSION  = 'cal-2026-09-25c';
 const CACHE    = 'calendario-' + VERSION;
-const ARCHIVOS = ['./', './index.html', './app.html', './icon.png'];
+const ARCHIVOS = ['./', './index.html', './app.html', './icon.png', './icon-192.png', './icon-512.png', './manifest.json'];
 const ESPERA   = 4000;
 
 self.addEventListener('install', e => {
@@ -113,4 +113,52 @@ self.addEventListener('fetch', e => {
 
 self.addEventListener('message', e => {
   if(e.data === 'actualizar') self.skipWaiting();
+});
+
+// ══════════════════════════════════════════════════════════════
+// NOTIFICACIONES
+// Llegan de la función "avisos" de Supabase, cifradas. Aquí solo
+// se muestran; al tocarlas se abre ese día en la app.
+// ══════════════════════════════════════════════════════════════
+function urlSegura(u){
+  try{
+    const x = new URL(u, self.registration.scope);
+    if(x.origin === self.location.origin) return x.href;
+  }catch(err){}
+  return self.registration.scope;
+}
+
+self.addEventListener('push', e => {
+  let d = {};
+  try{ d = e.data ? e.data.json() : {}; }
+  catch(err){ d = { t:'Recordatorio', b: e.data ? String(e.data.text()).slice(0, 140) : '' }; }
+  const titulo = String(d.t || 'Recordatorio').slice(0, 90);
+  const opciones = {
+    body: String(d.b || '').slice(0, 160),
+    tag: String(d.g || 'aviso').slice(0, 120),
+    data: { url: urlSegura(d.u) },
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    timestamp: Date.now(),
+  };
+  // El iPhone exige mostrar SIEMPRE algo por cada aviso que llega
+  e.waitUntil(self.registration.showNotification(titulo, opciones));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || self.registration.scope;
+  let dia = null;
+  try{ dia = new URL(url).searchParams.get('dia'); }catch(err){}
+  e.waitUntil((async () => {
+    const abiertas = await self.clients.matchAll({ type:'window', includeUncontrolled:true });
+    for(const c of abiertas){
+      if(c.url.startsWith(self.registration.scope)){
+        try{ await c.focus(); }catch(err){}
+        if(dia) c.postMessage({ tipo:'abrir-dia', fecha: dia });
+        return;
+      }
+    }
+    await self.clients.openWindow(url);
+  })());
 });
