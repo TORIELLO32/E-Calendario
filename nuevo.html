@@ -894,16 +894,19 @@
   .tuto-puntos{
     flex:1;
     display:flex;
-    gap:5px;
+    gap:3px;
     justify-content:center;
-    flex-wrap:wrap;
+    align-items:center;
+    flex-wrap:nowrap;
+    min-width:0;
   }
   .tuto-punto{
-    width:6px;height:6px;
+    flex:none;
+    width:5px;height:5px;
     border-radius:50%;
     background:var(--line);
   }
-  .tuto-punto.on{background:var(--accent);width:16px;border-radius:3px;}
+  .tuto-punto.on{background:var(--accent);width:12px;border-radius:3px;}
 
   /* Maquetas dentro del tutorial */
   .mk-grid{
@@ -928,6 +931,7 @@
     color:var(--ink-soft);
   }
   .mk-c.fin{background:var(--paper-alt);}
+  .mk-c{position:relative;}
   .mk-c.hoy{outline:2px solid var(--accent);outline-offset:-2px;}
   .mk-c b{font-size:0.62rem;color:var(--ink);}
   .mk-d{width:5px;height:5px;border-radius:50%;}
@@ -1235,6 +1239,7 @@
     -webkit-tap-highlight-color:transparent;
   }
   .sv-tira.hecho{opacity:0.45;}
+  .sv-tira.fav{height:7px;box-shadow:0 0 0 1.5px var(--estrella, #C0901A);}
   .sv-cuerpo{display:flex;gap:0;}
   .sv-horas{flex:none;width:26px;}
   .sv-hora{
@@ -2229,6 +2234,100 @@
   .thinking i:nth-child(2){animation-delay:0.15s;}
   .thinking i:nth-child(3){animation-delay:0.3s;}
   @keyframes pulse{0%,100%{opacity:0.25;}50%{opacity:1;}}
+  /* ══════════ Importante (estrella) ══════════ */
+  :root{--estrella:#C0901A;--estrella-bg:#C0901A1F;}
+  :root[data-tema="oscuro"]{--estrella:#E8BC4A;--estrella-bg:#E8BC4A24;}
+  .estrella{font-style:normal;color:var(--estrella);margin-right:3px;font-size:0.92em;}
+  .panel-item.done .estrella{opacity:0.55;}
+  .fav-btn{
+    flex:none;width:28px;background:none;border:none;
+    color:var(--line);font-size:1.05rem;line-height:1;cursor:pointer;
+    border-radius:6px;-webkit-tap-highlight-color:transparent;
+  }
+  .fav-btn.on{color:var(--estrella);}
+  .fav-btn:active{background:var(--estrella-bg);}
+  /* con la estrella hay un botón más: se aprietan un poco los demás */
+  .panel-item .sub-btn,.panel-item .bell-btn{width:28px;}
+  .panel-item .edit-btn{width:30px;}
+  .panel-item .del-btn{width:30px;}
+  .cell-star{
+    position:absolute;top:1px;right:2px;font-style:normal;
+    font-size:0.56rem;line-height:1;color:var(--estrella);pointer-events:none;
+  }
+  .fav-form{
+    display:flex;align-items:center;gap:7px;width:100%;
+    background:var(--paper-card);border:1px solid var(--line-soft);border-radius:8px;
+    padding:8px 10px;margin:2px 0 8px;font:inherit;font-size:0.82rem;
+    color:var(--ink-soft);cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;
+  }
+  .fav-form .fav-ico{font-size:1rem;line-height:1;color:var(--line);}
+  .fav-form.on{border-color:var(--estrella);background:var(--estrella-bg);color:var(--ink);font-weight:600;}
+  .fav-form.on .fav-ico{color:var(--estrella);}
+  .legend-item.fav-filtro .fav-ico{color:var(--estrella);font-size:0.85rem;line-height:1;}
+  .legend-item.fav-filtro.activo{border-color:var(--estrella);background:var(--estrella-bg);}
+  .legend-item.fav-filtro.activo b{color:var(--estrella);}
+
+  /* ══════════ Varios recordatorios ══════════ */
+  .rem-chips{display:flex;flex-wrap:wrap;gap:6px;margin:3px 0 6px;}
+  .rem-chip{
+    font:inherit;font-size:0.76rem;padding:6px 10px;border-radius:16px;
+    border:1px solid var(--line-soft);background:var(--paper-card);color:var(--ink-soft);
+    cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .rem-chip.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600;}
+  .rem-chip.off{opacity:0.4;}
+  .rem-diario{
+    display:flex;align-items:center;gap:8px;background:none;border:none;padding:4px 0 6px;
+    font:inherit;font-size:0.8rem;color:var(--ink-soft);cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .rem-caja{
+    width:17px;height:17px;border:1.5px solid var(--line);border-radius:4px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:0.7rem;color:#fff;
+  }
+  .rem-diario.on{color:var(--ink);}
+  .rem-diario.on .rem-caja{background:var(--accent);border-color:var(--accent);}
+
+  /* ══════════ Buscar ══════════ */
+  .buscar-caja{
+    display:flex;align-items:center;gap:8px;margin:0 0 10px;
+    border:1px solid var(--line);border-radius:10px;padding:0 6px 0 10px;background:var(--paper-card);
+  }
+  .buscar-caja:focus-within{border-color:var(--accent);}
+  .buscar-caja svg{width:16px;height:16px;flex:none;color:var(--ink-soft);}
+  .buscar-caja input{
+    flex:1;min-width:0;border:none !important;background:transparent !important;
+    padding:11px 0 !important;margin:0 !important;font-size:16px;outline:none;color:var(--ink);
+    -webkit-appearance:none;appearance:none;
+  }
+  .buscar-caja input::-webkit-search-cancel-button{display:none;}
+  .buscar-borrar{
+    flex:none;width:28px;height:28px;border:none;border-radius:50%;background:var(--paper-alt);
+    color:var(--ink-soft);font-size:1.1rem;line-height:1;cursor:pointer;
+  }
+  .buscar-res{max-height:62vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .br-cuenta{font-size:0.74rem;color:var(--ink-soft);margin:0 2px 4px;}
+  .br-sec{
+    font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--ink-soft);margin:12px 2px 4px;
+  }
+  .br-fila{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;
+    background:none;border:none;border-bottom:1px solid var(--line-soft);padding:9px 2px;
+    color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .br-fila:active{background:var(--accent-soft);}
+  .br-fecha{
+    flex:none;width:52px;display:flex;flex-direction:column;align-items:center;
+    font-size:0.64rem;color:var(--ink-soft);line-height:1.2;text-transform:uppercase;
+  }
+  .br-fecha b{font-size:1.05rem;color:var(--ink);font-weight:700;}
+  .br-fecha i{font-style:normal;opacity:0.8;}
+  .br-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .br-tit{font-size:0.9rem;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+  .br-tit .dot{flex:none;}
+  .br-extra{font-size:0.72rem;color:var(--ink-soft);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+  .br-fila.hecho .br-tit{text-decoration:line-through;color:var(--ink-soft);}
+  .br-vacio{padding:26px 10px;text-align:center;font-size:0.85rem;color:var(--ink-soft);line-height:1.6;}
 </style>
 </head>
 <body>
@@ -2251,6 +2350,9 @@
       </button>
       <span class="barra-anio" id="barraAnio">2026</span>
       <span class="barra-mes" id="barraMes"></span>
+      <button class="icon-btn barra-buscar" id="buscarBtn" aria-label="Buscar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+      </button>
       <button class="icon-btn barra-sel" id="selBtn2" aria-label="Seleccionar varios días">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2" stroke-dasharray="3 2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
       </button>
@@ -2410,6 +2512,20 @@
   </div>
 </div>
 
+<div class="overlay" id="buscarOverlay"></div>
+<div class="agent" id="buscarSheet" role="dialog" aria-modal="true" aria-label="Buscar">
+  <div class="panel-head">
+    <span class="panel-date">Buscar</span>
+    <button class="panel-close" id="buscarClose">Cerrar</button>
+  </div>
+  <div class="buscar-caja">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+    <input type="search" id="buscarInput" maxlength="60" placeholder="Nombre, lugar, notas o categoría…" autocomplete="off" autocapitalize="off" enterkeyhint="search">
+    <button type="button" class="buscar-borrar" id="buscarBorrar" aria-label="Borrar búsqueda">&times;</button>
+  </div>
+  <div class="buscar-res" id="buscarRes"></div>
+</div>
+
 <div class="overlay" id="rangeOverlay"></div>
 <div class="agent" id="rangeSheet" role="dialog" aria-modal="true">
   <div class="panel-head">
@@ -2428,6 +2544,7 @@
       <select id="rgType" onchange="checkNueva(this,'rgNueva')"></select>
     </label>
     <div id="rgNueva"></div>
+    <div id="rgExtra"></div>
     <div id="rgDetalles"></div>
     <div class="prev-actions">
       <button class="btn" id="rgCancel">Cancelar</button>
@@ -3024,6 +3141,203 @@ function remLabel(r){
   return o ? o.label : 'Sin recordatorio';
 }
 
+// ---------- Varios recordatorios en un mismo evento ----------
+// Antes era uno solo (ev.rem). Ahora es una lista (ev.rems), y lo
+// viejo se convierte solo: un evento con rem:7 pasa a rems:[7].
+// Se guardan los dos campos para que un dispositivo con la versión
+// anterior siga entendiendo el evento en vez de perder el aviso.
+const MAX_REMS = 4;
+
+function sanitizeRems(e){
+  if(!e || typeof e !== 'object') return [];
+  let crudos = [];
+  if(Array.isArray(e.rems)) crudos = e.rems;
+  else if(e.rem !== undefined && safeRem(e.rem) >= 0){
+    // formato viejo: rem:1 sonaba un día antes Y el mismo día
+    crudos = safeRem(e.rem) === 1 ? [1, 0] : [e.rem];
+  }
+
+  const out = [];
+  for(const r of crudos){
+    // solo números de verdad: null, true o "" no deben volverse 0
+    if(typeof r !== 'number' && !(typeof r === 'string' && /^\d{1,2}$/.test(r))) continue;
+    const n = safeRem(r);
+    if(n < 0 || out.includes(n)) continue;
+    out.push(n);
+    if(out.length >= MAX_REMS) break;
+  }
+  return out.sort((a,b) => b - a);   // del más lejano al más cercano
+}
+
+// El rem "viejo" que se guarda junto a la lista: el aviso más
+// temprano, que es el que más cubre.
+function remCompat(rems){
+  return (rems && rems.length) ? rems[0] : -1;
+}
+
+function remsDe(ev){ return sanitizeRems(ev); }
+
+// Copia completa de un evento. Existe para que ningún campo nuevo
+// se pierda cuando se edita, se borra o se mueve algo: antes cada
+// lugar listaba los campos a mano y al agregar uno se olvidaba.
+function copiaEvento(ev, cambios){
+  const rems = sanitizeRems(ev);
+  const base = {
+    date: ev.date,
+    title: ev.title,
+    type: ev.type,
+    rems,
+    rem: remCompat(rems),
+    remDiario: diarioLimpio(ev, rems),
+    fav: ev.fav === true,
+    hora: safeHora(ev.hora),
+    subs: sanitizeSubs(ev.subs),
+    link: safeLink(ev.link),
+    notas: ev.notas || '',
+    lugar: ev.lugar || '',
+  };
+  if(cambios){
+    // si el cambio trae solo el campo viejo, manda ese
+    if(cambios.rem !== undefined && cambios.rems === undefined){
+      delete base.rems;
+      delete base.remDiario;
+    }
+    Object.assign(base, cambios);
+  }
+  // se recalcula para que la lista y el campo viejo nunca se contradigan
+  base.rems = sanitizeRems(base);
+  base.remDiario = diarioLimpio(base, base.rems);
+  base.rem = remCompat(base.rems);
+  base.fav = base.fav === true;
+  return base;
+}
+
+// "Diario": además de cada aviso, uno cada día desde el más temprano
+// hasta el día del evento. Así funcionaba antes el recordatorio único
+// (rem:7 = los 7 días previos y el mismo día), y los eventos viejos
+// lo conservan sin que cambie nada.
+function remDiarioDe(e){
+  if(!e || typeof e !== 'object') return false;
+  if(Array.isArray(e.rems)) return e.remDiario === true;
+  return safeRem(e.rem) >= 1;
+}
+function diarioLimpio(e, rems){
+  return remDiarioDe(e) && !!rems && rems.length > 0 && rems[0] > 1;
+}
+
+function remCorto(n){
+  if(n === 0) return 'el mismo día';
+  if(n === 1) return '1 día antes';
+  if(n === 7) return '1 semana antes';
+  if(n === 14) return '2 semanas antes';
+  return n + ' días antes';
+}
+function remsLabel(rems){
+  if(!rems || !rems.length) return 'Sin recordatorio';
+  return rems.map(remCorto).join(' · ');
+}
+function remsTexto(ev){
+  const rems = sanitizeRems(ev);
+  if(!rems.length) return '';
+  return remsLabel(rems) + (diarioLimpio(ev, rems) ? ' · y diario' : '');
+}
+
+// Días (antes del evento) en que suena algo, sin repetir
+function diasDeAviso(ev){
+  const rems = sanitizeRems(ev);
+  const dias = new Set(rems);
+  if(diarioLimpio(ev, rems)) for(let d = rems[0]; d >= 0; d--) dias.add(d);
+  return [...dias].sort((a,b) => b - a);
+}
+
+// ---------- Estrella y recordatorios dentro de los formularios ----------
+// El estado vive aquí (no en el DOM) y solo se repinta su cajita, así
+// tocar una opción no borra lo que ya escribiste en el formulario.
+const REM_CHIPS = [
+  { v:0,  l:'El mismo día' },
+  { v:1,  l:'1 día antes' },
+  { v:2,  l:'2 días' },
+  { v:3,  l:'3 días' },
+  { v:7,  l:'1 semana' },
+  { v:14, l:'2 semanas' },
+];
+const formExtra = {};
+
+function iniciarExtra(pre, ev){
+  const rems = ev ? sanitizeRems(ev) : [];
+  formExtra[pre] = {
+    rems,
+    diario: ev ? diarioLimpio(ev, rems) : false,
+    fav: ev ? ev.fav === true : false,
+  };
+}
+function extraDe(pre){
+  if(!formExtra[pre]) iniciarExtra(pre, null);
+  return formExtra[pre];
+}
+function leerRems(pre){ return extraDe(pre).rems.slice(); }
+function leerDiario(pre){ const x = extraDe(pre); return x.diario && x.rems.length > 0; }
+function favEnForm(pre){ return extraDe(pre).fav === true; }
+
+function remsFormHTML(pre){
+  const x = extraDe(pre);
+  const lleno = x.rems.length >= MAX_REMS;
+  const chips = REM_CHIPS.map(c => {
+    const on = x.rems.includes(c.v);
+    const off = !on && lleno;
+    return `<button type="button" class="rem-chip${on ? ' on' : ''}${off ? ' off' : ''}"
+      onclick="tocarRem('${pre}',${c.v})" aria-pressed="${on}">${on ? '✓ ' : ''}${c.l}</button>`;
+  }).join('');
+  const puedeDiario = x.rems.some(n => n > 1);
+  return `
+    <div class="rem-chips">${chips}</div>
+    ${puedeDiario ? `<button type="button" class="rem-diario${x.diario ? ' on' : ''}" onclick="tocarDiario('${pre}')" aria-pressed="${x.diario}">
+      <span class="rem-caja">${x.diario ? '✓' : ''}</span> Y avisarme diario hasta el día</button>` : ''}
+    <div class="rem-note">${x.rems.length
+      ? `Sonará: <b>${esc(remsLabel(x.rems))}${x.diario && puedeDiario ? ', y diario' : ''}</b>. Hasta ${MAX_REMS} avisos.`
+      : `Elige uno o varios (hasta ${MAX_REMS}).`} Llegan por el Calendario de Apple al exportar desde ⚙︎.</div>`;
+}
+function favFormHTML(pre){
+  const on = extraDe(pre).fav;
+  return `<button type="button" class="fav-form${on ? ' on' : ''}" onclick="tocarFavForm('${pre}')" aria-pressed="${on}">
+    <span class="fav-ico">${on ? '★' : '☆'}</span>${on ? 'Importante' : 'Marcar como importante'}</button>`;
+}
+// Bloque completo para un formulario: estrella + recordatorios
+function camposExtra(pre){
+  return `
+    <div id="${pre}Fav">${favFormHTML(pre)}</div>
+    <div class="campo">
+      <span class="campo-lbl">Recordatorios</span>
+      <div id="${pre}Rems">${remsFormHTML(pre)}</div>
+    </div>`;
+}
+function pintarExtra(pre){
+  const r = document.getElementById(pre + 'Rems');
+  if(r) r.innerHTML = remsFormHTML(pre);
+  const f = document.getElementById(pre + 'Fav');
+  if(f) f.innerHTML = favFormHTML(pre);
+}
+function tocarRem(pre, v){
+  const x = extraDe(pre);
+  const n = safeRem(v);
+  if(n < 0) return;
+  if(x.rems.includes(n)) x.rems = x.rems.filter(r => r !== n);
+  else if(x.rems.length < MAX_REMS) x.rems.push(n);
+  x.rems.sort((a,b) => b - a);
+  if(!x.rems.some(r => r > 1)) x.diario = false;
+  pintarExtra(pre);
+}
+function tocarDiario(pre){
+  const x = extraDe(pre);
+  x.diario = !x.diario;
+  pintarExtra(pre);
+}
+function tocarFavForm(pre){
+  const x = extraDe(pre);
+  x.fav = !x.fav;
+  pintarExtra(pre);
+}
+
 function sanitizeEvent(e){
   if(!e || typeof e !== 'object' || Array.isArray(e)) return null;
   if(typeof e.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.date)) return null;
@@ -3034,9 +3348,12 @@ function sanitizeEvent(e){
   if(typeof e.title !== 'string') return null;
   const title = limpiarTexto(e.title, MAX_TITULO);
   if(!title) return null;
+  const rems = sanitizeRems(e);
   return {
     date: e.date, title, type: safeType(e.type),
-    rem: safeRem(e.rem), hora: safeHora(e.hora), subs: sanitizeSubs(e.subs),
+    rems, rem: remCompat(rems), remDiario: diarioLimpio(e, rems),
+    fav: e.fav === true,
+    hora: safeHora(e.hora), subs: sanitizeSubs(e.subs),
     link: safeLink(e.link),
     notas: typeof e.notas === 'string' ? limpiarTexto(e.notas, MAX_NOTAS) : '',
     lugar: typeof e.lugar === 'string' ? limpiarTexto(e.lugar, MAX_LUGAR) : '',
@@ -3324,8 +3641,7 @@ async function confirmarBorrarEvento(i){
 
   // Se guarda una copia por si se quiere deshacer
   ultimoBorrado = {
-    ev: { date:ev.date, title:ev.title, type:ev.type, rem:safeRem(ev.rem), hora:safeHora(ev.hora),
-          subs:sanitizeSubs(ev.subs), link:safeLink(ev.link), notas:ev.notas || '', lugar:ev.lugar || '' },
+    ev: copiaEvento(ev),
     estabaHecho: COMPLETED.has(id),
   };
 
@@ -3347,6 +3663,22 @@ async function deshacerBorrado(){
   await markChanged();
 }
 
+// ---------- Importante (estrella) ----------
+function titEv(ev){
+  return (ev.fav ? '<i class="estrella" aria-label="Importante">★</i>' : '') + esc(ev.title);
+}
+async function toggleFavAt(i){
+  const ev = panelEvents[i];
+  if(!ev) return;
+  const u = mioOCrear(ev);
+  u.fav = !(u.fav === true);
+  rebuildEvents();
+  renderLegend();
+  refrescarVista();
+  renderPanelBody();
+  await markChanged();
+}
+
 // ---------- Recordatorios ----------
 let remindingId = null;
 
@@ -3356,6 +3688,7 @@ function startRemAt(i){
   remindingId = evId(ev);
   editingId = null;
   addingHere = false;
+  iniciarExtra('rm', ev);
   renderPanelBody();
 }
 function cancelRem(){
@@ -3364,18 +3697,11 @@ function cancelRem(){
 }
 async function saveRemAt(i){
   const ev = panelEvents[i];
-  const sel = document.getElementById('rmSel');
-  if(!ev || !sel){ remindingId = null; renderPanelBody(); return; }
-  const rem = safeRem(sel.value);
-  const id = evId(ev);
-
-  const u = USER_EVENTS.find(x => evId(x) === id);
-  if(u){
-    u.rem = rem;
-  }else{
-    // evento del archivo: se guarda una copia propia con el recordatorio
-    USER_EVENTS.push({ date: ev.date, title: ev.title, type: ev.type, rem });
-  }
+  if(!ev){ remindingId = null; renderPanelBody(); return; }
+  const u = mioOCrear(ev);
+  u.rems = sanitizeRems({ rems: leerRems('rm') });
+  u.remDiario = leerDiario('rm') && diarioLimpio({ rems:u.rems, remDiario:true }, u.rems);
+  u.rem = remCompat(u.rems);
 
   remindingId = null;
   rebuildEvents();
@@ -3417,12 +3743,10 @@ async function saveEdit(oldId){
     alert('Esa liga no se ve válida. Debe empezar con https://');
     return;
   }
-  const nuevo = {
-    date, title: title.slice(0,80), type,
-    rem: previo ? safeRem(previo.rem) : -1,
-    hora, lugar, link, notas,
-    subs: previo ? sanitizeSubs(previo.subs) : [],
-  };
+  const nuevo = copiaEvento(previo || { date, title, type }, {
+    date, title: title.slice(0,80), type, hora, lugar, link, notas,
+    rems: leerRems('ed'), remDiario: leerDiario('ed'), fav: favEnForm('ed'),
+  });
   const newId = evId(nuevo);
 
   // Se retira el original y se guarda la versión editada
@@ -3549,7 +3873,7 @@ function buildMonthCard(y, m, byDate){
         classes += ' pintado carga-dia';
         fondo = ` style="background:${tinteCarga(pendDia)}"`;
       }
-    }else if(hasEvents && filtros.size > 0 && !enSeleccion){
+    }else if(hasEvents && hayFiltros() && !enSeleccion){
       classes += ' pintado';
       fondo = ` style="background:${tinteDia(dayEvents[0].type)}"`;
     }
@@ -3557,7 +3881,7 @@ function buildMonthCard(y, m, byDate){
     let dotsHtml = '';
     if(cargaMode){
       if(pendDia > 0) dotsHtml = `<span class="ev-num">${pendDia}</span>`;
-    }else if(hasEvents && !(filtros.size > 0 && !enSeleccion)){
+    }else if(hasEvents && !(hayFiltros() && !enSeleccion)){
       const shown = dayEvents.slice(0,3);
       const dots = shown.map(ev => {
         const col = safeColor(catColor(ev.type));
@@ -3584,7 +3908,10 @@ function buildMonthCard(y, m, byDate){
       dotsHtml = `<span class="ev-num">${dayEvents.length}</span>`;
     }
 
-    cells += `<button class="${classes}"${fondo} data-d="${iso}" onclick="dayTap('${iso}')"><span class="daynum">${d}</span>${dotsHtml}</button>`;
+    // Estrellita en la esquina si hay algo importante sin terminar
+    const hayFav = !cargaMode && dayEvents.some(ev => ev.fav && !COMPLETED.has(evId(ev)));
+    const estrella = hayFav ? '<i class="cell-star" aria-label="Importante">★</i>' : '';
+    cells += `<button class="${classes}"${fondo} data-d="${iso}" onclick="dayTap('${iso}')"><span class="daynum">${d}</span>${estrella}${dotsHtml}</button>`;
   }
 
   for(let i=0;i<trail;i++) cells += `<div class="cell blank"></div>`;
@@ -3689,6 +4016,8 @@ function abrirRango(){
   document.getElementById('rgType').innerHTML = typeOptions('otro');
   document.getElementById('rgNueva').innerHTML = '';
   detallesAbiertos = false;
+  iniciarExtra('rg', null);
+  document.getElementById('rgExtra').innerHTML = camposExtra('rg');
   abrirRangoCampos();
   document.getElementById('rangeSheet').classList.add('open');
   document.getElementById('rangeOverlay').classList.add('open');
@@ -3708,8 +4037,9 @@ async function guardarRango(){
   const det = leerDetalle('rg');
   if(det.error){ alert(det.error); return; }
 
+  const rems = leerRems('rg'), remDiario = leerDiario('rg'), fav = favEnForm('rg');
   const lista = diasDelRango().map(date => ({
-    date, title, type, hora,
+    date, title, type, hora, rems, remDiario, fav,
     lugar:det.lugar, link:det.link, notas:det.notas, subs:[],
   }));
   await addEvents(lista);
@@ -3851,11 +4181,15 @@ async function borrarCategoria(id){
 // Es un filtro de vista: no borra nada y se reinicia al recargar.
 // ══════════════════════════════════════════════════════════════
 let filtros = new Set();
+let soloFav = false;          // filtro de "★ Importantes"
+function hayFiltros(){ return filtros.size > 0 || soloFav; }
 
 // Lo que el calendario debe dibujar en este momento
 function eventosVisibles(){
-  if(filtros.size === 0) return EVENTS;
-  return EVENTS.filter(ev => filtros.has(ev.type));
+  if(!hayFiltros()) return EVENTS;
+  return EVENTS.filter(ev =>
+    (filtros.size === 0 || filtros.has(ev.type)) &&
+    (!soloFav || ev.fav === true));
 }
 
 // A dónde saltar al prender un filtro. En orden de preferencia:
@@ -3947,7 +4281,17 @@ function toggleFiltro(id){
 
   // Al prender un filtro no tiene caso dejarte buscando:
   // se salta al evento más cercano de lo que quedó a la vista.
-  if(prendiendo && filtros.size > 0){
+  if(prendiendo && hayFiltros()){
+    const ev = proximoVisible();
+    if(ev) irAFecha(ev.date);
+  }
+}
+
+function toggleFiltroFav(){
+  soloFav = !soloFav;
+  renderLegend();
+  renderVista();
+  if(soloFav){
     const ev = proximoVisible();
     if(ev) irAFecha(ev.date);
   }
@@ -3955,6 +4299,7 @@ function toggleFiltro(id){
 
 function limpiarFiltros(){
   filtros.clear();
+  soloFav = false;
   renderLegend();
   renderVista();
 }
@@ -3974,7 +4319,7 @@ function toggleLeyenda(){
 function renderLegend(){
   const el = document.querySelector('.legend');
   if(!el) return;
-  const hayFiltro = filtros.size > 0;
+  const hayFiltro = hayFiltros();
 
   // Los que tengas prendidos van primero: así se ven aunque
   // la lista esté cerrada en un solo renglón.
@@ -3991,6 +4336,15 @@ function renderLegend(){
       <i class="dot" style="background:${safeColor(k.color)}"></i>${esc(k.label)}${n ? ` <b>${n}</b>` : ''}
     </button>`;
   }).join('');
+
+  // "★ Importantes" va siempre al principio, si hay alguno marcado
+  const nFav = EVENTS.filter(ev => ev.fav === true).length;
+  if(nFav || soloFav){
+    const cls = 'legend-item fav-filtro' + (soloFav ? ' activo' : (hayFiltro ? ' apagado' : ''));
+    html = `<button class="${cls}" onclick="toggleFiltroFav()" aria-pressed="${soloFav}">
+      <span class="fav-ico">★</span>Importantes${nFav ? ` <b>${nFav}</b>` : ''}
+    </button>` + html;
+  }
 
   if(hayFiltro){
     html = `<button class="legend-item limpiar" onclick="limpiarFiltros()">Ver todo ✕</button>` + html;
@@ -4180,7 +4534,7 @@ function renderVista(){
     const hay = enAnio
       ? eventosVisibles().some(ev => +ev.date.slice(0,4) === ANIO)
       : eventosVisibles().length > 0;
-    if(aviso) aviso.className = (filtros.size > 0 && !hay) ? 'sel-hint show' : 'sel-hint';
+    if(aviso) aviso.className = (hayFiltros() && !hay) ? 'sel-hint show' : 'sel-hint';
   }catch(e){
     console.error('Error en los avisos:', e);
   }
@@ -4265,8 +4619,7 @@ function mioOCrear(ev){
   const id = evId(ev);
   let u = USER_EVENTS.find(x => evId(x) === id);
   if(!u){
-    u = { date:ev.date, title:ev.title, type:ev.type, rem:safeRem(ev.rem), hora:safeHora(ev.hora),
-          subs:sanitizeSubs(ev.subs), link:safeLink(ev.link), notas:ev.notas || '', lugar:ev.lugar || '' };
+    u = copiaEvento(ev);
     USER_EVENTS.push(u);
   }
   if(!Array.isArray(u.subs)) u.subs = [];
@@ -4571,7 +4924,7 @@ function forzarRepintado(){
 // Al esconder un bloque grande y mostrar otro, la página cambia de
 // alto de golpe. Safari a veces no repinta hasta que deslizas, y se
 // quedan los píxeles de la vista anterior. Esto lo obliga.
-function forzarRepintado(id){
+function repintarBloque(id){
   const el = document.getElementById(id);
   if(!el) return;
   el.style.opacity = '0.999';
@@ -4593,11 +4946,11 @@ async function elegirVista(v){
 
   renderVista();          // renderVista ya repinta los botones
 
-  const destino = { puntos:'months', mes:'mesVista', dia:'diaVista', lista:'listaVista' }[v];
-  forzarRepintado(destino);
+  const destino = { puntos:'months', mes:'mesVista', semana:'semanaVista', dia:'diaVista', lista:'listaVista' }[v];
+  repintarBloque(destino);
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    forzarRepintado(destino);
+    repintarBloque(destino);
   });
 
   try{ await writeKey(KEY_VISTA, v); }catch(e){ console.warn('vista:', e); }
@@ -4708,7 +5061,7 @@ function renderSemana(){
           ${porDia[d].filter(e => !safeHora(e.hora)).slice(0,3).map(ev => {
             const col = safeColor(catColor(ev.type));
             const hecho = COMPLETED.has(evId(ev));
-            return `<button class="sv-tira${hecho ? ' hecho' : ''}" style="background:${col}" onclick="dayTap('${d}')" aria-label="${esc(ev.title)}"></button>`;
+            return `<button class="sv-tira${hecho ? ' hecho' : ''}${ev.fav ? ' fav' : ''}" style="background:${col}" onclick="dayTap('${d}')" aria-label="${ev.fav ? 'Importante: ' : ''}${esc(ev.title)}"></button>`;
           }).join('')}
         </div>`).join('')}
     </div>` : '';
@@ -4733,7 +5086,7 @@ function renderSemana(){
       const col = safeColor(catColor(ev.type));
       return `<button class="sv-ev${hecho ? ' hecho' : ''}"
         style="top:${top}px;height:${ALTO_HORA_SEM - 2}px;left:${carril*ancho}%;width:calc(${ancho}% - 2px);background:${col}2E;border-left-color:${col}"
-        onclick="dayTap('${d}')">${esc(ev.title)}</button>`;
+        onclick="dayTap('${d}')">${titEv(ev)}</button>`;
     }).join('');
 
     let linea = '';
@@ -4859,7 +5212,7 @@ function renderDia(){
       <button class="dv-ev${hecho ? ' hecho' : ''}"
         style="top:${top}px;height:${ALTO_HORA - 3}px;left:${carril*ancho}%;width:calc(${ancho}% - 3px);background:${col}22;border-left-color:${col}"
         onclick="dayTap('${iso}')">
-        <span class="dv-tit">${esc(ev.title)}</span>
+        <span class="dv-tit">${titEv(ev)}</span>
         <span class="dv-sub">${esc(fmtHora(ev.hora))}${a !== null ? ` · ${subsHechas(ev)}/${subsDe(ev).length}` : ''}${ev.lugar ? ' · ' + esc(ev.lugar) : ''}</span>
       </button>`;
   }).join('');
@@ -4889,7 +5242,7 @@ function renderDia(){
       <button class="dv-tira${hecho ? ' hecho' : ''}"
         style="left:${k * 26}px;background:${col}${hecho ? '30' : ''};height:${altoTotal}px"
         onclick="dayTap('${iso}')" aria-label="${esc(ev.title)}">
-        <span class="dv-tira-txt">${esc(ev.title)}</span>
+        <span class="dv-tira-txt">${titEv(ev)}</span>
       </button>`;
   }).join('');
 
@@ -4901,7 +5254,7 @@ function renderDia(){
         ${todoDia.map(ev => {
           const hecho = COMPLETED.has(evId(ev));
           const col = safeColor(catColor(ev.type));
-          return `<button class="dv-chip${hecho ? ' hecho' : ''}" style="border-left-color:${col}" onclick="dayTap('${iso}')"><i class="mk-d" style="background:${col}"></i>${esc(ev.title)}</button>`;
+          return `<button class="dv-chip${hecho ? ' hecho' : ''}" style="border-left-color:${col}" onclick="dayTap('${iso}')"><i class="mk-d" style="background:${col}"></i>${titEv(ev)}</button>`;
         }).join('')}
       </span>
     </div>` : '';
@@ -4983,7 +5336,7 @@ function renderMes(){
       const hecho = COMPLETED.has(evId(ev));
       const col = safeColor(catColor(ev.type));
       const hora = ev.hora ? `<b>${esc(fmtHora(ev.hora).replace(':00',''))}</b> ` : '';
-      return `<span class="mg-ev${hecho ? ' hecho' : ''}" style="background:${col}24;border-left-color:${col}">${hora}${esc(ev.title)}</span>`;
+      return `<span class="mg-ev${hecho ? ' hecho' : ''}" style="background:${col}24;border-left-color:${col}">${hora}${titEv(ev)}</span>`;
     }).join('');
     const mas = evs.length > 3 ? `<span class="mg-mas">+${evs.length - 3}</span>` : '';
 
@@ -5071,7 +5424,7 @@ function renderLista(){
     : '';
 
   if(!evs.length){
-    el.innerHTML = `${botonPasados}<div class="lista-vacia">No hay nada${listaPasados ? '' : ' por venir'} en ${ANIO}${filtros.size ? ' con ese filtro' : ''}.</div>`;
+    el.innerHTML = `${botonPasados}<div class="lista-vacia">No hay nada${listaPasados ? '' : ' por venir'} en ${ANIO}${hayFiltros() ? ' con ese filtro' : ''}.</div>`;
     return;
   }
 
@@ -5096,7 +5449,7 @@ function renderLista(){
       <button class="lista-ev ${hecho ? 'hecho' : ''}" onclick="verDiaLista('${ev.date}')">
         <i class="lista-barra" style="background:${safeColor(catColor(ev.type))}"></i>
         <span class="lista-cuerpo">
-          <span class="lista-tit">${esc(ev.title)}</span>
+          <span class="lista-tit">${titEv(ev)}</span>
           <span class="lista-meta">
             ${ev.hora ? `<b>${esc(fmtHora(ev.hora))}</b>` : 'Todo el día'}
             · ${esc(catLabel(ev.type))}
@@ -5127,7 +5480,11 @@ function toggleDoneAt(i){
 }
 function startEditAt(i){
   const ev = panelEvents[i];
-  if(ev) startEdit(evId(ev));
+  if(!ev) return;
+  iniciarExtra('ed', ev);
+  remindingId = null;
+  addingHere = false;
+  startEdit(evId(ev));
 }
 function saveEditAt(i){
   const ev = panelEvents[i];
@@ -5163,14 +5520,10 @@ function renderPanelBody(){
     }
 
     if(remindingId === id){
-      const opts = REM_OPCIONES.map(o =>
-        `<option value="${o.v}" ${safeRem(ev.rem) === o.v ? 'selected' : ''}>${o.label}</option>`
-      ).join('');
       return `
         <div class="edit-form">
-          <div class="rem-head">Recordarme…</div>
-          <select id="rmSel">${opts}</select>
-          <div class="rem-note">Los avisos los manda el Calendario de Apple. Después de elegir, exporta desde ⋯</div>
+          <div class="rem-head">Recordarme «${esc(ev.title)}»…</div>
+          <div id="rmRems">${remsFormHTML('rm')}</div>
           <div class="prev-actions">
             <button class="btn" onclick="cancelRem()">Cancelar</button>
             <button class="btn primary" onclick="saveRemAt(${i})">Guardar</button>
@@ -5198,6 +5551,7 @@ function renderPanelBody(){
             <select id="edType" onchange="checkNueva(this,'edNueva')">${typeOptions(ev.type)}</select>
           </label>
           <div id="edNueva"></div>
+          ${camposExtra('ed')}
           <label class="campo">
             <span class="campo-lbl">Lugar (opcional)</span>
             <input type="text" id="edLugar" maxlength="${MAX_LUGAR}" value="${esc(ev.lugar || '')}" placeholder="Salón, dirección…">
@@ -5224,16 +5578,17 @@ function renderPanelBody(){
           <span class="checkbox">${CHECK_SVG}</span>
           <span class="txt">
             <span class="cat"><i class="dot" style="background:${catColor(ev.type)}"></i>${esc(catLabel(ev.type))}${ev.hora ? ` · <b class="hora-tag">${esc(fmtHora(ev.hora))}</b>` : ''}</span>
-            ${esc(ev.title)}
+            ${titEv(ev)}
             ${detallesHTML(ev)}
             ${subsDe(ev).length ? `<span class="prog-tag">${subsHechas(ev)}/${subsDe(ev).length} pasos</span>` : ''}
-            ${safeRem(ev.rem) >= 0 ? `<span class="rem-tag">🔔 ${esc(remLabel(ev.rem))}</span>` : ''}
+            ${remsTexto(ev) ? `<span class="rem-tag">🔔 ${esc(remsTexto(ev))}</span>` : ''}
           </span>
         </button>
+        <button class="fav-btn ${ev.fav ? 'on' : ''}" onclick="toggleFavAt(${i})" aria-label="${ev.fav ? 'Quitar importante' : 'Marcar importante'}" aria-pressed="${ev.fav === true}">${ev.fav ? '★' : '☆'}</button>
         <button class="sub-btn ${subsDe(ev).length ? 'on' : ''}" onclick="toggleSubsAbierto(${i})" aria-label="Pasos">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>
         </button>
-        <button class="bell-btn ${safeRem(ev.rem) >= 0 ? 'on' : ''}" onclick="startRemAt(${i})" aria-label="Recordatorio">
+        <button class="bell-btn ${sanitizeRems(ev).length ? 'on' : ''}" onclick="startRemAt(${i})" aria-label="Recordatorios">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
         </button>
         <button class="edit-btn" onclick="startEditAt(${i})" aria-label="Editar">
@@ -5261,6 +5616,7 @@ function renderPanelBody(){
         <select id="adType" onchange="checkNueva(this,'adNueva')">${typeOptions('otro')}</select>
       </label>
       <div id="adNueva"></div>
+      ${camposExtra('ad')}
       ${camposDetalle('ad')}
       <div class="prev-actions">
         <button class="btn" onclick="cancelAddHere()">Cancelar</button>
@@ -5292,6 +5648,8 @@ function startAddHere(){
   addingHere = true;
   detallesAbiertos = false;
   editingId = null;
+  remindingId = null;
+  iniciarExtra('ad', null);
   renderPanelBody();
   setTimeout(() => { const i = document.getElementById('adTitle'); if(i) i.focus(); }, 60);
 }
@@ -5309,6 +5667,7 @@ async function saveAddHere(){
   addingHere = false;
   detallesAbiertos = false;
   await addEvents([{ date: currentPanelDate, title, type, hora,
+                     rems: leerRems('ad'), remDiario: leerDiario('ad'), fav: favEnForm('ad'),
                      lugar:det.lugar, link:det.link, notas:det.notas, subs:[] }]);
   renderPanelBody();
 }
@@ -6762,7 +7121,7 @@ function mostrarRespuesta(res){
       <button class="resp-row ${done ? 'hecho' : ''}" onclick="verDia('${ev.date}')">
         <i class="dot" style="background:${safeColor(catColor(ev.type))}"></i>
         <span class="when">${cuando}</span>
-        <span class="resp-txt">${esc(ev.title)}${ev.hora ? ` <b class="hora-tag">${esc(fmtHora(ev.hora))}</b>` : ''}</span>
+        <span class="resp-txt">${titEv(ev)}${ev.hora ? ` <b class="hora-tag">${esc(fmtHora(ev.hora))}</b>` : ''}</span>
         <span class="resp-falta">${falta}</span>
       </button>
     `;
@@ -6891,9 +7250,7 @@ function etiquetaMod(tipo, valor){
 
 // Cómo queda cada evento después del cambio
 function aplicarMod(ev, tipo, valor){
-  const nuevo = { date:ev.date, title:ev.title, type:ev.type,
-                  rem:safeRem(ev.rem), hora:safeHora(ev.hora), subs:sanitizeSubs(ev.subs),
-                  link:safeLink(ev.link), notas:ev.notas || '', lugar:ev.lugar || '' };
+  const nuevo = copiaEvento(ev);
   if(tipo === 'nombre') nuevo.title = valor;
   else if(tipo === 'hora') nuevo.hora = safeHora(valor);
   else if(tipo === 'fecha') nuevo.date = valor;
@@ -7072,7 +7429,7 @@ async function confirmarCambio(){
     const id = evId(ev);
     const u = USER_EVENTS.find(x => evId(x) === id);
     if(u) u.type = destino;
-    else USER_EVENTS.push({ date:ev.date, title:ev.title, type:destino, rem:safeRem(ev.rem) });
+    else USER_EVENTS.push(copiaEvento(ev, { type:destino }));
   });
 
   pendingCambio = null;
@@ -7315,11 +7672,11 @@ function uidFor(ev){
 // Con hora: suenan a esa hora. Sin hora (día completo): a las 9:00,
 // que se cuenta como +9 h desde la medianoche.
 function alarmsFor(ev){
-  const n = safeRem(ev.rem);
-  if(n < 0) return [];
+  const dias = diasDeAviso(ev);
+  if(!dias.length) return [];
   const tieneHora = !!safeHora(ev.hora);
   const out = [];
-  for(let d = n; d >= 0; d--){
+  for(const d of dias){
     const horas = tieneHora ? d * 24 : d * 24 - 9;
     const trigger = horas > 0 ? `-PT${horas}H` : (horas === 0 ? 'PT0S' : `PT${-horas}H`);
     out.push(
@@ -7549,7 +7906,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.15';
+const VERSION = '2026.09.25';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -7585,7 +7942,7 @@ async function elegirTema(v){
   aplicarTema();
   // Los días pintados llevan el color en línea: hay que redibujar
   // para que cambien de intensidad con el tema.
-  if(filtros.size > 0 && vista === 'anio') refrescarVista();
+  if(hayFiltros() && vista === 'anio') refrescarVista();
   await writeKey(KEY_TEMA, temaElegido);
 }
 
@@ -7603,7 +7960,7 @@ if(window.matchMedia){
   const alCambiar = () => {
     if(temaElegido !== 'auto') return;
     aplicarTema();
-    if(filtros.size > 0 && vista === 'anio') refrescarVista();
+    if(hayFiltros() && vista === 'anio') refrescarVista();
   };
   if(mq.addEventListener) mq.addEventListener('change', alCambiar);
   else if(mq.addListener) mq.addListener(alCambiar);
@@ -7655,7 +8012,8 @@ function mkC(n, o){
   const est = o.bg ? ` style="background:${o.bg}"` : '';
   const punto = o.dot ? `<i class="mk-d" style="background:${o.dot}"></i>` : '';
   const num = o.num ? `<b>${o.num}</b>` : '';
-  return `<div class="${cls}"${est}><b>${n}</b>${punto}${num}</div>`;
+  const star = o.star ? '<i class="cell-star">★</i>' : '';
+  return `<div class="${cls}"${est}><b>${n}</b>${star}${punto}${num}</div>`;
 }
 function mkSemana(dias){ return `<div class="mk-grid">${dias}</div>`; }
 
@@ -7695,7 +8053,7 @@ const TUTO_PASOS = [
     texto: `
       <p>Cada tarjeta trae <b>doce barritas</b>, una por mes. La altura te dice cuánto tienes ahí, y el color de qué es. Así ves de un vistazo que octubre está apretado sin entrar.</p>
       <p>El año actual va con <b>borde azul</b>. Al abrirlo baja solo al mes en curso.</p>
-      <p>Arriba a la derecha está el <b>engrane ⚙︎</b>: ahí vive todo lo de ajustes, el respaldo y este tutorial.</p>`
+      <p>Arriba a la derecha está la <b>lupa</b> para buscar y el <b>engrane ⚙︎</b>: ahí vive todo lo de ajustes, el respaldo y este tutorial.</p>`
   },
   {
     titulo: 'Cinco formas de ver el año',
@@ -7898,6 +8256,47 @@ const TUTO_PASOS = [
       <p>Puedes combinar varias, y «Ver todo ✕» las quita.</p>`
   },
   {
+    titulo: 'Lo importante, con estrella',
+    sub: 'Para que lo que no puedes olvidar resalte entre todo lo demás.',
+    visual: `
+      <div class="mk-cap">En el día, toca la estrella del evento</div>
+      <div style="border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:12px;display:flex;align-items:center;gap:8px;font-size:0.84rem">
+        <i class="mk-d" style="background:${COL.ex}"></i>
+        <span style="flex:1"><i class="estrella">★</i>Examen final de estructuras</span>
+        <span style="color:var(--estrella);font-size:1.1rem;line-height:1">★</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--line)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      </div>
+      <div class="mk-cap">Y se nota en el calendario</div>
+      ${mkSemana(
+        mkC(14)+mkC(15,{dot:COL.en})+mkC(16,{dot:COL.ex,star:1})+mkC(17)+mkC(18,{dot:COL.ot})+mkC(19,{fin:1})+mkC(20,{fin:1})
+      )}
+      <div class="mk-fila" style="margin-top:12px">
+        <span class="mk-chip on" style="border-color:var(--estrella);background:var(--estrella-bg)"><span style="color:var(--estrella)">★</span>Importantes 3</span>
+        <span class="mk-chip"><i class="mk-d" style="background:${COL.ex}"></i>Examen 5</span>
+      </div>`,
+    texto: `
+      <p>La <b>☆</b> está en cada evento, junto a la campana. Tócala y se vuelve <b>★ dorada</b>. También puedes marcarla al <b>agregar o editar</b>.</p>
+      <p>En <b>Puntos</b> sale una estrellita en la esquina del día; en Mes, Día y Lista, junto al nombre. Cuando lo palomeas, la estrellita del día se quita.</p>
+      <p>Arriba aparece el filtro <b>★ Importantes</b>: te deja solo esos y te lleva al más cercano que falte.</p>`
+  },
+  {
+    titulo: 'Buscar cualquier cosa',
+    sub: 'La lupa busca en todos tus años de un jalón.',
+    visual: `
+      <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--accent);border-radius:10px;padding:9px 11px;margin-bottom:10px;font-size:0.86rem">
+        <span style="color:var(--ink-soft)">🔍</span><span style="flex:1">laminas</span><span style="color:var(--ink-soft)">✕</span>
+      </div>
+      <div class="mk-cap">3 resultados · Próximos</div>
+      <div class="mk-row"><span><b style="font-family:var(--font-mono)">7 oct</b> &nbsp;<i class="mk-d" style="background:${COL.en}"></i> Entrega de láminas</span></div>
+      <div class="mk-row"><span><b style="font-family:var(--font-mono)">21 oct</b> &nbsp;<i class="mk-d" style="background:${COL.en}"></i> Láminas corregidas</span></div>
+      <div class="mk-cap" style="margin-top:8px">Pasados</div>
+      <div class="mk-row" style="opacity:0.6"><span><b style="font-family:var(--font-mono)">2 sep</b> &nbsp;<i class="mk-d" style="background:${COL.en}"></i> <s>Láminas 1er parcial</s></span></div>`,
+    texto: `
+      <p>Busca en el <b>nombre, el lugar, las notas, los pasos y la categoría</b>. No importan acentos ni mayúsculas: «laminas» encuentra «Láminas».</p>
+      <p>Con varias palabras, busca lo que tenga <b>todas</b>: «examen 204» encuentra el examen del salón 204.</p>
+      <p>Tocas un resultado y te lleva a ese día con el evento abierto. Sin escribir nada, la lupa te enseña <b>tus importantes que vienen</b>.</p>`
+  },
+  {
     titulo: 'Marcar hecho y subtareas',
     sub: 'Una entrega no es una casilla, son varios pasos.',
     visual: `
@@ -7924,25 +8323,29 @@ const TUTO_PASOS = [
       <p>Al terminar el último, el evento <b>se marca solo</b>. Y si destachas uno, se desmarca.</p>`
   },
   {
-    titulo: 'Recordatorios',
-    sub: 'Los avisos los manda el Calendario de Apple.',
+    titulo: 'Recordatorios, los que quieras',
+    sub: 'Hasta cuatro avisos por evento. Los manda el Calendario de Apple.',
     visual: `
-      <div class="mk-cap">Eliges cuándo, con la campana</div>
-      <div style="border:1px solid var(--line);border-radius:9px;padding:11px;margin-bottom:12px;font-size:0.82rem">
-        <div class="mk-row"><span>Sin recordatorio</span></div>
-        <div class="mk-row"><span>El mismo día</span></div>
-        <div class="mk-row"><span>1 día antes</span></div>
-        <div class="mk-row" style="color:var(--accent);font-weight:600"><span>7 días antes, y diario</span><span class="mk-tag">✓</span></div>
+      <div class="mk-cap">Con la campana 🔔 eliges uno o varios</div>
+      <div class="rem-chips" style="pointer-events:none;margin-bottom:6px">
+        <span class="rem-chip">El mismo día</span>
+        <span class="rem-chip on">✓ 1 día antes</span>
+        <span class="rem-chip">2 días</span>
+        <span class="rem-chip">3 días</span>
+        <span class="rem-chip on">✓ 1 semana</span>
+        <span class="rem-chip">2 semanas</span>
       </div>
-      <div style="font-size:0.8rem;line-height:1.5">
-        Con «7 días antes» y examen el 15:<br>
-        <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--accent)">8 · 9 · 10 · 11 · 12 · 13 · 14 · 15 de octubre</span><br>
-        <span style="color:var(--ink-soft);font-size:0.78rem">Después ya no suena.</span>
+      <div class="rem-diario" style="pointer-events:none"><span class="rem-caja"></span> Y avisarme diario hasta el día</div>
+      <div style="font-size:0.8rem;line-height:1.5;margin-top:8px">
+        Examen el 15, con «1 semana» y «1 día antes»:<br>
+        <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--accent)">8 · 14 de octubre</span><br>
+        Si además prendes <b>diario</b>:<br>
+        <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--accent)">8 · 9 · 10 · 11 · 12 · 13 · 14 · 15 de octubre</span>
       </div>`,
     texto: `
-      <p><b>El paso que no te puedes saltar:</b> después de poner los recordatorios, ve a <b>⚙︎ → Exportar eventos</b> y mándalos a la app Calendario. Sin eso no suena nada.</p>
-      <p>Si el evento tiene hora, el aviso llega a esa hora. Si no, a las 9:00 de la mañana.</p>
-      <p>Exporta solo desde un dispositivo: iCloud lo pasa a los demás.</p>`
+      <p>Los eliges con la <b>campana</b> del evento, o desde que lo <b>agregas o editas</b>. Debajo del nombre se ve cuáles tiene: «🔔 1 semana antes · 1 día antes».</p>
+      <p><b>El paso que no te puedes saltar:</b> después de ponerlos, ve a <b>⚙︎ → Exportar eventos</b> y mándalos a la app Calendario. Sin eso no suena nada.</p>
+      <p>Si el evento tiene hora, el aviso llega a esa hora; si no, a las 9:00. Tus recordatorios de antes siguen igual. Exporta solo desde un dispositivo: iCloud lo pasa a los demás.</p>`
   },
   {
     titulo: 'Mapa de carga',
@@ -8219,12 +8622,12 @@ async function init(){
     ANIO = Math.min(Math.max(anioDeHoy(), ANIO_MIN), ANIO_MAX);
     renderVista();
     if(vista === 'anio') irAlMesDeHoy(true);
-    const note = document.getElementById('emptyNote');
-    if(note && EVENTS.length > 0) note.remove();
   }catch(e){
     console.error('Error al dibujar:', e);
   }
 
+  arranqueListo = true;
+  cerrarRescate();
   quitarCargando();
   if(!cargoBien) avisoCarga();
 
@@ -8250,25 +8653,174 @@ function avisoCarga(){
   const el = document.createElement('div');
   el.id = 'avisoCarga';
   el.className = 'storage-notice';
-  el.textContent = 'No se pudieron leer los datos de este dispositivo. Si tienes cuenta, tus eventos siguen en la nube: entra en ⋯ → Sincronizar ahora.';
+  el.textContent = 'No se pudieron leer los datos de este dispositivo. Si tienes cuenta, tus eventos siguen en la nube: entra en ⚙︎ → Sincronizar ahora.';
   const barra = document.getElementById('barra');
   if(barra) barra.parentNode.insertBefore(el, barra);
 }
 
-// Si el arranque truena por completo, se avisa en vez de dejar
-// un calendario vacío que parece que perdió todo.
+// ══════════════════════════════════════════════════════════════
+// BUSCAR POR TEXTO
+// Busca en todos los años a la vez: nombre, lugar, notas, categoría
+// y pasos. No distingue acentos ni mayúsculas ("examen" encuentra
+// "Exámen"), y con varias palabras pide que estén todas.
+// Sin nada escrito muestra tus importantes que vienen.
+// ══════════════════════════════════════════════════════════════
+const MAX_RESULTADOS = 80;
+let busqRes = [];
+
+function normalizar(t){
+  return String(t || '').toLowerCase().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+}
+function textoBuscable(ev){
+  const pasos = subsDe(ev).map(x => x.t || '').join(' ');
+  return normalizar([ev.title, ev.lugar, ev.notas, catLabel(ev.type), pasos].join(' '));
+}
+
+// Próximos primero (del más cercano al más lejano), luego lo pasado
+// (del más reciente al más viejo).
+function buscarTexto(q){
+  const palabras = normalizar(limpiarTexto(q, 60)).split(' ').filter(Boolean);
+  const hoy = todayISO();
+  let lista;
+  if(!palabras.length){
+    lista = EVENTS.filter(ev => ev.fav === true && ev.date >= hoy);
+  }else{
+    lista = EVENTS.filter(ev => {
+      const t = textoBuscable(ev);
+      return palabras.every(p => t.includes(p));
+    });
+  }
+  const futuros = lista.filter(e => e.date >= hoy).sort((a,b) => a.date.localeCompare(b.date));
+  const pasados = lista.filter(e => e.date < hoy).sort((a,b) => b.date.localeCompare(a.date));
+  return { futuros, pasados, total: lista.length, vacia: !palabras.length };
+}
+
+function filaResultado(ev, idx){
+  const col = safeColor(catColor(ev.type));
+  const hecho = COMPLETED.has(evId(ev));
+  const d = parseISO(ev.date);
+  const dia = WEEKDAYS_FULL[(d.getDay() + 6) % 7].slice(0,3);
+  const extra = [catLabel(ev.type), ev.hora ? fmtHora(ev.hora) : '', ev.lugar || ''].filter(Boolean).join(' · ');
+  return `
+    <button class="br-fila${hecho ? ' hecho' : ''}" onclick="abrirResultado(${idx})">
+      <span class="br-fecha"><b>${d.getDate()}</b>${MONTHS_ES[d.getMonth()].slice(0,3)} ${d.getFullYear()}<i>${dia}</i></span>
+      <span class="br-txt">
+        <span class="br-tit"><i class="dot" style="background:${col}"></i>${titEv(ev)}</span>
+        <span class="br-extra">${hecho ? '✓ Hecho · ' : ''}${esc(extra)}</span>
+      </span>
+    </button>`;
+}
+
+function renderBusqueda(){
+  const inp = document.getElementById('buscarInput');
+  const el = document.getElementById('buscarRes');
+  if(!inp || !el) return;
+  const q = inp.value;
+  const borrar = document.getElementById('buscarBorrar');
+  if(borrar) borrar.style.display = q ? '' : 'none';
+
+  const { futuros, pasados, total, vacia } = buscarTexto(q);
+  busqRes = futuros.concat(pasados).slice(0, MAX_RESULTADOS);
+  const nFut = Math.min(futuros.length, busqRes.length);
+
+  if(vacia){
+    el.innerHTML = futuros.length
+      ? `<div class="br-sec">★ Tus importantes que vienen</div>` + busqRes.map(filaResultado).join('')
+      : `<div class="br-vacio">Escribe para buscar en todos tus años.<br>Toca la ☆ de un evento para que aparezca aquí.</div>`;
+    return;
+  }
+  if(!total){
+    el.innerHTML = `<div class="br-vacio">No encontré nada con «${esc(limpiarTexto(q, 60))}».</div>`;
+    return;
+  }
+  let html = `<div class="br-cuenta">${total === 1 ? '1 resultado' : total + ' resultados'}${total > MAX_RESULTADOS ? ` · se muestran ${MAX_RESULTADOS}` : ''}</div>`;
+  if(nFut) html += `<div class="br-sec">Próximos</div>` + busqRes.slice(0, nFut).map((ev, i) => filaResultado(ev, i)).join('');
+  if(busqRes.length > nFut) html += `<div class="br-sec">Pasados</div>` + busqRes.slice(nFut).map((ev, i) => filaResultado(ev, nFut + i)).join('');
+  el.innerHTML = html;
+}
+
+function abrirBuscar(){
+  const inp = document.getElementById('buscarInput');
+  if(inp) inp.value = '';
+  renderBusqueda();
+  document.getElementById('buscarSheet').classList.add('open');
+  document.getElementById('buscarOverlay').classList.add('open');
+  setTimeout(() => { const i = document.getElementById('buscarInput'); if(i) i.focus(); }, 250);
+}
+function cerrarBuscar(){
+  document.getElementById('buscarSheet').classList.remove('open');
+  document.getElementById('buscarOverlay').classList.remove('open');
+  const inp = document.getElementById('buscarInput');
+  if(inp) inp.blur();
+}
+function abrirResultado(i){
+  const ev = busqRes[i];
+  if(!ev) return;
+  cerrarBuscar();
+  if(selectMode) toggleSelectMode();
+  // si un filtro lo esconde, se quita para que sí lo veas
+  if(hayFiltros() && !eventosVisibles().some(e => evId(e) === evId(ev))) limpiarFiltros();
+  irAFecha(ev.date);
+  openPanel(ev.date);
+}
+
+document.getElementById('buscarBtn').addEventListener('click', abrirBuscar);
+document.getElementById('buscarClose').addEventListener('click', cerrarBuscar);
+document.getElementById('buscarOverlay').addEventListener('click', cerrarBuscar);
+document.getElementById('buscarInput').addEventListener('input', renderBusqueda);
+document.getElementById('buscarInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); if(busqRes.length === 1) abrirResultado(0); else e.target.blur(); }
+});
+document.getElementById('buscarBorrar').addEventListener('click', () => {
+  const inp = document.getElementById('buscarInput');
+  inp.value = '';
+  renderBusqueda();
+  inp.focus();
+});
+
+// ---------- Pantalla de rescate ----------
+// Si el arranque se atora del todo, en vez de dejar un calendario
+// vacío (que parece que perdió todo) se ofrecen las tres salidas.
+let arranqueListo = false;
+
+function mostrarRescate(motivo){
+  const el = document.getElementById('rescate');
+  if(!el || el.classList.contains('show')) return;
+  const txt = document.getElementById('rescateTxt');
+  if(txt && motivo) txt.textContent = motivo;
+  el.classList.add('show');
+}
+function cerrarRescate(){
+  const el = document.getElementById('rescate');
+  if(el) el.classList.remove('show');
+}
+function entrarDeNuevo(){
+  cerrarRescate();
+  quitarCargando();
+  mostrarGate();
+  authMsg('Entra con tu cuenta para recuperar tus eventos.', '');
+}
+
 // Red de seguridad: pase lo que pase, la pantalla de carga se va
-setTimeout(quitarCargando, 9000);
+setTimeout(() => {
+  quitarCargando();
+  if(!arranqueListo) mostrarRescate();
+}, 9000);
 
 init().catch(err => {
   console.error('Fallo al arrancar:', err);
   quitarCargando();
-  if(syncEnabled()) mostrarGate();
   setSyncState('error');
-  const m = document.getElementById('authMsg');
-  if(m){
-    m.className = 'auth-msg err';
-    m.textContent = 'Hubo un problema al abrir. Entra con tu cuenta para recuperar tus eventos.';
+  if(syncEnabled()){
+    mostrarGate();
+    const m = document.getElementById('authMsg');
+    if(m){
+      m.className = 'auth-msg err';
+      m.textContent = 'Hubo un problema al abrir. Entra con tu cuenta para recuperar tus eventos.';
+    }
+  }else{
+    mostrarRescate('Algo se atoró al arrancar. Lo guardado en este dispositivo sigue ahí.');
   }
 });
 </script>
