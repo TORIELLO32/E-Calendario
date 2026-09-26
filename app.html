@@ -8695,7 +8695,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.26';
+const VERSION = '2026.09.26b';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -9157,7 +9157,7 @@ const TUTO_PASOS = [
     texto: `
       <p>Los eliges con la <b>campana</b> del evento, o desde que lo <b>agregas o editas</b>. Debajo del nombre se ve cuáles tiene: «🔔 1 semana antes · 1 día antes».</p>
       <p>Para que suenen, activa una vez las <b>notificaciones</b> en ⚙︎ (el paso siguiente te dice cómo). Desde ahí te llegan solas.</p>
-      <p>Si el evento tiene hora, llega a esa hora y también una hora antes. Si es de todo el día, el mismo día te llega cada hora de 9 AM a 9 PM hasta que lo palomees.</p>`
+      <p>Si el evento tiene hora, llega a esa hora y también una hora antes. Si es de todo el día, el mismo día te llega cada hora, desde las 12 AM, hasta que lo palomees.</p>`
   },
   {
     titulo: 'Notificaciones en el teléfono',
@@ -9179,7 +9179,8 @@ const TUTO_PASOS = [
     texto: `
       <p>Llegan <b>con la app cerrada</b>, y al tocarla se abre ese día.</p>
       <p><b>Con hora</b> (ej. 4:00 PM): a las 4:00 de cada día que elegiste, y además <b>una hora antes</b>, a las 3:00.</p>
-      <p><b>De todo el día</b>: el mismo día te llega <b>cada hora de 9 AM a 9 PM</b>. Los de días antes («1 día antes», «1 semana antes») llegan una vez a las 9 AM.</p>
+      <p><b>De todo el día</b>: el mismo día te llega <b>cada hora, desde las 12 AM hasta las 11 PM</b>. Los de días antes («1 día antes», «1 semana antes») llegan una vez a las 9 AM.</p>
+      <p>Si no quieres que suenen en la noche, usa el modo <b>Dormir</b> o <b>No molestar</b> del iPhone: llegan en silencio y las ves al despertar.</p>
       <p>En cuanto lo <b>palomeas</b>, dejan de llegar. Si cambias la fecha o los avisos, se ajusta solo.</p>
       <p>En iPhone solo funcionan desde el ícono de la pantalla de inicio (no desde Safari) y con iOS 16.4 o más nuevo. Actívalas en cada teléfono o iPad donde las quieras.</p>`
   },
@@ -9780,7 +9781,7 @@ async function pintarPush(){
   const sub = await suscripcionActual();
   if(sub && Notification.permission === 'granted'){
     marcarPush(true);
-    poner('<b>Activadas en este dispositivo.</b> Te llegan aunque la app esté cerrada. Con hora: a esa hora y una hora antes. De todo el día: cada hora de 9 AM a 9 PM, hasta que lo palomees.',
+    poner('<b>Activadas en este dispositivo.</b> Te llegan aunque la app esté cerrada. Con hora: a esa hora y una hora antes. De todo el día: cada hora, desde las 12 AM, hasta que lo palomees.',
       `<button class="btn" onclick="probarPush()">Mandar una de prueba</button>
        <button class="btn" onclick="desactivarPush()">Desactivar</button>`, 'ok');
     return;
