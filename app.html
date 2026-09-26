@@ -3427,10 +3427,12 @@ function sanitizeIds(arr){
 }
 
 function applySnapshot(o){
+  // Las categorías PRIMERO: si los eventos se revisan antes, los de
+  // una categoría tuya todavía no la "conocen" y caían en Otro.
+  CAT_MIAS = sanitizeCats(o.categorias);
   USER_EVENTS = sanitizeList(o.eventos);
   COMPLETED = new Set(sanitizeIds(o.completados));
   DELETED = new Set(sanitizeIds(o.eliminados));
-  CAT_MIAS = sanitizeCats(o.categorias);
   localStamp = numeroSeguro(o.stamp, 0);
 }
 
@@ -3462,7 +3464,11 @@ async function syncPull(){
     if(rows.length && rows[0].datos){
       const remote = rows[0].datos;
       const remoteStamp = remote.stamp || 0;
-      if(remoteStamp > localStamp){
+      // Con la MISMA versión también se toma la de la nube: así un
+      // dispositivo que se guardó mal (p. ej. categorías en Otro) se
+      // repara solo. Un cambio local siempre sube el sello, así que
+      // esto nunca pisa algo tuyo sin subir.
+      if(remoteStamp >= localStamp && remoteStamp > 0){
         applySnapshot(remote);
         await saveEventos();
         await saveEstado();
@@ -3530,7 +3536,12 @@ function evId(ev){ return ev.date + '|' + ev.title; }
 // El tipo solo puede ser una categoría existente (de fábrica o tuya).
 // Si llega cualquier otra cosa (de la nube o de un respaldo), pasa a "Otro".
 function safeType(t){
-  return categorias().some(k => k.id === t) ? t : 'otro';
+  if(categorias().some(k => k.id === t)) return t;
+  // Una categoría tuya que este dispositivo todavía no conoce (por
+  // ejemplo, recién instalado) se conserva tal cual en vez de pasar a
+  // Otro. Mientras no llegue, se ve gris; en cuanto llega, se pinta.
+  if(typeof t === 'string' && /^c_[a-z0-9]{1,20}$/.test(t)) return t;
+  return 'otro';
 }
 
 function hasClaudeStorage(){
@@ -8600,7 +8611,11 @@ async function restoreBackup(){
     return;
   }
 
-  // Se combina con lo que ya hay, no se borra nada
+  // Se combina con lo que ya hay, no se borra nada.
+  // Las categorías van primero, por lo mismo que en applySnapshot.
+  sanitizeCats(o.categorias).forEach(k => {
+    if(!CAT_MIAS.some(x => x.id === k.id)) CAT_MIAS.push(k);
+  });
   let nuevos = 0;
   sanitizeList(o.eventos).forEach(ev => {
     const id = evId(ev);
@@ -8610,9 +8625,6 @@ async function restoreBackup(){
   });
   sanitizeIds(o.completados).forEach(id => COMPLETED.add(id));
   sanitizeIds(o.eliminados).forEach(id => DELETED.add(id));
-  sanitizeCats(o.categorias).forEach(k => {
-    if(!CAT_MIAS.some(x => x.id === k.id)) CAT_MIAS.push(k);
-  });
 
   renderAll();
   await markChanged();
@@ -8683,7 +8695,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.25c';
+const VERSION = '2026.09.25d';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
