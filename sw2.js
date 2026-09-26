@@ -15,7 +15,7 @@
 // app "bajaba de versión" sola.
 // ══════════════════════════════════════════════════════════════
 
-const VERSION  = 'cal-2026-09-26b';
+const VERSION  = 'cal-2026-09-26c';
 const CACHE    = 'calendario-' + VERSION;
 const ARCHIVOS = ['./', './index.html', './app.html', './icon.png', './icon-192.png', './icon-512.png', './manifest.json'];
 const ESPERA   = 4000;
@@ -159,14 +159,19 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = (e.notification.data && e.notification.data.url) || self.registration.scope;
-  let dia = null;
-  try{ dia = new URL(url).searchParams.get('dia'); }catch(err){}
+  let dia = null, lista = null;
+  try{
+    const q = new URL(url).searchParams;
+    dia = q.get('dia');
+    lista = q.get('lista');
+  }catch(err){}
   e.waitUntil((async () => {
     const abiertas = await self.clients.matchAll({ type:'window', includeUncontrolled:true });
     for(const c of abiertas){
       if(c.url.startsWith(self.registration.scope)){
         try{ await c.focus(); }catch(err){}
         if(dia) c.postMessage({ tipo:'abrir-dia', fecha: dia });
+        else if(lista) c.postMessage({ tipo:'abrir-lista', id: lista });
         return;
       }
     }

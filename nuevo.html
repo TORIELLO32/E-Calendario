@@ -1138,6 +1138,7 @@
   .vistas[data-actual="semana"] .vista-btn[data-v="semana"],
   .vistas[data-actual="dia"]    .vista-btn[data-v="dia"],
   .vistas[data-actual="lista"]  .vista-btn[data-v="lista"],
+  .vistas[data-actual="listas"] .vista-btn[data-v="listas"],
   .vista-btn.on{
     background:var(--paper-card);
     color:var(--accent);
@@ -2294,6 +2295,81 @@
   .rem-diario.on{color:var(--ink);}
   .rem-diario.on .rem-caja{background:var(--accent);border-color:var(--accent);}
 
+  /* ══════════ Listas ══════════ */
+  .vistas .vista-btn{padding:6px 2px;font-size:0.68rem;}
+  .barra.en-listas .legend-wrap,
+  .barra.en-listas .barra-hoy,
+  .barra.en-listas #filtroVacio{display:none;}
+  #listasVista{padding:4px 0 90px;}
+  .ls-nueva{width:100%;margin:4px 0 12px;}
+  .ls-grid{display:flex;flex-direction:column;gap:9px;}
+  .ls-card{
+    display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;font:inherit;color:var(--ink);
+    background:var(--paper-card);border:1px solid var(--line-soft);border-radius:12px;padding:12px 13px;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .ls-card:active{transform:scale(0.99);}
+  .ls-card.completa{opacity:0.62;}
+  .ls-emoji{font-size:1.6rem;line-height:1;flex:none;margin-top:1px;}
+  .ls-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+  .ls-nombre{font-weight:700;font-size:0.98rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ls-cuenta{font-size:0.74rem;color:var(--ink-soft);}
+  .ls-barra{display:block;height:5px;border-radius:3px;background:var(--line-soft);overflow:hidden;}
+  .ls-barra i{display:block;height:100%;background:var(--accent);border-radius:3px;}
+  .ls-chips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px;}
+  .ls-chip{
+    font:inherit;font-size:0.7rem;color:var(--ink-soft);background:var(--paper-alt);border:none;border-radius:10px;
+    padding:3px 8px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  button.ls-chip{cursor:pointer;color:var(--accent);}
+  .ls-chip.grande{font-size:0.78rem;padding:5px 10px;border:1px solid var(--line-soft);background:var(--paper-card);}
+  .ls-en-dia{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 10px 40px;}
+  .ls-vacio{text-align:center;color:var(--ink-soft);font-size:0.86rem;line-height:1.55;padding:18px 6px;}
+  .ls-vacio-tit{font-weight:700;color:var(--ink);font-size:1.02rem;margin-bottom:4px;}
+  .ls-vacio-nota{font-size:0.78rem;color:var(--ink-soft);margin-top:14px;text-align:center;}
+  .ls-plantillas{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0 4px;}
+  .ls-form .ls-plantillas{justify-content:flex-start;margin:4px 0 10px;}
+  .ls-tpl{
+    font:inherit;font-size:0.8rem;padding:7px 11px;border-radius:16px;cursor:pointer;
+    border:1px solid var(--line-soft);background:var(--paper-card);color:var(--ink);
+  }
+  .ls-tpl b{font-weight:600;color:var(--ink-soft);font-size:0.72rem;margin-left:2px;}
+  .ls-tpl.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600;}
+  .ls-emojis{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 10px;}
+  .ls-emo{
+    width:38px;height:38px;font-size:1.25rem;border-radius:9px;border:1px solid var(--line-soft);
+    background:var(--paper-card);cursor:pointer;padding:0;line-height:1;
+  }
+  .ls-emo.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent);}
+  .ls-cabeza{display:flex;align-items:center;gap:8px;margin:2px 0 8px;}
+  .ls-titulo{flex:1;min-width:0;font-weight:700;font-size:1.12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ls-cabeza .icon-btn{width:36px;height:36px;flex:none;}
+  .ls-cabeza .icon-btn.active{color:var(--accent) !important;border-color:var(--accent) !important;background:var(--accent-soft) !important;}
+  .ls-progreso{display:flex;flex-direction:column;gap:5px;font-size:0.76rem;color:var(--ink-soft);margin-bottom:10px;}
+  .ls-agregar{display:flex;gap:7px;margin:4px 0 10px;}
+  .ls-agregar input{
+    flex:1;min-width:0;margin:0 !important;font:inherit;font-size:16px;color:var(--ink);
+    background:var(--paper-card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;
+  }
+  .ls-agregar input:focus{border-color:var(--accent);}
+  .ls-agregar .btn{flex:none;width:46px;font-size:1.2rem;padding:0;}
+  .ls-tipico{width:100%;margin-bottom:10px;}
+  .ls-items{display:flex;flex-direction:column;}
+  .ls-item{display:flex;align-items:stretch;border-bottom:1px solid var(--line-soft);}
+  .ls-check{
+    flex:1;min-width:0;display:flex;align-items:center;gap:11px;text-align:left;font:inherit;font-size:0.95rem;
+    background:none;border:none;color:var(--ink);padding:11px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .ls-txt{flex:1;min-width:0;overflow-wrap:anywhere;}
+  .ls-item.hecho .ls-txt{text-decoration:line-through;color:var(--ink-soft);}
+  .ls-item.hecho .checkbox{background:var(--accent);border-color:var(--accent);}
+  .ls-item.hecho .checkbox svg{opacity:1;}
+  .ls-sec{font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);margin:16px 2px 2px;}
+  .ls-acciones{margin-top:12px;}
+  .ls-repetir{display:flex;align-items:center;gap:8px;font-size:0.84rem;margin:2px 0 6px;}
+  .ls-repetir input{width:18px;height:18px;margin:0;}
+  .ls-borrar{width:100%;margin-top:12px;color:var(--examen);}
+
   /* ══════════ Notificaciones ══════════ */
   #pushBtns:empty,#pushMsg:empty{display:none;}
   #pushTxt b{color:var(--ink);}
@@ -2387,8 +2463,9 @@
       <button type="button" class="vista-btn" data-v="mes" aria-pressed="false">Mes</button>
       <button type="button" class="vista-btn" data-v="semana" aria-pressed="false">Semana</button>
       <button type="button" class="vista-btn" data-v="dia" aria-pressed="false">Día</button>
-      <button type="button" class="vista-btn" data-v="lista" aria-pressed="false">Lista</button>
+      <button type="button" class="vista-btn" data-v="lista" aria-pressed="false">Agenda</button>
       <button type="button" class="vista-btn on" data-v="puntos" aria-pressed="true">Puntos</button>
+      <button type="button" class="vista-btn" data-v="listas" aria-pressed="false">Listas</button>
     </div>
     <div class="legend-wrap" id="legendWrap">
       <div class="legend"></div>
@@ -2407,6 +2484,7 @@
   <main id="diaVista" style="display:none"></main>
   <main id="semanaVista" style="display:none"></main>
   <main id="listaVista" style="display:none"></main>
+  <main id="listasVista" style="display:none"></main>
 </div>
 
 <div class="overlay" id="overlay"></div>
@@ -2460,6 +2538,9 @@
     <button class="ex-chip">¿De qué me vas a avisar esta semana?</button>
     <button class="ex-chip">Muéstrame solo los importantes</button>
     <button class="ex-chip">Busca láminas</button>
+    <button class="ex-chip">Agrega leche y huevos al súper</button>
+    <button class="ex-chip">¿Qué me falta del súper?</button>
+    <button class="ex-chip">Haz una lista para el viaje con pasaporte y cargador</button>
     <button class="ex-chip">Ayuda</button>
   </div>
 
@@ -3069,6 +3150,7 @@ function snapshot(){
     completados: [...COMPLETED],
     eliminados: [...DELETED],
     categorias: CAT_MIAS,
+    listas: LISTAS,
     stamp: localStamp,
   };
 }
@@ -3433,6 +3515,9 @@ function applySnapshot(o){
   USER_EVENTS = sanitizeList(o.eventos);
   COMPLETED = new Set(sanitizeIds(o.completados));
   DELETED = new Set(sanitizeIds(o.eliminados));
+  // Un dispositivo con la versión anterior no conoce las listas: si lo
+  // que llega no las trae, se conservan las de aquí (y se vuelven a subir).
+  if(Array.isArray(o.listas)) LISTAS = sanitizeListas(o.listas);
   localStamp = numeroSeguro(o.stamp, 0);
 }
 
@@ -3619,6 +3704,7 @@ async function loadAll(){
       COMPLETED = new Set(sanitizeIds(o.completados));
       DELETED = new Set(sanitizeIds(o.eliminados));
       CAT_MIAS = sanitizeCats(o.categorias);
+      LISTAS = sanitizeListas(o.listas);
       localStamp = numeroSeguro(o.stamp, localStamp);
     }catch(e){}
   }
@@ -3635,6 +3721,7 @@ async function saveEstado(){
     completados: [...COMPLETED],
     eliminados: [...DELETED],
     categorias: CAT_MIAS,
+    listas: LISTAS,
     stamp: localStamp,
   }));
 }
@@ -3798,6 +3885,7 @@ async function saveEdit(oldId){
     rems: leerRems('ed'), remDiario: leerDiario('ed'), fav: favEnForm('ed'),
   });
   const newId = evId(nuevo);
+  moverLigaListas(oldId, newId);
 
   // Se retira el original y se guarda la versión editada
   DELETED.add(oldId);
@@ -4514,6 +4602,7 @@ function renderVista(){
   const enDia   = enAnio && vistaTipo === 'dia';
   const enSem   = enAnio && vistaTipo === 'semana';
   const enMeses = enAnio && vistaTipo === 'puntos';
+  const enListas = enAnio && vistaTipo === 'listas';
 
   // 1. Botones de vista: siempre desde el estado
   pintarVistas();
@@ -4526,6 +4615,7 @@ function renderVista(){
     diaVista:  enDia,
     semanaVista: enSem,
     listaVista:enLista,
+    listasVista:enListas,
   };
   Object.keys(mostrar).forEach(id => {
     const el = document.getElementById(id);
@@ -4551,6 +4641,7 @@ function renderVista(){
   // 5. Encabezados
   const barra = document.getElementById('barra');
   if(barra) barra.classList.toggle('en-anios', !enAnio);
+  if(barra) barra.classList.toggle('en-listas', enListas);
   const bAnio = document.getElementById('barraAnio');
   if(bAnio) bAnio.textContent = enAnio ? ANIO : `${ANIO_MIN}–${ANIO_MAX}`;
   const bMes = document.getElementById('barraMes');
@@ -4561,6 +4652,7 @@ function renderVista(){
   try{
     if(!enAnio) renderYears();
     else if(enLista) renderLista();
+    else if(enListas) renderListas();
     else if(enMes) renderMes();
     else if(enDia) renderDia();
     else if(enSem) renderSemana();
@@ -4571,7 +4663,7 @@ function renderVista(){
   }catch(e){
     console.error('Error al dibujar la vista:', e);
     // Antes esto dejaba la pantalla en blanco sin decir nada.
-    const destino = enLista ? 'listaVista' : (enMes ? 'mesVista' : (enDia ? 'diaVista' : (enSem ? 'semanaVista' : null)));
+    const destino = enListas ? 'listasVista' : enLista ? 'listaVista' : (enMes ? 'mesVista' : (enDia ? 'diaVista' : (enSem ? 'semanaVista' : null)));
     const el = destino && document.getElementById(destino);
     if(el) el.innerHTML = `<div class="lista-vacia">No se pudo dibujar esta vista.<br>
       Prueba con otra desde los botones de arriba.<br>
@@ -4931,7 +5023,7 @@ function toggleCarga(){
 // prefieres, por dispositivo.
 // ══════════════════════════════════════════════════════════════
 const KEY_VISTA = 'semestre2026:vista';
-const VISTAS_OK = ['mes','semana','dia','lista','puntos'];
+const VISTAS_OK = ['mes','semana','dia','lista','puntos','listas'];
 let vistaTipo = 'puntos';
 
 // Los botones se pintan SIEMPRE desde vistaTipo, nunca a mano.
@@ -4955,7 +5047,7 @@ let repintando = false;
 function forzarRepintado(){
   if(repintando) return;
   repintando = true;
-  ['barra','years','months','mesVista','semanaVista','diaVista','listaVista'].forEach(id => {
+  ['barra','years','months','mesVista','semanaVista','diaVista','listaVista','listasVista'].forEach(id => {
     const el = document.getElementById(id);
     if(!el || el.style.display === 'none') return;
     // Leer una medida obliga al navegador a recalcular ya
@@ -4963,7 +5055,7 @@ function forzarRepintado(){
     el.style.transform = 'translateZ(0)';
   });
   requestAnimationFrame(() => {
-    ['barra','years','months','mesVista','semanaVista','diaVista','listaVista'].forEach(id => {
+    ['barra','years','months','mesVista','semanaVista','diaVista','listaVista','listasVista'].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.style.transform = '';
     });
@@ -4996,7 +5088,7 @@ async function elegirVista(v){
 
   renderVista();          // renderVista ya repinta los botones
 
-  const destino = { puntos:'months', mes:'mesVista', semana:'semanaVista', dia:'diaVista', lista:'listaVista' }[v];
+  const destino = { puntos:'months', mes:'mesVista', semana:'semanaVista', dia:'diaVista', lista:'listaVista', listas:'listasVista' }[v];
   repintarBloque(destino);
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -5025,6 +5117,7 @@ function refrescarVista(){
   if(vista !== 'anio'){ renderYears(); return; }
   try{
     if(vistaTipo === 'lista') renderLista();
+    else if(vistaTipo === 'listas') renderListas();
     else if(vistaTipo === 'mes') renderMes();
     else if(vistaTipo === 'dia') renderDia();
     else if(vistaTipo === 'semana') renderSemana();
@@ -5647,6 +5740,7 @@ function renderPanelBody(){
         <button class="del-btn" onclick="pedirBorrar(${i})" aria-label="Borrar">&times;</button>
       </div>
       ${subsHTML(ev, i)}
+      ${listasDeEventoHTML(ev)}
     `;
   }).join('');
 
@@ -7492,6 +7586,7 @@ async function confirmarMod(){
     const idViejo = evId(viejo);
     const idNuevo = evId(nuevo);
     const estabaHecho = COMPLETED.has(idViejo);
+    moverLigaListas(idViejo, idNuevo);
 
     // Fuera el viejo
     USER_EVENTS = USER_EVENTS.filter(x => evId(x) !== idViejo);
@@ -8173,6 +8268,7 @@ function ayudaAgente(){
       <div class="agent-msg"><b>Editar</b>: “cambia la hora del gym a las 7 am”, “mueve el examen del 15 al 20”, “recorre las prácticas una semana”, “cambia los partidos a Deporte”.</div>
       <div class="agent-msg"><b>Quitar</b>: “quítame la creatina”, “borra todo del 20 de octubre”.</div>
       <div class="agent-msg"><b>Preguntar</b>: “¿qué tengo esta semana?”, “¿cuándo es el examen de estructuras?”, “¿qué es importante este mes?”, “¿de qué me vas a avisar?”.</div>
+      <div class="agent-msg"><b>Listas</b>: “agrega leche y huevos al súper”, “ya compré el pan”, “¿qué me falta de la maleta?”, “haz una lista para la fiesta con carne y hielo”, “recuérdame la lista del súper cada sábado a las 10”.</div>
       <div class="agent-msg"><b>Pantalla</b>: “busca láminas”, “muéstrame solo los importantes”, “quita los filtros”.</div>
     </div>`;
 }
@@ -8205,6 +8301,402 @@ function ejecutarPantalla(p){
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// LISTAS CON EL ASISTENTE
+// "agrega leche y huevos al súper", "ya compré el pan",
+// "¿qué me falta de la maleta?", "haz una lista para la fiesta"
+// ══════════════════════════════════════════════════════════════
+let deshacerListas = null;      // copia de LISTAS antes del último cambio
+let pendingListaAccion = null;  // { tipo:'borrar'|'vaciar', id }
+
+function nombreListaNorm(l){
+  return normalize(l.nombre).replace(/[^a-z0-9ñ ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function limpiarRefLista(txt){
+  let t = normalize(String(txt || '')).replace(/[¿?¡!.,;:]/g, ' ').replace(/\s+/g, ' ').trim();
+  for(let i = 0; i < 4; i++){
+    const antes = t;
+    t = t.replace(/^(?:a|al|en|de|del|para|la|el|mi|mis|las|los|lo|tu)\s+/, '')
+         .replace(/^lista(?:s)?(?:\s+(?:de|del|para|llamada))?\s+/, '')
+         .replace(/^lista(?:s)?$/, '');
+    if(t === antes) break;
+  }
+  return t.trim();
+}
+// Encuentra la lista que se nombra: "el súper", "la lista de la maleta", "mandado"
+function buscarListaPorTexto(txt){
+  const t = limpiarRefLista(txt);
+  if(!t || !LISTAS.length) return null;
+  let l = LISTAS.find(x => nombreListaNorm(x) === t);
+  if(l) return l;
+  const b = palabrasClave(t);
+  if(b.length){
+    const cand = LISTAS.filter(x => {
+      const a = palabrasClave(x.nombre);
+      return a.length && (b.every(w => a.includes(w)) || a.every(w => b.includes(w)));
+    });
+    if(cand.length) return cand.sort((x, y) => y.creada - x.creada)[0];
+  }
+  const conEspacios = ' ' + t + ' ';
+  for(const p of PLANTILLAS_LISTA){
+    if(!p.alias || !p.alias.some(a => conEspacios.includes(' ' + a + ' '))) continue;
+    const x = LISTAS.filter(q => q.tpl === p.id).sort((a2, b2) => b2.creada - a2.creada)[0];
+    if(x) return x;
+  }
+  return null;
+}
+function prefijoEsDeLista(pref, l){
+  const b = palabrasClave(limpiarRefLista(pref));
+  const tpl = PLANTILLAS_LISTA.find(p => p.id === l.tpl);
+  const a = palabrasClave(l.nombre).concat(tpl && tpl.alias ? tpl.alias.flatMap(x => palabrasClave(x)) : []);
+  return b.length > 0 && b.every(w => a.includes(w));
+}
+function plantillaPorNombre(txt){
+  const t = ' ' + limpiarRefLista(txt) + ' ';
+  return PLANTILLAS_LISTA.find(p => p.alias && p.alias.some(a => t.includes(' ' + a + ' '))) || null;
+}
+// Recupera el texto con sus acentos y mayúsculas del original
+function recuperarOriginal(orig, normFrag){
+  if(!normFrag) return '';
+  try{
+    const m = String(orig).match(flexRx(normFrag.trim()));
+    if(m) return m[0];
+  }catch(e){}
+  return normFrag;
+}
+function palabrasItem(t){ return palabrasClave(t).filter(w => !['compre','tengo','ya'].includes(w)); }
+function itemCoincide(item, consulta){
+  const a = palabrasClave(item.t), b = palabrasItem(consulta);
+  if(!a.length || !b.length) return false;
+  return b.every(w => a.includes(w)) || a.every(w => b.includes(w));
+}
+// "X de la lista del súper" → { resto:'X', lista } probando del corte más a la derecha
+function partirPorLista(s, conectores){
+  const rx = new RegExp('\\s(?:' + conectores + ')\\s', 'g');
+  const cortes = [];
+  let m;
+  while((m = rx.exec(s))) cortes.push({ i: m.index, fin: m.index + m[0].length });
+  for(let k = cortes.length - 1; k >= 0; k--){
+    const derecha = s.slice(cortes[k].fin);
+    const l = buscarListaPorTexto(derecha);
+    if(l) return { resto: s.slice(0, cortes[k].i).trim(), lista: l, derecha };
+  }
+  // no se encontró, pero dijo "lista …": se ofrece crearla
+  for(let k = cortes.length - 1; k >= 0; k--){
+    const derecha = s.slice(cortes[k].fin);
+    if(/^(?:la\s+|mi\s+)?lista\s/.test(derecha)) return { resto: s.slice(0, cortes[k].i).trim(), lista: null, derecha };
+  }
+  return null;
+}
+
+const CONECT_AGREGAR = 'a|al|en|a\\s+la|en\\s+la|para\\s+la|para\\s+el|a\\s+mi|en\\s+mi|a\\s+los|a\\s+las|en\\s+los|en\\s+las';
+const CONECT_DE = 'de|del|en|de\\s+la|de\\s+mi|en\\s+la|en\\s+mi|de\\s+los|de\\s+las';
+
+function intentoListas(texto){
+  const orig = String(texto || '').normalize('NFC');
+  const s = normalize(orig).trim().replace(/[¿?¡!.]+/g, ' ').replace(/\s+/g, ' ').trim().replace(CORTESIA_RX, '');
+  if(!s) return null;
+  let m;
+
+  // Ver todas
+  if(/^(?:que\s+listas\s+tengo|cuales\s+son\s+mis\s+listas|mis\s+listas|(?:muestrame|ensename|ver|abre|abreme)\s+(?:mis\s+|las\s+)?listas|listas)$/.test(s)) return { tipo:'verListas' };
+
+  // Crear
+  m = s.match(/^(?:crea|creame|haz|hazme|abre|abreme|arma|armame|empieza|inicia|nueva|agrega|anade|pon|ponme)\s+(?:me\s+)?(?:una\s+)?(?:nueva\s+)?lista\s+(?:de\s+|del\s+|para\s+(?:el\s+|la\s+|mi\s+|los\s+|las\s+)?|llamada\s+|que\s+se\s+llame\s+)?(.+?)(?:\s*(?::|\scon\s)\s*(.+))?$/);
+  if(m){
+    const nombreN = m[1].trim();
+    return { tipo:'crear', nombre: recuperarOriginal(orig, nombreN), nombreN, items: m[2] ? partirItems(recuperarOriginal(orig, m[2])) : [] };
+  }
+
+  // Borrar una lista entera
+  m = s.match(/^(?:borra|borrame|elimina|eliminame|quita|quitame)\s+(?:toda\s+)?(?:la\s+|mi\s+)?lista\s+(?:de\s+|del\s+|para\s+(?:el\s+|la\s+)?)?(.+)$/);
+  if(m){
+    const l = buscarListaPorTexto(m[1]);
+    return l ? { tipo:'borrarLista', lista:l } : { tipo:'noExiste', nombre: recuperarOriginal(orig, m[1]) };
+  }
+
+  // Recordatorio de una lista
+  m = s.match(/^(?:recuerdame|recuerdamela|avisame|avisamela|ponle\s+(?:un\s+)?(?:recordatorio|aviso|alarma)\s+a)\s+(?:la\s+|mi\s+)?lista\s+(?:de\s+|del\s+|para\s+(?:el\s+|la\s+)?)?(.+)$/);
+  if(m){
+    const palabras = m[1].split(' ');
+    for(let k = palabras.length; k >= 1; k--){
+      const pref = palabras.slice(0, k).join(' ');
+      const l = buscarListaPorTexto(pref);
+      // el nombre solo se lleva palabras que de verdad son de la lista
+      if(!l || !prefijoEsDeLista(pref, l)) continue;
+      const cola = palabras.slice(k).join(' ');
+      const fechas = cola ? localParse(cola) : [];
+      const hora = extraerHora(cola);
+      const repetir = /\b(?:cada|todos\s+los|todas\s+las|diario|semanal)\b/.test(cola) ? 'semana' : 'no';
+      return { tipo:'recordar', lista:l, fecha: fechas[0] ? fechas[0].date : null, hora: hora ? hora.hora : (fechas[0] && fechas[0].hora) || null, repetir };
+    }
+    return { tipo:'noExiste', nombre: recuperarOriginal(orig, m[1].split(' ').slice(0, 3).join(' ')) };
+  }
+
+  // Quitar tachadas / desmarcar / vaciar
+  m = s.match(/^(?:borra|quita|limpia|elimina|saca)(?:me|le)?\s+(?:las\s+|los\s+|lo\s+)?(?:tachadas|tachados|tachado|comprado|comprados|compradas|hechas|hechos|palomeadas|palomeados)\s+(?:de|del|en|de\s+la|de\s+mi|en\s+la)\s+(.+)$/);
+  if(m){ const l = buscarListaPorTexto(m[1]); if(l) return { tipo:'quitarTachadas', lista:l }; }
+  m = s.match(/^(?:desmarca|destacha|despalomea|reinicia|resetea)(?:me)?\s+(?:todo|todas|todos|toda)\s+(?:de|del|en|de\s+la|de\s+mi|en\s+la|la|el)?\s*(.+)$/)
+    || s.match(/^(?:reinicia|resetea)(?:me)?\s+(?:la\s+|mi\s+)?(?:lista\s+(?:de\s+|del\s+)?)?(.+)$/);
+  if(m){ const l = buscarListaPorTexto(m[1]); if(l) return { tipo:'desmarcar', lista:l }; }
+  m = s.match(/^(?:vacia|vaciame)\s+(?:la\s+|mi\s+)?(?:lista\s+(?:de\s+|del\s+)?)?(.+)$/);
+  if(m){ const l = buscarListaPorTexto(m[1]); if(l) return { tipo:'vaciar', lista:l }; }
+
+  // Preguntar / abrir
+  m = s.match(/^(?:que|cuales|cuanto|cuantas\s+cosas|y\s+que)\s+(?:me\s+|nos\s+)?(?:falta|faltan|queda|quedan|tengo|hay|llevo|va|van|tiene|lleva)\s+(?:de|del|en|para|de\s+la|en\s+la|en\s+mi|de\s+mi|para\s+la|para\s+el)\s+(.+)$/)
+    || s.match(/^(?:muestrame|ensename|dime|ver|abre|abreme|lee|leeme)\s+(?:la\s+|mi\s+)?lista\s+(?:de\s+|del\s+|para\s+(?:el\s+|la\s+)?)?(.+)$/)
+    || s.match(/^(?:que|cual)\s+es\s+(?:la\s+|mi\s+)?lista\s+(?:de\s+|del\s+)?(.+)$/)
+    || s.match(/^(?:que\s+(?:me\s+)?falta|que\s+tengo)\s+(?:que\s+)?(?:comprar|empacar|llevar)(?:\s+(?:para|de|del|en)\s+(.+))?$/);
+  if(m){
+    const ref = m[1] || (/comprar/.test(s) ? 'super' : (/empacar|llevar/.test(s) ? 'maleta' : ''));
+    const l = buscarListaPorTexto(ref);
+    if(l) return { tipo:'ver', lista:l };
+    if(/\blista\b/.test(s)) return { tipo:'noExiste', nombre: recuperarOriginal(orig, limpiarRefLista(ref)) };
+  }
+
+  // Agregar
+  m = s.match(/^(?:agrega|agregale|agregame|anade|anadele|anademe|pon|ponle|ponme|mete|metele|meteme|apunta|apuntale|apuntame|anota|anotale|anotame|suma|sumale|incluye|incluyele|echale|echa)\s+(.+)$/);
+  if(m){
+    const p = partirPorLista(' ' + m[1], CONECT_AGREGAR);
+    if(p && p.resto){
+      const items = partirItems(recuperarOriginal(orig, p.resto.trim()));
+      if(items.length){
+        if(p.lista) return { tipo:'agregar', lista:p.lista, items };
+        return { tipo:'noExiste', nombre: recuperarOriginal(orig, limpiarRefLista(p.derecha)), items };
+      }
+    }
+  }
+  // "necesito comprar leche" → al súper (si no trae fecha: con fecha es un evento)
+  m = s.match(/^(?:necesito|tengo\s+que|hay\s+que|me\s+falta|falta|ocupo|debo)\s+comprar\s+(.+)$/);
+  if(m && !localParse(m[1]).length){
+    const l = buscarListaPorTexto('super');
+    if(l) return { tipo:'agregar', lista:l, items: partirItems(recuperarOriginal(orig, m[1])) };
+  }
+
+  // Tachar: "ya compré el pan", "tacha la leche del súper"
+  m = s.match(/^(?:ya\s+)?(?:compre|consegui|empaque|meti|guarde|traje|lleve|agarre|tache|tacha|palomea|palomee)\s+(.+)$/)
+    || s.match(/^ya\s+(?:tengo|esta|estan)\s+(.+)$/);
+  if(m){
+    const p = partirPorLista(' ' + m[1], CONECT_DE);
+    const lista = p && p.lista ? p.lista : null;
+    const consulta = p && p.lista ? p.resto : m[1];
+    const frases = partirItems(consulta).map(normalize);
+    const donde = lista ? [lista] : LISTAS;
+    const hallados = [];
+    for(const f of frases){
+      for(const l of donde){
+        const x = l.items.find(i => !i.d && itemCoincide(i, f));
+        if(x){ hallados.push({ l, x }); break; }
+      }
+    }
+    if(hallados.length) return { tipo:'tachar', hallados };
+    if(lista) return { tipo:'noHallado', lista, que: recuperarOriginal(orig, consulta) };
+  }
+
+  // Quitar cosas de una lista: "quita la leche del súper"
+  m = s.match(/^(?:quita|quitale|quitame|borra|borrale|borrame|elimina|eliminale|saca|sacale)\s+(.+)$/);
+  if(m){
+    const p = partirPorLista(' ' + m[1], CONECT_DE);
+    if(p && p.lista){
+      const frases = partirItems(p.resto).map(normalize);
+      const hallados = [];
+      frases.forEach(f => { const x = p.lista.items.find(i => itemCoincide(i, f)); if(x) hallados.push({ l:p.lista, x }); });
+      if(hallados.length) return { tipo:'quitar', hallados };
+      return { tipo:'noHallado', lista:p.lista, que: recuperarOriginal(orig, p.resto) };
+    }
+  }
+  return null;
+}
+
+function botonAbrirLista(l){
+  return `<button class="btn" onclick="abrirListaDesdeAgente('${l.id}')">Abrir ${l.emoji} ${esc(l.nombre)}</button>`;
+}
+function resultadoLista(msg, l, conDeshacer){
+  agentSetResult(`
+    <div class="agent-msg ok">${msg}</div>
+    <div class="prev-actions">
+      ${l ? botonAbrirLista(l) : ''}
+      ${conDeshacer ? `<button class="btn" onclick="deshacerListaAgente()">Deshacer</button>` : ''}
+    </div>`);
+  document.getElementById('agentInput').value = '';
+}
+function abrirListaDesdeAgente(id){
+  closeAgent();
+  irALista(id);
+}
+async function deshacerListaAgente(){
+  if(!deshacerListas) return;
+  try{ LISTAS = sanitizeListas(JSON.parse(deshacerListas)); }catch(e){ return; }
+  deshacerListas = null;
+  await guardarListas();
+  agentSetResult('<div class="agent-msg ok">Listo — lo dejé como estaba.</div>');
+}
+function recordarListas(){ deshacerListas = JSON.stringify(LISTAS); }
+function nombresItems(arr){
+  const n = arr.map(t => '«' + esc(t) + '»');
+  return n.length <= 1 ? n.join('') : n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1];
+}
+
+async function ejecutarListas(a){
+  if(a.tipo === 'verListas'){
+    if(!LISTAS.length){
+      agentSetResult('<div class="agent-msg">Todavía no tienes listas. Prueba «haz una lista del súper» o ve a la pestaña <b>Listas</b>.</div>');
+      return;
+    }
+    agentSetResult(`<div class="prev-card"><div class="prev-head">Tus listas · ${LISTAS.length}</div>
+      ${LISTAS.map(l => `<button class="resp-row" onclick="abrirListaDesdeAgente('${l.id}')"><span class="when">${l.emoji}</span><span class="resp-txt">${esc(l.nombre)}</span><span class="resp-falta">${pendientesDe(l).length} por tachar</span></button>`).join('')}
+    </div>`);
+    return;
+  }
+  if(a.tipo === 'noExiste'){
+    const nombre = limpiarTexto(a.nombre || '', MAX_NOMBRE_LISTA);
+    const items = a.items || [];
+    pendingListaAccion = { tipo:'crear', nombre, items };
+    agentSetResult(`
+      <div class="agent-msg">No tienes una lista «${esc(nombre || 'así')}».</div>
+      ${nombre ? `<button class="btn primary" style="width:100%;margin-top:8px" onclick="confirmarListaAgente()">＋ Crear «${esc(nombre)}»${items.length ? ` con ${items.length} ${items.length === 1 ? 'cosa' : 'cosas'}` : ''}</button>` : ''}`);
+    return;
+  }
+  if(a.tipo === 'crear'){
+    const ya = buscarListaPorTexto(a.nombreN);
+    if(ya && nombreListaNorm(ya) === limpiarRefLista(a.nombreN)){
+      if(a.items.length){
+        recordarListas();
+        const n = agregarALista(ya, a.items);
+        await guardarListas();
+        resultadoLista(`Ya tenías ${ya.emoji} <b>${esc(ya.nombre)}</b>: le agregué ${n} ${n === 1 ? 'cosa' : 'cosas'}.`, ya, true);
+      }else resultadoLista(`Ya tienes ${ya.emoji} <b>${esc(ya.nombre)}</b>.`, ya, false);
+      return;
+    }
+    const tpl = plantillaPorNombre(a.nombreN);
+    const nombre = a.nombre.charAt(0).toUpperCase() + a.nombre.slice(1);
+    recordarListas();
+    const l = crearLista(nombre, tpl ? tpl.emoji : '📝', tpl ? tpl.id : null, a.items);
+    if(!l){ agentSetResult('<div class="agent-msg err">No pude crearla (¿llegaste al máximo de listas?).</div>'); return; }
+    await guardarListas();
+    const extra = (!a.items.length && tpl && tpl.items.length)
+      ? `<button class="btn" style="width:100%;margin-top:8px" onclick="tipicoDesdeAgente('${l.id}')">＋ Agregar lo típico (${tpl.items.length})</button>` : '';
+    resultadoLista(`Creé ${l.emoji} <b>${esc(l.nombre)}</b>${a.items.length ? ` con ${nombresItems(a.items)}` : ''}.`, l, true);
+    if(extra) document.getElementById('agentResult').insertAdjacentHTML('beforeend', extra);
+    return;
+  }
+  if(a.tipo === 'agregar'){
+    recordarListas();
+    const n = agregarALista(a.lista, a.items);
+    await guardarListas();
+    resultadoLista(n
+      ? `Agregué ${nombresItems(a.items)} a ${a.lista.emoji} <b>${esc(a.lista.nombre)}</b>.`
+      : `Eso ya estaba en ${a.lista.emoji} <b>${esc(a.lista.nombre)}</b>.`, a.lista, n > 0);
+    return;
+  }
+  if(a.tipo === 'tachar'){
+    recordarListas();
+    a.hallados.forEach(h => { h.x.d = true; });
+    const listas = [...new Set(a.hallados.map(h => h.l))];
+    listas.forEach(l => { if(!pendientesDe(l).length) cerrarAvisosDe('lista|' + l.id); });
+    await guardarListas();
+    const l = listas[0];
+    const faltan = pendientesDe(l).length;
+    resultadoLista(`Taché ${nombresItems(a.hallados.map(h => h.x.t))} de ${l.emoji} <b>${esc(l.nombre)}</b>. ${faltan ? `Te faltan ${faltan}.` : '¡Ya tienes todo!'}`, l, true);
+    return;
+  }
+  if(a.tipo === 'quitar'){
+    recordarListas();
+    const l = a.hallados[0].l;
+    const ids = new Set(a.hallados.map(h => h.x.id));
+    l.items = l.items.filter(i => !ids.has(i.id));
+    await guardarListas();
+    resultadoLista(`Quité ${nombresItems(a.hallados.map(h => h.x.t))} de ${l.emoji} <b>${esc(l.nombre)}</b>.`, l, true);
+    return;
+  }
+  if(a.tipo === 'noHallado'){
+    agentSetResult(`<div class="agent-msg">No encontré «${esc(a.que)}» en ${a.lista.emoji} <b>${esc(a.lista.nombre)}</b>.</div>
+      <div class="prev-actions">${botonAbrirLista(a.lista)}</div>`);
+    return;
+  }
+  if(a.tipo === 'ver'){
+    const l = a.lista, pend = pendientesDe(l);
+    const filas = pend.slice(0, 30).map(x => `<div class="prev-row"><span class="when">☐</span><span>${esc(x.t)}</span></div>`).join('');
+    agentSetResult(`
+      <div class="prev-card">
+        <div class="prev-head">${l.emoji} ${esc(l.nombre)} · ${pend.length ? `te faltan ${pend.length}` : 'todo tachado'}</div>
+        ${pend.length ? filas : '<div class="agent-msg ok">¡Ya tienes todo! ✓</div>'}
+        ${pend.length > 30 ? `<div class="agent-msg">…y ${pend.length - 30} más</div>` : ''}
+        <div class="prev-actions">${botonAbrirLista(l)}</div>
+      </div>`);
+    return;
+  }
+  if(a.tipo === 'recordar'){
+    if(!a.fecha){
+      agentSetResult(`<div class="agent-msg err">¿Cuándo? Por ejemplo «recuérdame la lista ${esc(a.lista.nombre.toLowerCase())} el sábado a las 10» o «cada sábado».</div>`);
+      return;
+    }
+    recordarListas();
+    a.lista.aviso = sanitizeAvisoLista({ fecha:a.fecha, hora:a.hora || '09:00', repetir:a.repetir });
+    await guardarListas();
+    resultadoLista(`Listo: te aviso de ${a.lista.emoji} <b>${esc(a.lista.nombre)}</b> ${esc(textoAvisoLista(a.lista.aviso))}, si quedan cosas sin tachar. ${esc(notaAvisos())}`, a.lista, true);
+    return;
+  }
+  if(a.tipo === 'quitarTachadas'){
+    const n = a.lista.items.filter(i => i.d).length;
+    recordarListas();
+    a.lista.items = a.lista.items.filter(i => !i.d);
+    await guardarListas();
+    resultadoLista(n ? `Quité ${n} ${n === 1 ? 'tachada' : 'tachadas'} de ${a.lista.emoji} <b>${esc(a.lista.nombre)}</b>.` : 'No había nada tachado.', a.lista, n > 0);
+    return;
+  }
+  if(a.tipo === 'desmarcar'){
+    recordarListas();
+    a.lista.items.forEach(i => { i.d = false; });
+    await guardarListas();
+    resultadoLista(`Desmarqué todo en ${a.lista.emoji} <b>${esc(a.lista.nombre)}</b>. Lista para usarse otra vez.`, a.lista, true);
+    return;
+  }
+  if(a.tipo === 'vaciar' || a.tipo === 'borrarLista'){
+    pendingListaAccion = { tipo:a.tipo, id:a.lista.id };
+    const que = a.tipo === 'vaciar' ? `Vaciar ${a.lista.emoji} <b>${esc(a.lista.nombre)}</b> (se quitan sus ${a.lista.items.length} cosas)` : `Borrar la lista ${a.lista.emoji} <b>${esc(a.lista.nombre)}</b> completa`;
+    agentSetResult(`
+      <div class="prev-card borrar">
+        <div class="prev-head">¿Seguro?</div>
+        <div class="agent-msg">${que}.</div>
+        <div class="prev-actions">
+          <button class="btn" onclick="pendingListaAccion=null;agentSetResult('')">Cancelar</button>
+          <button class="btn peligro" onclick="confirmarListaAgente()">Sí</button>
+        </div>
+      </div>`);
+  }
+}
+async function confirmarListaAgente(){
+  const p = pendingListaAccion;
+  pendingListaAccion = null;
+  if(!p) return;
+  if(p.tipo === 'crear'){
+    const tpl = plantillaPorNombre(p.nombre);
+    recordarListas();
+    const l = crearLista(p.nombre.charAt(0).toUpperCase() + p.nombre.slice(1), tpl ? tpl.emoji : '📝', tpl ? tpl.id : null, p.items || []);
+    if(!l) return;
+    await guardarListas();
+    resultadoLista(`Creé ${l.emoji} <b>${esc(l.nombre)}</b>${p.items && p.items.length ? ` con ${nombresItems(p.items)}` : ''}.`, l, true);
+    return;
+  }
+  const l = listaPorId(p.id);
+  if(!l) return;
+  recordarListas();
+  if(p.tipo === 'vaciar'){ l.items = []; }
+  else{ LISTAS = LISTAS.filter(x => x.id !== l.id); if(listaAbierta === l.id) listaAbierta = null; cerrarAvisosDe('lista|' + l.id); }
+  await guardarListas();
+  resultadoLista(p.tipo === 'vaciar' ? `Vacié ${l.emoji} <b>${esc(l.nombre)}</b>.` : `Borré la lista ${l.emoji} <b>${esc(l.nombre)}</b>.`, p.tipo === 'vaciar' ? l : null, true);
+}
+async function tipicoDesdeAgente(id){
+  const l = listaPorId(id);
+  const p = l && PLANTILLAS_LISTA.find(x => x.id === l.tpl);
+  if(!p) return;
+  recordarListas();
+  const n = agregarALista(l, p.items);
+  await guardarListas();
+  resultadoLista(`Agregué ${n} cosas típicas a ${l.emoji} <b>${esc(l.nombre)}</b>.`, l, true);
+}
+
 async function interpretar(texto){
   let list = null;
   if(!apiBroken){
@@ -8229,6 +8721,14 @@ async function agentSubmit(){
   if(pant){
     sendBtn.disabled = false;
     ejecutarPantalla(pant);
+    return;
+  }
+
+  // ── Listas: súper, maleta… ──
+  const enLista = intentoListas(text);
+  if(enLista){
+    sendBtn.disabled = false;
+    await ejecutarListas(enLista);
     return;
   }
 
@@ -8403,6 +8903,7 @@ function closeAgent(){
   pendingCambio = null;
   pendingMod = null;
   pendingExtras = null;
+  pendingListaAccion = null;
 }
 
 document.getElementById('fab').addEventListener('click', openAgent);
@@ -8565,6 +9066,7 @@ function buildBackup(){
     completados: [...COMPLETED],
     eliminados: [...DELETED],
     categorias: CAT_MIAS,
+    listas: LISTAS,
   };
   const json = JSON.stringify(data);
   return btoa(unescape(encodeURIComponent(json)));
@@ -8625,6 +9127,9 @@ async function restoreBackup(){
   });
   sanitizeIds(o.completados).forEach(id => COMPLETED.add(id));
   sanitizeIds(o.eliminados).forEach(id => DELETED.add(id));
+  sanitizeListas(o.listas).forEach(l => {
+    if(LISTAS.length < MAX_LISTAS && !LISTAS.some(x => x.id === l.id)) LISTAS.push(l);
+  });
 
   renderAll();
   await markChanged();
@@ -8695,7 +9200,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.26b';
+const VERSION = '2026.09.26c';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -8845,15 +9350,16 @@ const TUTO_PASOS = [
       <p>Arriba a la derecha está la <b>lupa</b> para buscar y el <b>engrane ⚙︎</b>: ahí vive todo lo de ajustes, el respaldo y este tutorial.</p>`
   },
   {
-    titulo: 'Cinco formas de ver el año',
+    titulo: 'Cinco formas de ver el año, y tus listas',
     sub: 'Arriba eliges cómo quieres verlo. Se recuerda tu preferencia.',
     visual: `
       <div class="vistas" data-actual="mes" style="pointer-events:none;margin-bottom:12px">
         <button class="vista-btn" data-v="mes">Mes</button>
         <button class="vista-btn" data-v="semana">Semana</button>
         <button class="vista-btn" data-v="dia">Día</button>
-        <button class="vista-btn" data-v="lista">Lista</button>
+        <button class="vista-btn" data-v="lista">Agenda</button>
         <button class="vista-btn" data-v="puntos">Puntos</button>
+        <button class="vista-btn" data-v="listas">Listas</button>
       </div>
       <div class="mk-cap">Mes · un mes a la vez, con los nombres</div>
       ${mkSemana(
@@ -8868,9 +9374,35 @@ const TUTO_PASOS = [
         <li><b>Mes</b> — un mes a la vez con los nombres de los eventos. Deslizas de lado para cambiar.</li>
         <li><b>Semana</b> — siete columnas con las horas. Tocas un día y lo abres completo.</li>
         <li><b>Día</b> — las horas del día con la línea de «ahora».</li>
-        <li><b>Lista</b> — lo que viene, en orden, con cuánto falta para cada cosa.</li>
+        <li><b>Agenda</b> — lo que viene, en orden, con cuánto falta para cada cosa.</li>
         <li><b>Puntos</b> — el año entero en una pantalla, compacto.</li>
+        <li><b>Listas</b> — súper, maleta, útiles… (el siguiente paso te las explica).</li>
       </ul>`
+  },
+  {
+    titulo: 'Listas: súper, maleta y lo que quieras',
+    sub: 'Para las cosas que no son de un día: lo que hay que comprar, empacar o llevar.',
+    visual: `
+      <div class="ls-card" style="pointer-events:none;margin-bottom:9px">
+        <span class="ls-emoji">🛒</span>
+        <span class="ls-info"><span class="ls-nombre">Súper</span><span class="ls-cuenta">5 de 12</span>
+          <span class="ls-barra"><i style="width:42%"></i></span>
+          <span class="ls-chips"><span class="ls-chip">🔔 cada sábado, 10:00 am</span></span></span>
+      </div>
+      <div class="ls-card" style="pointer-events:none;margin-bottom:12px">
+        <span class="ls-emoji">🧳</span>
+        <span class="ls-info"><span class="ls-nombre">Maleta Orlando</span><span class="ls-cuenta">1 de 18</span>
+          <span class="ls-barra"><i style="width:6%"></i></span>
+          <span class="ls-chips"><span class="ls-chip">📅 Viaje a Orlando · 23 dic</span></span></span>
+      </div>
+      <div class="mk-cap">O dícelo al asistente</div>
+      <span class="tuto-frase">Agrega leche y huevos al súper</span>
+      <span class="tuto-frase">Ya compré el pan</span>
+      <span class="tuto-frase">¿Qué me falta de la maleta?</span>`,
+    texto: `
+      <p>En <b>Listas</b> tocas <b>＋ Nueva lista</b> y eliges una plantilla (Súper, Maleta, Útiles de arquitectura, Mochila del gym, Mudanza, Fiesta) o una en blanco. Para agregar varias cosas de un jalón, sepáralas con comas.</p>
+      <p>Lo tachado baja a su sección. Con <b>Desmarcar todo</b> la vuelves a usar el próximo viaje.</p>
+      <p>En sus ajustes la puedes <b>ligar a un evento</b> (aparece ese día) y ponerle un <b>recordatorio</b>, una vez o cada semana, que solo suena si quedan cosas sin tachar.</p>`
   },
   {
     titulo: 'Semana y día, con horas',
@@ -9088,7 +9620,7 @@ const TUTO_PASOS = [
       </div>`,
     texto: `
       <p>La <b>☆</b> está en cada evento, junto a la campana. Tócala y se vuelve <b>★ dorada</b>. También puedes marcarla al <b>agregar o editar</b>.</p>
-      <p>En <b>Puntos</b> sale una estrellita en la esquina del día; en Mes, Día y Lista, junto al nombre. Cuando lo palomeas, la estrellita del día se quita.</p>
+      <p>En <b>Puntos</b> sale una estrellita en la esquina del día; en Mes, Día y Agenda, junto al nombre. Cuando lo palomeas, la estrellita del día se quita.</p>
       <p>Arriba aparece el filtro <b>★ Importantes</b>: te deja solo esos y te lleva al más cercano que falte.</p>`
   },
   {
@@ -9310,6 +9842,7 @@ if('serviceWorker' in navigator && navigator.serviceWorker.addEventListener){
   navigator.serviceWorker.addEventListener('message', e => {
     if(e.data === 'version-nueva') avisoVersionNueva();
     else if(e.data && e.data.tipo === 'abrir-dia') abrirDiaPedido(e.data.fecha);
+    else if(e.data && e.data.tipo === 'abrir-lista' && idListaValido(e.data.id)) irALista(e.data.id);
   });
 }
 
@@ -9497,6 +10030,475 @@ function avisoCarga(){
   el.textContent = 'No se pudieron leer los datos de este dispositivo. Si tienes cuenta, tus eventos siguen en la nube: entra en ⚙︎ → Sincronizar ahora.';
   const barra = document.getElementById('barra');
   if(barra) barra.parentNode.insertBefore(el, barra);
+}
+
+// ══════════════════════════════════════════════════════════════
+// LISTAS
+// Listas sueltas (súper, maleta, útiles…) con casillas para tachar.
+// Se guardan en tu cuenta junto con los eventos. Una lista puede
+// ligarse a un evento (aparece en ese día) y tener un recordatorio
+// (una vez o cada semana) que avisa si quedan cosas sin tachar.
+// ══════════════════════════════════════════════════════════════
+const MAX_LISTAS = 60;
+const MAX_ITEMS_LISTA = 300;
+const MAX_ITEM_TXT = 80;
+const MAX_NOMBRE_LISTA = 40;
+let LISTAS = [];
+
+const EMOJIS_LISTA = ['🛒','🧳','✈️','🏋️','🎒','📐','🏠','🎉','🍳','💊','🎁','📚','🧹','🐶','🚗','📝','⚽','💼'];
+
+const PLANTILLAS_LISTA = [
+  { id:'vacia',   nombre:'Lista en blanco', emoji:'📝', items:[] },
+  { id:'super',   nombre:'Súper', emoji:'🛒', alias:['super','supermercado','mandado','despensa','compras'],
+    items:['Leche','Huevos','Pan','Tortillas','Fruta','Verdura','Pollo','Arroz','Frijoles','Queso','Jamón','Café','Agua','Papel de baño','Jabón','Detergente'] },
+  { id:'maleta',  nombre:'Maleta de viaje', emoji:'🧳', alias:['maleta','viaje','equipaje','empacar'],
+    items:['Pasaporte / INE','Cartera y tarjetas','Cargador del celular','Audífonos','Ropa interior','Calcetines','Playeras','Pantalones','Pijama','Zapatos extra','Cepillo y pasta de dientes','Desodorante','Shampoo','Medicinas','Lentes de sol','Bloqueador','Traje de baño','Batería portátil'] },
+  { id:'arqui',   nombre:'Útiles de arquitectura', emoji:'📐', alias:['utiles','arquitectura','arqui','material','taller'],
+    items:['Escalímetro','Escuadras','Lápices 2H, HB y 2B','Estilógrafos','Goma','Cúter','Cama de corte','Papel mantequilla','Cartón y cascarón','Pegamento','Cinta masking','Laptop y cargador','USB'] },
+  { id:'gym',     nombre:'Mochila del gym', emoji:'🏋️', alias:['gym','gimnasio','mochila'],
+    items:['Toalla','Botella de agua','Audífonos','Ropa de cambio','Tenis','Candado','Creatina o proteína','Desodorante'] },
+  { id:'mudanza', nombre:'Mudanza', emoji:'🏠', alias:['mudanza','cambio de casa'],
+    items:['Cajas','Cinta','Plumón','Plástico de burbujas','Bolsas de basura','Cambiar domicilio en el banco','Dar de baja luz e internet','Contratar flete','Limpiar el lugar nuevo'] },
+  { id:'fiesta',  nombre:'Fiesta / carne asada', emoji:'🎉', alias:['fiesta','carne asada','asado','reunion','cumple'],
+    items:['Carne','Tortillas','Salsas','Refrescos','Hielo','Carbón','Platos y vasos','Servilletas','Bocina'] },
+];
+
+function nuevoIdLista(pref){
+  return pref + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+function idListaValido(id){ return typeof id === 'string' && /^l_[a-z0-9]{1,24}$/.test(id); }
+function idItemValido(id){ return typeof id === 'string' && /^i_[a-z0-9]{1,24}$/.test(id); }
+
+function sanitizeItemsLista(arr){
+  if(!Array.isArray(arr)) return [];
+  const out = [], vistos = new Set();
+  for(const s of arr){
+    if(out.length >= MAX_ITEMS_LISTA) break;
+    if(!s || typeof s !== 'object') continue;
+    const t = limpiarTexto(typeof s.t === 'string' ? s.t : '', MAX_ITEM_TXT);
+    if(!t) continue;
+    let id = idItemValido(s.id) && !vistos.has(s.id) ? s.id : nuevoIdLista('i');
+    while(vistos.has(id)) id = nuevoIdLista('i');
+    vistos.add(id);
+    out.push({ id, t, d: s.d === true });
+  }
+  return out;
+}
+function sanitizeAvisoLista(a){
+  if(!a || typeof a !== 'object') return null;
+  if(typeof a.fecha !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(a.fecha)) return null;
+  const [y, m, d] = a.fecha.split('-').map(Number);
+  if(m < 1 || m > 12 || d < 1 || d > daysInMonth(y, m) || !clampToSemester(a.fecha)) return null;
+  return { fecha: a.fecha, hora: safeHora(a.hora) || '09:00', repetir: a.repetir === 'semana' ? 'semana' : 'no' };
+}
+function sanitizeListas(arr){
+  if(!Array.isArray(arr)) return [];
+  const out = [], vistos = new Set();
+  for(const l of arr){
+    if(out.length >= MAX_LISTAS) break;
+    if(!l || typeof l !== 'object') continue;
+    const nombre = limpiarTexto(typeof l.nombre === 'string' ? l.nombre : '', MAX_NOMBRE_LISTA);
+    if(!nombre) continue;
+    let id = idListaValido(l.id) && !vistos.has(l.id) ? l.id : nuevoIdLista('l');
+    vistos.add(id);
+    const evento = (typeof l.evento === 'string' && /^\d{4}-\d{2}-\d{2}\|.{1,80}$/.test(l.evento)) ? l.evento : null;
+    out.push({
+      id, nombre,
+      emoji: EMOJIS_LISTA.includes(l.emoji) ? l.emoji : '📝',
+      tpl: PLANTILLAS_LISTA.some(p => p.id === l.tpl) ? l.tpl : null,
+      evento,
+      aviso: sanitizeAvisoLista(l.aviso),
+      items: sanitizeItemsLista(l.items),
+      creada: numeroSeguro(Number(l.creada), 0),
+    });
+  }
+  return out;
+}
+
+function listaPorId(id){ return LISTAS.find(l => l.id === id) || null; }
+function pendientesDe(l){ return l.items.filter(x => !x.d); }
+function listasDeEvento(id){ return LISTAS.filter(l => l.evento === id); }
+
+// Si un evento cambia de nombre o de fecha, su lista lo sigue
+function moverLigaListas(viejo, nuevo){
+  if(!viejo || viejo === nuevo) return;
+  LISTAS.forEach(l => { if(l.evento === viejo) l.evento = nuevo; });
+}
+
+function textoAvisoLista(a){
+  if(!a) return '';
+  const d = parseISO(a.fecha);
+  const dia = WEEKDAYS_FULL[(d.getDay() + 6) % 7];
+  const h = fmtHora(a.hora);
+  if(a.repetir === 'semana') return `cada ${dia}, ${h}`;
+  return `${dia} ${d.getDate()} ${MONTHS_ES[d.getMonth()].slice(0,3)}, ${h}`;
+}
+function textoEventoLista(l){
+  if(!l.evento) return '';
+  const ev = EVENTS.find(e => evId(e) === l.evento);
+  if(!ev) return 'evento que ya no existe';
+  return `${ev.title} · ${shortDate(ev.date)}`;
+}
+
+// Separa "leche, huevos y pan" en tres cosas
+function partirItems(txt){
+  return String(txt || '')
+    .split(/\s*(?:,|;|\n|\s+y\s+|\s+e\s+(?=[^aeiouáéíóú]))\s*/i)
+    .map(s => limpiarTexto(s.replace(/^(?:un|una|unos|unas|el|la|los|las)\s+/i, ''), MAX_ITEM_TXT))
+    .filter(Boolean)
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1));
+}
+
+// ---------- Estado de la pantalla ----------
+let listaAbierta = null;     // id de la lista que se ve por dentro
+let listaConfig = false;     // panel de ajustes abierto
+let creandoLista = false;
+let borrandoLista = false;
+let formLista = { nombre:'', emoji:'📝', tpl:'vacia' };
+
+function renderListas(){
+  const el = document.getElementById('listasVista');
+  if(!el) return;
+  const l = listaAbierta ? listaPorId(listaAbierta) : null;
+  if(listaAbierta && !l){ listaAbierta = null; listaConfig = false; }
+  el.innerHTML = l ? detalleListaHTML(l) : indiceListasHTML();
+}
+
+function indiceListasHTML(){
+  const form = creandoLista ? formNuevaListaHTML() : `
+    <button class="btn primary ls-nueva" onclick="nuevaListaForm()">＋ Nueva lista</button>`;
+  if(!LISTAS.length && !creandoLista){
+    return `
+      ${form}
+      <div class="ls-vacio">
+        <div class="ls-vacio-tit">Tus listas viven aquí</div>
+        <div>Súper, maleta, útiles, lo que quieras. Empieza con una de estas:</div>
+        <div class="ls-plantillas">
+          ${PLANTILLAS_LISTA.filter(p => p.id !== 'vacia').map(p =>
+            `<button class="ls-tpl" onclick="crearDesdePlantilla('${p.id}')">${p.emoji} ${esc(p.nombre)}</button>`).join('')}
+        </div>
+        <div class="ls-vacio-nota">También puedes decirle al asistente: «agrega leche y huevos al súper».</div>
+      </div>`;
+  }
+  const orden = LISTAS.slice().sort((a, b) => (pendientesDe(b).length > 0) - (pendientesDe(a).length > 0) || b.creada - a.creada);
+  const tarjetas = orden.map(l => {
+    const total = l.items.length, hechas = total - pendientesDe(l).length;
+    const pct = total ? Math.round(hechas / total * 100) : 0;
+    const chips = [
+      l.evento ? `<span class="ls-chip">📅 ${esc(textoEventoLista(l))}</span>` : '',
+      l.aviso ? `<span class="ls-chip">🔔 ${esc(textoAvisoLista(l.aviso))}</span>` : '',
+    ].join('');
+    return `
+      <button class="ls-card${total && hechas === total ? ' completa' : ''}" onclick="abrirLista('${l.id}')">
+        <span class="ls-emoji">${l.emoji}</span>
+        <span class="ls-info">
+          <span class="ls-nombre">${esc(l.nombre)}</span>
+          <span class="ls-cuenta">${total ? (hechas === total ? '✓ Todo listo' : `${hechas} de ${total}`) : 'Vacía'}</span>
+          <span class="ls-barra"><i style="width:${pct}%"></i></span>
+          ${chips ? `<span class="ls-chips">${chips}</span>` : ''}
+        </span>
+      </button>`;
+  }).join('');
+  return form + `<div class="ls-grid">${tarjetas}</div>`;
+}
+
+function formNuevaListaHTML(){
+  const f = formLista;
+  return `
+    <div class="edit-form ls-form">
+      <div class="campo-lbl">Empezar con</div>
+      <div class="ls-plantillas">
+        ${PLANTILLAS_LISTA.map(p => `<button type="button" class="ls-tpl${f.tpl === p.id ? ' on' : ''}" onclick="elegirPlantilla('${p.id}')">${p.emoji} ${esc(p.nombre)}${p.items.length ? ` <b>${p.items.length}</b>` : ''}</button>`).join('')}
+      </div>
+      <label class="campo">
+        <span class="campo-lbl">Nombre</span>
+        <input type="text" id="lsNombre" maxlength="${MAX_NOMBRE_LISTA}" value="${esc(f.nombre)}" placeholder="Súper, Viaje a Orlando, Útiles…"
+          oninput="formLista.nombre = this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();crearListaUI()}">
+      </label>
+      <div class="campo-lbl">Ícono</div>
+      <div class="ls-emojis">${EMOJIS_LISTA.map(e => `<button type="button" class="ls-emo${f.emoji === e ? ' on' : ''}" onclick="elegirEmojiNueva('${e}')">${e}</button>`).join('')}</div>
+      <div class="prev-actions">
+        <button class="btn" onclick="cancelarNuevaLista()">Cancelar</button>
+        <button class="btn primary" onclick="crearListaUI()">Crear lista</button>
+      </div>
+    </div>`;
+}
+
+function detalleListaHTML(l){
+  const pend = pendientesDe(l), hechas = l.items.filter(x => x.d);
+  const fila = x => `
+    <div class="ls-item${x.d ? ' hecho' : ''}">
+      <button class="ls-check" onclick="tacharItem('${l.id}','${x.id}')" aria-label="${x.d ? 'Desmarcar' : 'Tachar'}">
+        <span class="checkbox">${CHECK_SVG}</span><span class="ls-txt">${esc(x.t)}</span>
+      </button>
+      <button class="del-btn" onclick="quitarItem('${l.id}','${x.id}')" aria-label="Quitar">&times;</button>
+    </div>`;
+  const total = l.items.length;
+  const pct = total ? Math.round(hechas.length / total * 100) : 0;
+  const tpl = PLANTILLAS_LISTA.find(p => p.id === l.tpl);
+  const sugerir = (!total && tpl && tpl.items.length)
+    ? `<button class="btn ls-tipico" onclick="agregarTipico('${l.id}')">＋ Agregar lo típico (${tpl.items.length})</button>` : '';
+  return `
+    <div class="ls-cabeza">
+      <button class="icon-btn" onclick="cerrarLista()" aria-label="Volver a las listas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="ls-titulo">${l.emoji} ${esc(l.nombre)}</span>
+      <button class="icon-btn${listaConfig ? ' active' : ''}" onclick="toggleConfigLista()" aria-label="Ajustes de la lista">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      </button>
+    </div>
+    <div class="ls-progreso"><span>${total ? `${hechas.length} de ${total} tachadas` : 'Todavía no tiene nada'}</span><span class="ls-barra"><i style="width:${pct}%"></i></span></div>
+    ${(l.evento || l.aviso) && !listaConfig ? `<div class="ls-chips">${l.evento ? `<button class="ls-chip" onclick="irAEventoDeLista('${l.id}')">📅 ${esc(textoEventoLista(l))}</button>` : ''}${l.aviso ? `<span class="ls-chip">🔔 ${esc(textoAvisoLista(l.aviso))}</span>` : ''}</div>` : ''}
+    ${listaConfig ? configListaHTML(l) : ''}
+    <div class="ls-agregar">
+      <input type="text" id="lsNuevo" maxlength="400" placeholder="Agregar… (ej: leche, pan)" enterkeyhint="done"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();agregarItemsUI('${l.id}')}">
+      <button class="btn primary" onclick="agregarItemsUI('${l.id}')" aria-label="Agregar">＋</button>
+    </div>
+    ${sugerir}
+    <div class="ls-items">${pend.map(fila).join('')}</div>
+    ${hechas.length ? `<div class="ls-sec">Tachadas</div><div class="ls-items">${hechas.map(fila).join('')}</div>
+      <div class="opt-actions ls-acciones">
+        <button class="btn" onclick="borrarTachadas('${l.id}')">Quitar tachadas (${hechas.length})</button>
+        <button class="btn" onclick="desmarcarTodo('${l.id}')">Desmarcar todo</button>
+      </div>` : ''}
+    ${!total && !sugerir ? '<div class="ls-vacio-nota">Escribe arriba lo que necesitas y dale ＋.</div>' : ''}`;
+}
+
+function configListaHTML(l){
+  const hoy = todayISO();
+  const futuros = EVENTS.filter(e => e.date >= hoy).slice(0, 250);
+  const ligado = l.evento && !futuros.some(e => evId(e) === l.evento) ? EVENTS.find(e => evId(e) === l.evento) : null;
+  const opciones = [`<option value="">Sin ligar</option>`]
+    .concat(ligado ? [`<option value="${esc(evId(ligado))}" selected>${esc(shortDate(ligado.date) + ' · ' + ligado.title)}</option>`] : [])
+    .concat(futuros.map(e => `<option value="${esc(evId(e))}" ${evId(e) === l.evento ? 'selected' : ''}>${esc(shortDate(e.date) + ' · ' + e.title)}</option>`))
+    .join('');
+  const a = l.aviso;
+  if(borrandoLista){
+    return `
+      <div class="conf-borrar">
+        <div class="conf-txt">¿Borrar la lista <b>${esc(l.nombre)}</b> con sus ${l.items.length} cosas?</div>
+        <div class="prev-actions">
+          <button class="btn" onclick="borrandoLista=false;renderListas()">Cancelar</button>
+          <button class="btn peligro" onclick="borrarLista('${l.id}')">Sí, borrar</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="edit-form ls-form">
+      <label class="campo">
+        <span class="campo-lbl">Nombre</span>
+        <input type="text" id="lsCfgNombre" maxlength="${MAX_NOMBRE_LISTA}" value="${esc(l.nombre)}">
+      </label>
+      <div class="campo-lbl">Ícono</div>
+      <div class="ls-emojis">${EMOJIS_LISTA.map(e => `<button type="button" class="ls-emo${l.emoji === e ? ' on' : ''}" onclick="emojiLista('${l.id}','${e}')">${e}</button>`).join('')}</div>
+      <label class="campo">
+        <span class="campo-lbl">Ligar a un evento</span>
+        <select id="lsCfgEvento">${opciones}</select>
+      </label>
+      <div class="campo-lbl">Recordatorio (si quedan cosas sin tachar)</div>
+      <div class="edit-row">
+        <label class="campo"><span class="campo-lbl">Día</span><input type="date" id="lsCfgFecha" value="${a ? esc(a.fecha) : ''}" min="${ANIO_MIN}-01-01" max="${ANIO_MAX}-12-31"></label>
+        <label class="campo"><span class="campo-lbl">Hora</span><input type="time" id="lsCfgHora" value="${a ? esc(a.hora) : '09:00'}"></label>
+      </div>
+      <label class="ls-repetir"><input type="checkbox" id="lsCfgSemana" ${a && a.repetir === 'semana' ? 'checked' : ''}> Repetir cada semana</label>
+      <div class="rem-note">${notaAvisos()}</div>
+      <div class="prev-actions">
+        <button class="btn" onclick="toggleConfigLista()">Cerrar</button>
+        <button class="btn primary" onclick="guardarConfigLista('${l.id}')">Guardar</button>
+      </div>
+      <button class="btn ls-borrar" onclick="borrandoLista=true;renderListas()">Borrar esta lista</button>
+    </div>`;
+}
+
+// ---------- Acciones ----------
+async function guardarListas(){
+  renderListas();
+  renderPanelBody();
+  await markChanged();
+}
+function nuevaListaForm(){
+  creandoLista = true;
+  formLista = { nombre:'', emoji:'📝', tpl:'vacia' };
+  renderListas();
+  setTimeout(() => { const i = document.getElementById('lsNombre'); if(i) i.focus(); }, 60);
+}
+function cancelarNuevaLista(){ creandoLista = false; renderListas(); }
+function elegirPlantilla(id){
+  const p = PLANTILLAS_LISTA.find(x => x.id === id);
+  if(!p) return;
+  const inp = document.getElementById('lsNombre');
+  if(inp) formLista.nombre = inp.value;
+  const eraDePlantilla = PLANTILLAS_LISTA.some(x => x.nombre === formLista.nombre);
+  formLista.tpl = id;
+  formLista.emoji = p.emoji;
+  if(!formLista.nombre || eraDePlantilla) formLista.nombre = p.id === 'vacia' ? '' : p.nombre;
+  renderListas();
+}
+function elegirEmojiNueva(e){
+  if(!EMOJIS_LISTA.includes(e)) return;
+  const inp = document.getElementById('lsNombre');
+  if(inp) formLista.nombre = inp.value;
+  formLista.emoji = e;
+  renderListas();
+}
+function crearLista(nombre, emoji, tpl, items){
+  if(LISTAS.length >= MAX_LISTAS) return null;
+  const n = limpiarTexto(nombre || '', MAX_NOMBRE_LISTA);
+  if(!n) return null;
+  const l = sanitizeListas([{
+    id: nuevoIdLista('l'), nombre: n, emoji, tpl,
+    items: (items || []).map(t => ({ id: nuevoIdLista('i'), t, d: false })),
+    creada: Date.now(),
+  }])[0];
+  if(!l) return null;
+  LISTAS.push(l);
+  return l;
+}
+async function crearListaUI(){
+  const inp = document.getElementById('lsNombre');
+  const nombre = limpiarTexto((inp ? inp.value : formLista.nombre) || '', MAX_NOMBRE_LISTA);
+  if(!nombre){ if(inp) inp.focus(); return; }
+  const p = PLANTILLAS_LISTA.find(x => x.id === formLista.tpl) || PLANTILLAS_LISTA[0];
+  const l = crearLista(nombre, formLista.emoji, p.id === 'vacia' ? null : p.id, p.items);
+  if(!l){ alert('Ya tienes el máximo de listas (' + MAX_LISTAS + ').'); return; }
+  creandoLista = false;
+  listaAbierta = l.id;
+  listaConfig = false;
+  await guardarListas();
+}
+async function crearDesdePlantilla(id){
+  const p = PLANTILLAS_LISTA.find(x => x.id === id);
+  if(!p) return;
+  const l = crearLista(p.nombre, p.emoji, p.id, p.items);
+  if(!l) return;
+  listaAbierta = l.id;
+  await guardarListas();
+}
+function abrirLista(id){
+  if(!listaPorId(id)) return;
+  listaAbierta = id; listaConfig = false; borrandoLista = false; creandoLista = false;
+  renderListas();
+  window.scrollTo({ top:0, behavior:'instant' });
+}
+function cerrarLista(){ listaAbierta = null; listaConfig = false; borrandoLista = false; renderListas(); }
+function toggleConfigLista(){ listaConfig = !listaConfig; borrandoLista = false; renderListas(); }
+
+function agregarALista(l, textos){
+  let n = 0;
+  for(const t of textos){
+    if(l.items.length >= MAX_ITEMS_LISTA) break;
+    const limpio = limpiarTexto(t, MAX_ITEM_TXT);
+    if(!limpio) continue;
+    // si ya estaba tachado, se vuelve a poner pendiente en vez de duplicarlo
+    const ya = l.items.find(x => normalize(x.t) === normalize(limpio));
+    if(ya){ if(ya.d){ ya.d = false; n++; } continue; }
+    l.items.push({ id: nuevoIdLista('i'), t: limpio, d: false });
+    n++;
+  }
+  return n;
+}
+async function agregarItemsUI(id){
+  const l = listaPorId(id);
+  const inp = document.getElementById('lsNuevo');
+  if(!l || !inp) return;
+  const n = agregarALista(l, partirItems(inp.value));
+  inp.value = '';
+  if(n) await guardarListas();
+  setTimeout(() => { const i = document.getElementById('lsNuevo'); if(i) i.focus(); }, 30);
+}
+async function agregarTipico(id){
+  const l = listaPorId(id);
+  const p = l && PLANTILLAS_LISTA.find(x => x.id === l.tpl);
+  if(!p) return;
+  agregarALista(l, p.items);
+  await guardarListas();
+}
+async function tacharItem(lid, iid){
+  const l = listaPorId(lid);
+  const x = l && l.items.find(i => i.id === iid);
+  if(!x) return;
+  x.d = !x.d;
+  if(!pendientesDe(l).length) cerrarAvisosDe('lista|' + l.id);
+  await guardarListas();
+}
+async function quitarItem(lid, iid){
+  const l = listaPorId(lid);
+  if(!l) return;
+  l.items = l.items.filter(i => i.id !== iid);
+  await guardarListas();
+}
+async function borrarTachadas(id){
+  const l = listaPorId(id);
+  if(!l) return;
+  l.items = l.items.filter(i => !i.d);
+  await guardarListas();
+}
+async function desmarcarTodo(id){
+  const l = listaPorId(id);
+  if(!l) return;
+  l.items.forEach(i => { i.d = false; });
+  await guardarListas();
+}
+async function emojiLista(id, e){
+  const l = listaPorId(id);
+  if(!l || !EMOJIS_LISTA.includes(e)) return;
+  const inp = document.getElementById('lsCfgNombre');
+  const nombre = inp ? limpiarTexto(inp.value, MAX_NOMBRE_LISTA) : '';
+  if(nombre) l.nombre = nombre;
+  l.emoji = e;
+  await guardarListas();
+}
+async function guardarConfigLista(id){
+  const l = listaPorId(id);
+  if(!l) return;
+  const g = k => document.getElementById(k);
+  const nombre = limpiarTexto(g('lsCfgNombre') ? g('lsCfgNombre').value : '', MAX_NOMBRE_LISTA);
+  if(nombre) l.nombre = nombre;
+  const ev = g('lsCfgEvento') ? g('lsCfgEvento').value : '';
+  l.evento = (ev && EVENTS.some(e => evId(e) === ev)) ? ev : (ev === l.evento ? l.evento : null);
+  const fecha = g('lsCfgFecha') ? g('lsCfgFecha').value : '';
+  l.aviso = fecha ? sanitizeAvisoLista({
+    fecha, hora: g('lsCfgHora') ? g('lsCfgHora').value : '09:00',
+    repetir: g('lsCfgSemana') && g('lsCfgSemana').checked ? 'semana' : 'no',
+  }) : null;
+  listaConfig = false;
+  await guardarListas();
+}
+async function borrarLista(id){
+  LISTAS = LISTAS.filter(l => l.id !== id);
+  listaAbierta = null; listaConfig = false; borrandoLista = false;
+  cerrarAvisosDe('lista|' + id);
+  await guardarListas();
+}
+function irAEventoDeLista(id){
+  const l = listaPorId(id);
+  if(!l || !l.evento) return;
+  const fecha = l.evento.slice(0, 10);
+  vistaTipo = 'dia';
+  diaActual = fecha;
+  renderVista();
+  openPanel(fecha);
+}
+// Desde el día: abrir la lista ligada
+function irALista(id){
+  if(!listaPorId(id)) return;
+  closePanel();
+  if(vista !== 'anio'){ vista = 'anio'; }
+  vistaTipo = 'listas';
+  listaAbierta = id; listaConfig = false;
+  renderVista();
+  window.scrollTo({ top:0, behavior:'instant' });
+}
+// Chips de listas debajo de un evento, en el panel del día
+function listasDeEventoHTML(ev){
+  const ls = listasDeEvento(evId(ev));
+  if(!ls.length) return '';
+  return `<div class="ls-en-dia">${ls.map(l => {
+    const total = l.items.length, hechas = total - pendientesDe(l).length;
+    return `<button class="ls-chip grande" onclick="irALista('${l.id}')">${l.emoji} ${esc(l.nombre)} · ${hechas}/${total}</button>`;
+  }).join('')}</div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -9915,9 +10917,11 @@ function abrirDiaDeUrl(){
   try{
     const p = new URLSearchParams(location.search);
     const d = p.get('dia');
-    if(!d) return;
+    const l = p.get('lista');
+    if(!d && !l) return;
     history.replaceState(null, '', location.pathname);
-    abrirDiaPedido(d);
+    if(d) abrirDiaPedido(d);
+    else if(idListaValido(l) && !document.getElementById('authGate').classList.contains('show')) irALista(l);
   }catch(e){}
 }
 
