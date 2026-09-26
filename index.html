@@ -2054,6 +2054,12 @@
     flex-wrap:wrap;
     gap:6px;
     margin-bottom:12px;
+    max-height:118px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:2px;
+    mask-image:linear-gradient(to bottom, #000 80%, transparent);
+    -webkit-mask-image:linear-gradient(to bottom, #000 80%, transparent);
   }
   .ex-chip{
     font-family:var(--font-body);
@@ -2287,6 +2293,14 @@
   .rem-diario.on{color:var(--ink);}
   .rem-diario.on .rem-caja{background:var(--accent);border-color:var(--accent);}
 
+  /* ══════════ Asistente: extras ══════════ */
+  .prev-extras{margin:8px 0 2px;}
+  .prev-extras .fav-form{margin:0 0 6px;}
+  .prev-aviso{font-size:0.78rem;color:var(--accent);padding:2px 2px 4px;}
+  .prev-row.prev-sub{padding-top:0;margin-top:-3px;font-size:0.74rem;color:var(--ink-soft);padding-left:17px;}
+  .resp-rem{display:block;font-size:0.72rem;color:var(--accent);margin-top:1px;}
+  .ayuda-agente .agent-msg{margin:6px 0;font-size:0.8rem;line-height:1.45;}
+
   /* ══════════ Buscar ══════════ */
   .buscar-caja{
     display:flex;align-items:center;gap:8px;margin:0 0 10px;
@@ -2430,6 +2444,18 @@
     <button class="ex-chip">¿Qué entrego la próxima semana?</button>
     <button class="ex-chip">¿Cuáles son mis vacaciones próximas?</button>
     <button class="ex-chip">¿Qué tengo pendiente este mes?</button>
+    <button class="ex-chip">Entrega el 20 de octubre, recuérdame una semana y un día antes</button>
+    <button class="ex-chip">Examen final el 2 de diciembre, es importante</button>
+    <button class="ex-chip">Ponle estrella al examen del 15 de octubre</button>
+    <button class="ex-chip">Recuérdame las entregas de octubre un día antes</button>
+    <button class="ex-chip">Quítale los avisos al gimnasio</button>
+    <button class="ex-chip">Ya hice la entrega de láminas</button>
+    <button class="ex-chip">¿Cuándo es el examen de estructuras?</button>
+    <button class="ex-chip">¿Qué es importante este mes?</button>
+    <button class="ex-chip">¿De qué me vas a avisar esta semana?</button>
+    <button class="ex-chip">Muéstrame solo los importantes</button>
+    <button class="ex-chip">Busca láminas</button>
+    <button class="ex-chip">Ayuda</button>
   </div>
 
   <div class="agent-result" id="agentResult"></div>
@@ -5770,7 +5796,9 @@ function detectType(text){
       }
     }
   }
-  if(/\bexamen|\bexamenes|\bparcial|\bfinal(?:es)?\b|\bquiz\b|\bprueba|\bevaluacion|\bextraordinario|\bordinario\b|\bteorico\b|\bpractico\b|\bsegundo\s+parcial|\bprimer\s+parcial/.test(t)) return 'examen';
+  if(/\bexamen|\bexamenes|\bparcial|\bquiz\b|\bprueba|\bevaluacion|\bextraordinario|\bordinario\b|\bteorico\b|\bpractico\b|\bsegundo\s+parcial|\bprimer\s+parcial/.test(t)) return 'examen';
+  // "final" solo es examen si no es la entrega/proyecto final
+  if(/\bfinal(?:es)?\b/.test(t) && !/\bentrega|\bproyecto|\blamina|\bmaqueta|\breporte|\bensayo|\bpresentacion|\bportafolio|\btrabajo\b|\bexposicion|\bplano|\bcurso|\bpartido|\bjuego|\bconcierto|\bpago/.test(t)) return 'examen';
   if(/\bentrega|\btarea|\bproyecto|\blamina|\bmaqueta|\breporte|\bensayo|\bavance|\bpractica|\bexposicion|\bpresentacion|\bportafolio|\brender|\bplano|\bcroquis|\bboceto|\binvestigacion|\bresumen|\bmapa\s+conceptual|\bcuestionario|\btrabajo\b|\bdeber\b|\bactividad|\bbitacora|\bmemoria\b|\banteproyecto/.test(t)) return 'entrega';
   if(/\bvacacion|\bviaje|\bpuente\b|\bferiado|\basueto|\bdescanso|\bfestivo|\bdia\s+libre|\bsalida\b|\bplaya\b|\bfin\s+de\s+curso|\bpaseo/.test(t)) return 'vacacion';
   return 'otro';
@@ -5783,7 +5811,7 @@ function clampToSemester(iso){
 // Palabras de orden o relleno que no deben quedar en el título.
 // "Agregar el 8 de agosto cita doctor" → "Cita doctor"
 const RELLENO = new Set([
-  'por','favor','porfavor','porfa','porfis','me','puedes','podrias','podras',
+  'por','favor','porfavor','porfa','porfis','me','puedes','podrias','podras','oye','ey','hey','hola',
   'quiero','necesito','hay','que','tengo','voy','a','al','ocupo','debo',
   'agrega','agregar','agregame','agregarme','anade','anadir','añade','añadir',
   'pon','poner','ponme','ponle','pongan','mete','meter','meteme','metele',
@@ -6730,10 +6758,18 @@ function showPreview(list){
     <div class="prev-row">
       <i class="dot" style="background:${safeColor(catColor(ev.type))}"></i>
       <span class="when">${shortDate(ev.date)}${ev.hora ? ' · ' + esc(fmtHora(ev.hora)) : ''}</span>
-      <span>${esc(ev.title)}</span>
+      <span>${titEv(ev)}</span>
     </div>
   `).join('');
   const extra = list.length > 6 ? `<div class="agent-msg">…y ${list.length - 6} más</div>` : '';
+  const favTodos = list.length > 0 && list.every(ev => ev.fav === true);
+  const avisoTxt = list[0] ? remsTexto(list[0]) : '';
+  const extrasHTML = `
+      <div class="prev-extras">
+        <button type="button" class="fav-form${favTodos ? ' on' : ''}" onclick="togglePrevFav()" aria-pressed="${favTodos}">
+          <span class="fav-ico">${favTodos ? '★' : '☆'}</span>${favTodos ? 'Importante' : 'Marcar como importante'}</button>
+        ${avisoTxt ? `<div class="prev-aviso">🔔 ${esc(avisoTxt)}</div>` : ''}
+      </div>`;
   const tipoActual = list[0] ? safeType(list[0].type) : 'otro';
   const pedirCat = (ultimaCatPedida && !buscarCategoria(ultimaCatPedida)) ? ultimaCatPedida : null;
 
@@ -6747,6 +6783,7 @@ function showPreview(list){
       </div>
       ${pedirCat ? `<button class="btn crear-pedida" onclick="crearPedida()">＋ Crear la categoría «${esc(pedirCat)}»</button>` : ''}
       <div id="prevNueva"></div>
+      ${extrasHTML}
       <div class="prev-actions">
         <button class="btn" onclick="cancelAdd()">Cancelar</button>
         <button class="btn primary" onclick="confirmAdd()">Agregar</button>
@@ -6760,10 +6797,43 @@ function cancelAdd(){
   agentSetResult('');
 }
 
+function togglePrevFav(){
+  const todos = pendingEvents.length > 0 && pendingEvents.every(ev => ev.fav === true);
+  pendingEvents = pendingEvents.map(ev => ({ ...ev, fav: !todos }));
+  showPreview(pendingEvents);
+}
+
 async function confirmAdd(){
+  // Si alguno ya existía, no se duplica: se le ponen la estrella
+  // y los avisos que se pidieron.
+  let fusion = 0;
+  pendingEvents.forEach(raw => {
+    const limpio = sanitizeEvent(raw);
+    if(!limpio) return;
+    const existe = EVENTS.find(e => evId(e) === evId(limpio));
+    if(!existe || (!limpio.fav && !limpio.rems.length)) return;
+    const u = mioOCrear(existe);
+    if(limpio.fav) u.fav = true;
+    if(limpio.rems.length){
+      const d = remsTrasAccion(u, { modo:'sumar', rems:limpio.rems, diario:limpio.remDiario });
+      u.rems = d.rems;
+      u.remDiario = diarioLimpio({ rems:d.rems, remDiario:d.diario }, d.rems);
+      u.rem = remCompat(u.rems);
+    }
+    fusion++;
+  });
   const n = await addEvents(pendingEvents);
+  if(fusion){
+    rebuildEvents();
+    renderLegend();
+    refrescarVista();
+    await markChanged();
+  }
   pendingEvents = [];
-  agentSetResult(`<div class="agent-msg ok">Listo — se agregaron ${n} ${n === 1 ? 'evento' : 'eventos'}.</div>`);
+  const partes = [];
+  if(n || !fusion) partes.push(`se agregaron ${n} ${n === 1 ? 'evento' : 'eventos'}`);
+  if(fusion) partes.push(`${fusion === 1 ? 'a 1 que ya tenías se le puso' : 'a ' + fusion + ' que ya tenías se les puso'} lo que pediste`);
+  agentSetResult(`<div class="agent-msg ok">Listo — ${partes.join(' y ')}.</div>`);
   document.getElementById('agentInput').value = '';
 }
 
@@ -6812,10 +6882,19 @@ function raiz(w){
   if(n.length > 4) n = n.replace(/e$/,'');
   return n;
 }
+// Formas cortas que la gente usa para lo mismo
+const SINONIMOS = {
+  gym:'gimnasio', gim:'gimnasio', gimnasi:'gimnasio', fut:'futbol', doc:'doctor', dr:'doctor',
+  medico:'doctor', medic:'doctor', profe:'profesor', mate:'matematica', mates:'matematica',
+  matematic:'matematica', expo:'exposicion', exposicion:'exposicion', cumple:'cumpleano',
+  cumpleano:'cumpleano', depa:'departamento', super:'supermercado', mama:'mama', papa:'papa',
+  junt:'junta', reunion:'junta', reun:'junta',
+};
 function palabrasClave(txt){
   return normalize(txt).split(/\s+/)
+    .map(w => w.replace(/[^a-z0-9ñ]/g, ''))
     .filter(w => w && !RELLENO.has(w) && w.length > 1)
-    .map(raiz)
+    .map(w => SINONIMOS[w] || SINONIMOS[raiz(w)] || raiz(w))
     .filter(Boolean);
 }
 
@@ -6830,6 +6909,28 @@ function coincideTitulo(tituloEvento, consulta){
   const comunes = b.filter(w => a.includes(w)).length;
   if(comunes === 0) return false;
   return comunes / Math.min(a.length, b.length) >= 0.5;
+}
+
+// Palabras de fecha que no cuentan como parte del nombre
+const PAL_FECHA = new Set(['hoy','manana','pasado','ayer','semana','mes','ano','dia','dias','proximo','proxima',
+  'siguiente','este','esta','que','viene','entra','todos','todas','cada','lunes','martes','miercoles','jueves',
+  'viernes','sabado','domingo','enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre',
+  'setiembre','octubre','noviembre','diciembre','ene','feb','mar','abr','may','jun','jul','ago','sep','sept',
+  'oct','nov','dic','primero','primera','ultimo','ultima','fin','mediados','inicio','principio'].map(raiz));
+function palabrasNombre(txt){
+  return palabrasClave(txt).filter(w => !PAL_FECHA.has(w) && !/^\d+$/.test(w));
+}
+// De lo que coincidió "más o menos", deja lo que tiene TODAS las
+// palabras del nombre pedido. "Entrega de maqueta" ya no se lleva
+// "Entrega de láminas" por compartir "entrega".
+function soloExactos(lista, consulta){
+  const b = palabrasNombre(consulta || '');
+  if(!b.length) return lista;
+  const exactos = lista.filter(ev => {
+    const a = palabrasClave(ev.title);
+    return b.every(w => a.includes(w));
+  });
+  return exactos;
 }
 
 // Si solo se menciona un mes (sin día), el alcance es el mes completo
@@ -6893,12 +6994,17 @@ function buscarEventos(objetivo, resto){
   // Demasiado vago: ni fecha, ni nombre, ni categoría
   if(!fechas && !consulta && !origen) return { lista: [], vago: true };
 
-  const lista = EVENTS.filter(ev =>
+  let lista = EVENTS.filter(ev =>
     (!fechas || fechas.has(ev.date)) &&
     (!origen || ev.type === origen.id) &&
     (!consulta || coincideTitulo(ev.title, consulta))
   );
-  return { lista, vago: false };
+  // Si hay coincidencias exactas, solo esas
+  if(consulta && lista.length > 1){
+    const exactos = soloExactos(lista, consulta);
+    if(exactos.length) lista = exactos;
+  }
+  return { lista, vago: false, consulta };
 }
 
 async function confirmarBorrado(){
@@ -6969,7 +7075,25 @@ function esPregunta(text){
   if(/^(que|qué)\s+(tengo|hay|falta|me\s+falta|viene|sigue|queda|quedan|tareas?|examen|examenes|entregas?|vacaciones|eventos?|pendientes?|dias?|cosas?|actividades?)\b/.test(t)) return true;
   if(/^(tengo|hay)\s+(algo|alguna|algun)\b/.test(t)) return true;
   if(/^como\s+(voy|va)\b/.test(t)) return true;
+  if(/^(?:que\s+dia|en\s+que\s+fecha|para\s+cuando|a\s+que\s+hora|que\s+fecha)\b/.test(t)) return true;
+  if(/^(?:que|cuales?)\s+(?:son\s+|es\s+)?(?:mis\s+|los\s+|las\s+)?(?:importantes?|urgentes?|recordatorios?|avisos?|alarmas?|prioridades?)\b/.test(t)) return true;
+  if(/^(?:que|que\s+cosas?|que\s+eventos?)\s+(?:es|son|tienen?|llevan?)\s+(?:importantes?|estrella|recordatorios?|avisos?|aviso|prioridad)\b/.test(t)) return true;
+  if(/^de\s+que\s+me\s+(?:vas|va)\s+a\s+(?:avisar|recordar)\b/.test(t)) return true;
+  if(/^que\s+(?:es\s+|son\s+|hay\s+)?lo\s+(?:importante|urgente|pendiente|que\s+falta)\b/.test(t)) return true;
+  if(/^(?:mis|los|las)\s+(?:importantes|pendientes|recordatorios|avisos|prioridades|urgentes)\b/.test(t)) return true;
+  if(/^(?:recuerdame|recuerdamelo|avisame|dime)\s+(?:que|cuando|cual|cuales)\s+(?:tengo|hay|es|son|toca|tocan|me\s+toca)\b/.test(t)) return true;
   return false;
+}
+
+// "¿cuándo es el examen de estructuras?" → de qué evento pregunta
+function sujetoDePregunta(t){
+  const s = t.replace(/[¿?¡!.,]/g, ' ').replace(/\s+/g, ' ').trim();
+  const m = s.match(/^(?:y\s+)?(?:cuando|que\s+dia|en\s+que\s+fecha|para\s+cuando|a\s+que\s+hora|que\s+fecha)\s+(?:(?:es|son|sera|seran|fue|fueron|era|eran|tengo|tenia|toca|tocan|cae|caen|hay|habia|me\s+toca|entrego|presento|va\s+a\s+ser|empieza|empiezan|termina|terminan|sale|salgo|regreso|vuelvo|voy\s+a|tengo\s+que)\s+)?(.*)$/);
+  if(!m) return null;
+  const suj = m[1].replace(/^(?:mi|mis|el|la|los|las|lo\s+de|lo|que|a|al|de|del)\s+/, '').trim();
+  if(!suj || /^(?:proxim|siguiente|ultim|primer)/.test(suj)) return null;
+  if(tipoDePregunta(suj) && palabrasClave(suj).length <= 1 && !EVENTS.some(ev => coincideTitulo(ev.title, suj))) return null;
+  return suj;
 }
 
 // Qué categoría pregunta, o null si no menciona ninguna
@@ -7066,6 +7190,27 @@ function periodoDePregunta(t, texto){
 
 function responderPregunta(texto){
   const t = normalize(texto);
+  const soloFav = /importante|estrella|prioridad|prioritari|urgente|destacad/.test(t);
+  const soloRem = /recordatorio|aviso|alarma|notificacion|me\s+(?:vas\s+a\s+|va\s+a\s+)?(?:avisar|recordar|notificar)|me\s+(?:avisas|recuerdas)|suena|sonar/.test(t);
+
+  // "¿Cuándo es X?" → se busca X por nombre en todos los años
+  const suj = sujetoDePregunta(t);
+  if(suj){
+    const hoy = todayISO();
+    let hallados = EVENTS.filter(ev => coincideTitulo(ev.title, suj));
+    if(hallados.length > 1){
+      const exactos = soloExactos(hallados, suj);
+      if(exactos.length) hallados = exactos;
+    }
+    if(hallados.length){
+      const pasado = /\b(?:fue|fueron|era|eran|tenia|habia)\b/.test(t);
+      const fut = hallados.filter(e => e.date >= hoy).sort((a,b) => a.date.localeCompare(b.date));
+      const pas = hallados.filter(e => e.date < hoy).sort((a,b) => b.date.localeCompare(a.date));
+      const lista = pasado ? pas.concat(fut) : fut.concat(pas);
+      return { lista, encabezado: '«' + suj + '»', ini:null, fin:null, conRem:soloRem };
+    }
+  }
+
   const { ini, fin, etiqueta } = periodoDePregunta(t, texto);
   const tipo = tipoDePregunta(t);
   const soloPendientes = /pendiente|me\s+falta|falta|sin\s+hacer|no\s+he\s+hecho|por\s+hacer/.test(t);
@@ -7077,6 +7222,8 @@ function responderPregunta(texto){
     const done = COMPLETED.has(evId(ev));
     if(soloPendientes && done) return false;
     if(soloHechos && !done) return false;
+    if(soloFav && ev.fav !== true) return false;
+    if(soloRem && !sanitizeRems(ev).length) return false;
     return true;
   });
 
@@ -7087,12 +7234,14 @@ function responderPregunta(texto){
   const partes = [];
   if(tipo) partes.push(catLabel(tipo).toLowerCase());
   else partes.push('eventos');
+  if(soloFav) partes.push('importantes');
+  if(soloRem) partes.push('con aviso');
   if(soloPendientes) partes.push('pendientes');
   if(soloHechos) partes.push('ya hechos');
   let encabezado = partes.join(' ');
   if(etiqueta) encabezado += ' ' + etiqueta;
 
-  return { lista, encabezado, ini, fin };
+  return { lista, encabezado, ini, fin, conRem:soloRem };
 }
 
 // Abre el día desde la respuesta
@@ -7121,7 +7270,7 @@ function mostrarRespuesta(res){
       <button class="resp-row ${done ? 'hecho' : ''}" onclick="verDia('${ev.date}')">
         <i class="dot" style="background:${safeColor(catColor(ev.type))}"></i>
         <span class="when">${cuando}</span>
-        <span class="resp-txt">${titEv(ev)}${ev.hora ? ` <b class="hora-tag">${esc(fmtHora(ev.hora))}</b>` : ''}</span>
+        <span class="resp-txt">${titEv(ev)}${ev.hora ? ` <b class="hora-tag">${esc(fmtHora(ev.hora))}</b>` : ''}${res.conRem && remsTexto(ev) ? `<span class="resp-rem">🔔 ${esc(remsTexto(ev))}</span>` : ''}</span>
         <span class="resp-falta">${falta}</span>
       </button>
     `;
@@ -7460,6 +7609,578 @@ async function crearYCambiar(nombre, ids){
 }
 
 // ---------- Interpretación compartida (IA o lector local) ----------
+// ══════════════════════════════════════════════════════════════
+// ESTRELLA, RECORDATORIOS Y "HECHO" CON EL ASISTENTE
+//
+// Dos piezas:
+//  1. separarExtras(texto): lee y QUITA del texto lo que habla de
+//     estrella o de avisos, para que no se cuele en el título.
+//     "Examen el 15, recuérdame una semana antes, es importante"
+//        → texto "Examen el 15", rems [7], fav true
+//  2. intentoExtras(texto): reconoce órdenes sobre eventos que YA
+//     existen: "ponle estrella al examen del 15", "quítale los
+//     avisos al gym", "ya hice la entrega de láminas".
+// ══════════════════════════════════════════════════════════════
+const NUM_AV = {
+  un:1, una:1, uno:1, dos:2, tres:3, cuatro:4, cinco:5, seis:6, siete:7,
+  ocho:8, nueve:9, diez:10, once:11, doce:12, trece:13, catorce:14,
+  quince:15, veinte:20, treinta:30, media:0, medio:0,
+};
+function numAviso(w){
+  if(/^\d{1,3}$/.test(w)) return +w;
+  return Object.prototype.hasOwnProperty.call(NUM_AV, w) ? NUM_AV[w] : undefined;
+}
+function unidadAviso(w){
+  if(/^dias?$/.test(w)) return 1;
+  if(/^semanas?$/.test(w)) return 7;
+  if(/^quincenas?$/.test(w)) return 14;
+  if(/^mes(?:es)?$/.test(w)) return 30;
+  if(/^(?:horas?|hrs?|minutos?|mins?)$/.test(w)) return 0;
+  return null;
+}
+const DESP_AV = new Set(['antes','previos','previo','previas','previa','anteriores','anticipacion','antelacion']);
+const NO_NUM_ANTES = new Set(['el','del','al','dia','de','para','hasta','desde','los','las']);
+const MESES_SET = new Set(Object.keys(MES_NUM));
+
+const TRIG_VERBO_RX = '(?:recuerdamelos|recuerdamelas|recuerdamelo|recuerdamela|recuerdame|recordarme|recuerdes|recuerde|recuerda|avisamelos|avisamelo|avisamela|avisame|avisarme|avises|avise|notificame|notificarme|notifiques|alertame|alertarme)';
+const TRIG_NOMBRE_RX = '(?:recordatorios?|avisos?|alarmas?|alertas?|notificaciones?)';
+
+// Recorta del texto original los tramos [a,b) marcados en la versión normalizada.
+function recortarTramos(orig, norm, tramos){
+  if(!tramos.length) return orig;
+  const base = (orig.length === norm.length) ? orig : norm;
+  const quitar = new Array(base.length).fill(false);
+  tramos.forEach(([a,b]) => { for(let i = Math.max(0,a); i < Math.min(b, base.length); i++) quitar[i] = true; });
+  let out = '';
+  for(let i = 0; i < base.length; i++) out += quitar[i] ? ' ' : base[i];
+  return out
+    .replace(/\(\s*\)/g, ' ')
+    .replace(/\s+([,;.])/g, '$1')
+    .replace(/([,;.])\s*([,;.])+/g, '$1')
+    .replace(/(^|[\s,;])(?:y|e|con|que|pero)\s*(?=[,;.]|$)/gi, '$1')
+    .replace(/^[\s,;.]+|[\s,;.]+$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function separarExtras(texto, opciones){
+  const op = opciones || {};
+  const orig = String(texto || '').normalize('NFC');
+  const n = normalize(orig);
+  const tramos = [];
+  const marca = (m, extraIni) => tramos.push([m.index + (extraIni || 0), m.index + m[0].length]);
+  const res = { texto: orig, fav: null, favCopula: false, rems: null, diario: false,
+                hayAviso: false, porHoras: false, diarioTramo: null };
+
+  // ── Estrella: primero lo negativo ("no es importante") ──
+  const favNo = /(?:^|[\s,;.])((?:que\s+)?(?:no|ya\s+no)\s+(?:es|son|esta|sera)\s+(?:tan\s+|muy\s+)?(?:importantes?|urgentes?|prioridad)|sin\s+estrella|no\s+(?:tan\s+)?importantes?|nada\s+importantes?)\b/g;
+  for(const m of n.matchAll(favNo)){ res.fav = false; tramos.push([m.index + m[0].indexOf(m[1]), m.index + m[0].length]); }
+
+  if(res.fav !== false){
+    const favSi = [
+      // "…, es importante" / "son muy importantes"
+      { rx:/(?:^|[\s,;.])((?:y\s+)?(?:que\s+)?(?:es|son|esta|sera|seran)\s+(?:muy\s+|super\s+|bien\s+|re\s*|demasiado\s+)?(?:importantes?|importantisim[oa]s?|urgentes?|prioridad(?:\s+alta)?|prioritari[oa]s?|critic[oa]s?|crucial(?:es)?))\b/g, copula:true },
+      // "márcalo como importante", "ponle estrella", "con estrella"
+      { rx:/(?:^|[\s,;.])((?:y\s+)?(?:marcal[oa]s?|marcame(?:l[oa]s?)?|marca(?:r)?|ponle|ponles|ponme|pon|dale|dales|con|agregale|agrega|anadele|anade|metele|mete|hazl[oa]s?|haz)\s+(?:como\s+)?(?:una\s+|la\s+|su\s+)?(?:estrellita|estrella|importantes?|prioridad(?:\s+alta)?|prioritari[oa]s?|destacad[oa]s?|favorit[oa]s?))\b/g },
+      // "que no se me olvide", "no olvidar"
+      { rx:/(?:^|[\s,;.])((?:y\s+)?(?:que\s+)?no\s+se\s+me\s+(?:puede|debe|vaya\s+a|tiene\s+que)\s+olvidar|(?:y\s+)?que\s+no\s+se\s+me\s+olvide|no\s+olvidar|no\s+se\s+me\s+olvide|no\s+lo\s+olvides|sin\s+falta)\b/g },
+      // adjetivo suelto: "junta importante", "muy importante:", "importantísimo"
+      { rx:/(?:^|[\s,;.(])((?:muy\s+|super\s+|bien\s+|re\s*)?(?:importantes?|importantisim[oa]s?|prioridad\s+alta|alta\s+prioridad|prioritari[oa]s?))\b\s*[:)]?/g },
+      // "(importante)", "IMPORTANTE:" y símbolos
+      { rx:/(\s*(?:⭐️?|🌟|★|‼️?|❗+|❕+|!{2,})+\s*)/g },
+    ];
+    for(const p of favSi){
+      for(const m of n.matchAll(p.rx)){
+        res.fav = true;
+        if(p.copula) res.favCopula = true;
+        const ini = m.index + m[0].indexOf(m[1]);
+        tramos.push([ini, m.index + m[0].length]);
+      }
+    }
+    // "urgente" marca estrella pero se queda en el título
+    if(res.fav === null && /\b(?:urgente|urgentisimo|crucial|imperdible)\b/.test(n)) res.fav = true;
+  }
+
+  // ── Recordatorios ──
+  const trigVerbo = new RegExp('(?:^|[\\s,;.(])((?:y\\s+|e\\s+)?(?:que\\s+)?(?:me\\s+)?(?:lo\\s+|la\\s+|los\\s+|las\\s+)?' + TRIG_VERBO_RX + '(?:\\s+(?:de\\s+(?:esto|eso|ello)|por\\s*favor|porfa|porfis|tambien))?)\\b', 'g');
+  const trigNombre = new RegExp('(?:^|[\\s,;.(])((?:y\\s+|e\\s+)?(?:(?:con|ponle|ponles|ponme|pon|agregale|agregales|agrega|anadele|anade|metele|mete|activale|activa|programale|programa|quiero|necesito|mandame|mandale|manda|enviame|envia|dame)\\s+)?(?:un\\s+|una\\s+|el\\s+|los\\s+|las\\s+|la\\s+|mis\\s+|unos\\s+|sus\\s+)?' + TRIG_NOMBRE_RX + '(?:\\s*:|\\s+(?:de|para|a)(?=\\s))?)\\b', 'g');
+  const remNo = new RegExp('(?:^|[\\s,;.])((?:y\\s+)?(?:sin\\s+(?:ningun\\s+|ninguna\\s+)?' + TRIG_NOMBRE_RX + '|(?:ya\\s+)?no\\s+me\\s+(?:avises|recuerdes|notifiques)))\\b', 'g');
+
+  let hayTrig = !!op.forzarAviso || /\bde\s+(?:anticipacion|antelacion)\b/.test(n);
+  for(const m of n.matchAll(remNo)){ res.rems = []; res.hayAviso = true; tramos.push([m.index + m[0].indexOf(m[1]), m.index + m[0].length]); }
+  if(res.rems === null){
+    for(const m of n.matchAll(trigVerbo)){ hayTrig = true; tramos.push([m.index + m[0].indexOf(m[1]), m.index + m[0].length]); }
+    for(const m of n.matchAll(trigNombre)){
+      // "revisar la alarma de la casa" no es un aviso: el sustantivo solo
+      // cuenta con verbo ("ponle aviso"), con "con", o si le sigue el cuándo.
+      const conVerbo = /^(?:y\s+|e\s+)?(?:con|ponle|ponles|ponme|pon|agregale|agregales|agrega|anadele|anade|metele|mete|activale|activa|programale|programa|quiero|necesito|mandame|mandale|manda|enviame|envia|dame)\s/.test(m[1]);
+      const sigue = n.slice(m.index + m[0].length);
+      const conCuando = /^\s*(?::|de\s+|para\s+|a\s+)?\s*(?:\d|un\b|una\b|dos\b|tres\b|cuatro\b|cinco\b|seis\b|siete\b|ocho\b|nueve\b|diez\b|quince\b|el\s+(?:mismo\s+)?dia|ese\s+dia|la\s+vispera|el\s+dia\s+anterior|la\s+noche|la\s+semana|el\s+mes|diari)/.test(sigue);
+      const alFinal = /^\s*[.!]*\s*$/.test(sigue) && /(?:^|\s)(?:y|,)?\s*(?:con\s+)?(?:recordatorios?|avisos?|alarmas?)$/.test(n.slice(0, m.index + m[0].length).trim());
+      if(!conVerbo && !conCuando && !alFinal) continue;
+      hayTrig = true; tramos.push([m.index + m[0].indexOf(m[1]), m.index + m[0].length]);
+    }
+    const alInicio = n.match(/^\s*(recordar|recordarme)\b/);
+    if(alInicio){ hayTrig = true; }
+  }
+
+  if(hayTrig){
+    res.hayAviso = true;
+    const dias = [];
+
+    // a) "N unidad antes", también en listas: "3, 2 y 1 días antes",
+    //    "una semana y un día antes", "con 5 días de anticipación"
+    const toks = [...n.matchAll(/[a-z0-9]+|,/g)].map(m => ({ w:m[0], i:m.index, f:m.index + m[0].length }));
+    for(let k = 0; k < toks.length; k++){
+      if(!DESP_AV.has(toks[k].w)) continue;
+      let finTramo = toks[k].f;
+      let j = k - 1;
+      if((toks[k].w === 'anticipacion' || toks[k].w === 'antelacion') && j >= 0 && toks[j].w === 'de') j--;
+      let unidad = null, ini = null;
+      const encontrados = [];
+      while(j >= 0){
+        const w = toks[j].w;
+        const u = unidadAviso(w);
+        if(u !== null){
+          unidad = u;
+          const prev = j - 1 >= 0 ? numAviso(toks[j-1].w) : undefined;
+          if(prev !== undefined){ encontrados.push(prev * u); if(u === 0) res.porHoras = true; ini = toks[j-1].i; j -= 2; }
+          else if(/^(dia|semana|mes|quincena)$/.test(w)){ encontrados.push(u); ini = toks[j].i; j -= 1; }
+          else break;
+          continue;
+        }
+        if((w === ',' || w === 'y' || w === 'e' || w === 'o') && encontrados.length && j - 1 >= 0){
+          const sig = toks[j-1].w;
+          const sigNum = numAviso(sig);
+          const antesDeSig = j - 2 >= 0 ? toks[j-2].w : '';
+          const sigEsFecha = NO_NUM_ANTES.has(antesDeSig) || MESES_SET.has(antesDeSig);
+          if(unidadAviso(sig) !== null || (sigNum !== undefined && !sigEsFecha && unidad !== null)){ j--; continue; }
+          break;
+        }
+        const num = numAviso(w);
+        if(num !== undefined && unidad !== null && encontrados.length){
+          const antes = j - 1 >= 0 ? toks[j-1].w : '';
+          if(NO_NUM_ANTES.has(antes) || MESES_SET.has(antes)) break;
+          encontrados.push(num * unidad); ini = toks[j].i; j--;
+          continue;
+        }
+        break;
+      }
+      if(encontrados.length && ini !== null){
+        // "con 5 días de anticipación" → también se va el "con"
+        const antesIni = n.slice(Math.max(0, ini - 20), ini);
+        const conM = antesIni.match(/(?:\b(?:con|a|unos|como)\s+)$/);
+        let a = ini - (conM ? conM[0].length : 0);
+        // "desde una semana antes" = diario desde ahí
+        const desdeM = n.slice(Math.max(0, a - 20), a).match(/(?:\b(?:desde|a\s+partir\s+de|empezando|comenzando)\s+)$/);
+        if(desdeM){ res.diario = true; a -= desdeM[0].length; }
+        // "antes del evento", "antes de que llegue"
+        const cola = n.slice(finTramo).match(/^\s+(?:del?\s+(?:evento|examen|dia|entrega|cita)|de\s+que\s+(?:llegue|sea|pase))\b/);
+        if(cola) finTramo += cola[0].length;
+        encontrados.forEach(d => dias.push(d));
+        tramos.push([a, finTramo]);
+      }
+    }
+
+    // c) Diario: solo si va pegado al aviso ("avísame diario desde…",
+    //    "y diario hasta el día"). Suelto, "diario" es un evento que se repite.
+    const dRx = op.sinDiario ? /$^/g : /(?:^|[\s,;.])((?:y\s+)?(?:(?:a\s+)?diario|diariamente|todos\s+los\s+dias|cada\s+dia)(\s+(?:hasta|antes\s+de)\s+(?:el\s+(?:mero\s+)?dia|la\s+fecha|el\s+evento|que\s+llegue|ese\s+dia|el\s+examen|la\s+entrega|la\s+cita))?)\b/g;
+    for(const m of n.matchAll(dRx)){
+      const ini = m.index + m[0].indexOf(m[1]);
+      const fin = m.index + m[0].length;
+      const antes = n.slice(Math.max(0, ini - 40), ini);
+      const pegado = !!m[2] ||
+        new RegExp('(?:antes|' + TRIG_VERBO_RX + '|' + TRIG_NOMBRE_RX + ')\\W*(?:y\\W*)?$').test(antes) ||
+        /^\s*(?:desde|a\s+partir\s+de)\b/.test(n.slice(fin));
+      if(!pegado) continue;
+      res.diario = true;
+      res.diarioTramo = [ini, fin];
+      tramos.push([ini, fin]);
+    }
+    // "…hasta el día" suelto después del aviso
+    for(const m of n.matchAll(/\b(?:y\s+)?hasta\s+(?:el\s+(?:mero\s+)?dia|ese\s+dia|la\s+fecha|que\s+llegue)\b/g)){
+      res.diario = true; marca(m);
+    }
+
+    // b) Frases hechas
+    const fijas = [
+      [/\b(?:el\s+dia\s+(?:anterior|de\s+antes|previo|antes)|la\s+vispera|la\s+noche\s+(?:anterior|antes|de\s+antes|previa)|un\s+dia\s+previo)\b/g, 1],
+      [/\b(?:la\s+semana\s+(?:anterior|previa|de\s+antes|antes))\b/g, 7],
+      [/\b(?:el\s+mes\s+(?:anterior|previo|de\s+antes|antes))\b/g, 30],
+      [/\b(?:(?:el|ese|en\s+el|en\s+ese|justo\s+el|justo\s+ese|ese\s+mero|el\s+mero)\s+(?:mismo\s+)?dia(?:\s+(?:mismo|del\s+evento|de\s+la\s+cita|que\s+toca))?|el\s+propio\s+dia|mismo\s+dia|al\s+momento|en\s+el\s+momento|a\s+la\s+hora(?!\s+de)|ese\s+dia|el\s+dia(?!\s*(?:\d|de\b|del\b|primero|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|diecis|veint|treinta|lunes|martes|miercoles|jueves|viernes|sabado|domingo|siguiente|anterior|antes|previo)))\b/g, 0],
+    ];
+    for(const [rx, d] of fijas){
+      for(const m of n.matchAll(rx)){
+        // no tocar lo que ya se tomó como "N días antes"
+        if(tramos.some(([a,b]) => m.index >= a && m.index < b)) continue;
+        dias.push(d); marca(m);
+      }
+    }
+
+    const limpios = [];
+    dias.forEach(d => {
+      const v = Math.min(30, Math.max(0, Math.round(d)));
+      if(!limpios.includes(v)) limpios.push(v);
+    });
+    // Sin decir cuándo: "recuérdame…" = el mismo día;
+    // "diario hasta el día" sin decir desde cuándo = desde una semana antes
+    if(!limpios.length && res.diario) limpios.push(7);
+    res.rems = sanitizeRems({ rems: limpios.length ? limpios : [0] });
+    if(!res.rems.some(r => r > 1)) res.diario = false;
+  }
+
+  res.texto = recortarTramos(orig, n, tramos);
+  return res;
+}
+
+// Pone lo leído (estrella / avisos) en los eventos que se van a agregar
+function ponerExtras(lista, ex){
+  if(!ex) return lista;
+  return lista.map(ev => {
+    const nuevo = { ...ev };
+    if(ex.fav === true) nuevo.fav = true;
+    if(Array.isArray(ex.rems)){
+      nuevo.rems = ex.rems.slice();
+      nuevo.remDiario = ex.diario === true;
+    }
+    return nuevo;
+  });
+}
+
+// ──────────────────────────────────────────────────────────────
+// Órdenes sobre eventos que ya existen
+// Devuelve { es, accion, objetivo, soloExistentes }
+//   accion: { tipo:'fav', valor } | { tipo:'hecho', valor }
+//         | { tipo:'rems', modo:'sumar'|'poner'|'quitar', rems, diario }
+// ──────────────────────────────────────────────────────────────
+const CORTESIA_RX = /^(?:(?:por\s*favor|porfa|porfis|oye|ey|hey|hola|me\s+puedes|puedes|podrias|me\s+podrias|quiero\s+que|necesito\s+que|ayudame\s+a|a\s+ver)\s*,?\s+)+/;
+const FAV_PAL = '(?:estrellita|estrella|importantes?|prioridad|prioritari[oa]s?|destacad[oa]s?|favorit[oa]s?)';
+const HECHO_PAL = '(?:hech[oa]s?|terminad[oa]s?|completad[oa]s?|list[oa]s?|realizad[oa]s?|cumplid[oa]s?|palomead[oa]s?|entregad[oa]s?|acabad[oa]s?)';
+const OBJ_PRONOMBRE = '(?:me|lo|la|los|las|le|les|melo|mela|melos|melas)?';
+
+function intentoExtras(texto){
+  const r = intentoExtrasCrudo(texto);
+  if(!r.es) return r;
+  // Una pregunta nunca es una orden: "¿qué es importante?"
+  const s = normalize(String(texto || '')).trim().replace(/^[¿¡\s]+/, '').replace(CORTESIA_RX, '');
+  if(/^(?:que|cual|cuales|cuando|donde|como|cuanto|cuantos|cuantas|quien|por\s+que)\b/.test(s)) return { es:false };
+  const obj = String(r.objetivo || '').trim();
+  if(/^(?:que|cual|cuales|cuando|donde|como|cuanto|quien)\b/.test(obj)) return { es:false };
+  return r;
+}
+function intentoExtrasCrudo(texto){
+  const crudo = normalize(String(texto || '')).trim().replace(/[¿?¡!.]+$/g, '').trim();
+  const s = crudo.replace(CORTESIA_RX, '');
+  const R = (rx) => s.match(rx);
+  let m;
+
+  // ─── Quitar estrella ───
+  if(new RegExp('\\b' + FAV_PAL).test(s)){
+    m = R(new RegExp('^(?:quita|saca|borra|elimina|desmarca)' + OBJ_PRONOMBRE + '\\s+(?:la\\s+|su\\s+|lo\\s+|el\\s+)?(?:de\\s+)?(?:como\\s+)?' + FAV_PAL + '\\s*(?:a|al|de|del|en|para|a\\s+la|a\\s+las|a\\s+los)?\\s+(.+)$'));
+    if(m) return { es:true, accion:{ tipo:'fav', valor:false }, objetivo:m[1] };
+    m = R(new RegExp('^(?:quita|saca|borra|elimina|desmarca)' + OBJ_PRONOMBRE + '\\s+(.+?)\\s+(?:de\\s+(?:mis\\s+|los\\s+)?|como\\s+)' + FAV_PAL + '$'));
+    if(m) return { es:true, accion:{ tipo:'fav', valor:false }, objetivo:m[1] };
+    m = R(new RegExp('^(.+?)\\s+(?:ya\\s+)?no\\s+(?:es|son|esta|estan)\\s+(?:tan\\s+)?' + FAV_PAL + '$'));
+    if(m) return { es:true, accion:{ tipo:'fav', valor:false }, objetivo:m[1], siNoAgregar:true };
+    m = R(new RegExp('^(?:ya\\s+)?no\\s+(?:es|son)\\s+(?:tan\\s+)?' + FAV_PAL + '\\s+(.+)$'));
+    if(m) return { es:true, accion:{ tipo:'fav', valor:false }, objetivo:m[1] };
+    m = R(new RegExp('^(.+?)\\s+sin\\s+estrella$'));
+    if(m) return { es:true, accion:{ tipo:'fav', valor:false }, objetivo:m[1] };
+  }
+
+  // ─── Quitar recordatorios ───
+  m = R(new RegExp('^(?:quita|borra|elimina|desactiva|apaga|cancela|saca|cancela)' + OBJ_PRONOMBRE + '\\s+(?:el\\s+|los\\s+|la\\s+|las\\s+|mis\\s+|sus\\s+|todos\\s+los\\s+|todas\\s+las\\s+)?' + TRIG_NOMBRE_RX + '\\s*(?:a|al|de|del|en|para|a\\s+la|a\\s+las|a\\s+los)?\\s+(.+)$'));
+  if(m) return { es:true, accion:{ tipo:'rems', modo:'quitar', rems:[], diario:false }, objetivo:m[1] };
+  m = R(new RegExp('^(?:ya\\s+)?no\\s+(?:quiero|necesito|ocupo)\\s+(?:mas\\s+|los\\s+|el\\s+|las\\s+|la\\s+)?' + TRIG_NOMBRE_RX + '\\s+(?:de|del|para|en|sobre|a|al)?\\s*(.+)$'));
+  if(m) return { es:true, accion:{ tipo:'rems', modo:'quitar', rems:[], diario:false }, objetivo:m[1] };
+  m = R(new RegExp('^sin\\s+' + TRIG_NOMBRE_RX + '\\s+(?:para|a|al|en|de|del|a\\s+la|a\\s+las|a\\s+los)?\\s*(.+)$'));
+  if(m) return { es:true, accion:{ tipo:'rems', modo:'quitar', rems:[], diario:false }, objetivo:m[1], siNoAgregar:true };
+  m = R(/^(?:ya\s+)?no\s+me\s+(?:avises|recuerdes|notifiques|mandes\s+avisos?)\s+(?:de|del|sobre|lo\s+de|por|nada\s+de)?\s*(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'rems', modo:'quitar', rems:[], diario:false }, objetivo:m[1] };
+  m = R(new RegExp('^(?:deja|dejame|pon|ponle|ponme)?\\s*(.+?)\\s+sin\\s+' + TRIG_NOMBRE_RX + '$'));
+  if(m && m[1]) return { es:true, accion:{ tipo:'rems', modo:'quitar', rems:[], diario:false }, objetivo:m[1], siNoAgregar:true };
+
+  // ─── Cambiar (reemplazar) recordatorios ───
+  m = R(new RegExp('^(?:cambia|modifica|ajusta|mueve|pasa)' + OBJ_PRONOMBRE + '\\s+(?:el\\s+|los\\s+|la\\s+|las\\s+|mis\\s+|sus\\s+)?' + TRIG_NOMBRE_RX + '\\b(.*)$'));
+  if(m){
+    const ex = separarExtras(m[1], { forzarAviso:true });
+    const obj = normalize(ex.texto).replace(/\s+(?:a|para|por)$/,'').replace(/^(?:de|del|a|al|para|en)\s+/,'');
+    return { es:true, accion:{ tipo:'rems', modo:'poner', rems:ex.rems || [0], diario:ex.diario }, objetivo:obj };
+  }
+  m = R(new RegExp('^(?:solo|solamente|nada\\s+mas)\\s+' + TRIG_VERBO_RX + '\\b'));
+  if(m){
+    const ex = separarExtras(s);
+    const obj = normalize(ex.texto).replace(/^(?:solo|solamente|nada\s+mas)\s+/,'').replace(/^(?:de|del|sobre)\s+/,'');
+    return { es:true, accion:{ tipo:'rems', modo:'poner', rems:ex.rems || [0], diario:ex.diario }, objetivo:obj };
+  }
+
+  // ─── Marcar hecho ───
+  m = R(new RegExp('^(?:marca|pon|palomea|tacha|da|dale|deja)' + OBJ_PRONOMBRE + '\\s+(?:por\\s+|como\\s+)?' + HECHO_PAL + '\\s+(?:a\\s+|al\\s+)?(.+)$'));
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+  m = R(new RegExp('^(?:marca|pon|palomea|tacha|deja)' + OBJ_PRONOMBRE + '\\s+(.+?)\\s+(?:como|por)\\s+' + HECHO_PAL + '$'));
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+  m = R(/^(?:palomea|tacha|palomeame|tachame)\s+(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+  m = R(/^(?:ya\s+)(?:hice|termine|acabe|complete|entregue|presente|tome|pague|cumpli\s+con|realice|fui\s+(?:al|a\s+la|a)|mande|envie|subi|estudie\s+para)\s+(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+  m = R(/^(?:termine|acabe|complete|entregue|presente)\s+(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+  m = R(/^ya\s+(?:quedo|quedaron|salio|salieron|cumpli|acabo|termino)\s+(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+  m = R(/^(?:listo|listos|lista|listas|hecho|hecha|hechos|hechas|terminado|terminada|palomita|check)\s*,?\s+(?:el|la|los|las|lo\s+de|a|al)\s+(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+  m = R(/^(?:ya\s+)?fui\s+(?:al|a\s+la|a\s+los|a\s+las|a)\s+(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+  m = R(new RegExp('^(.+?)\\s+(?:ya\\s+)(?:esta|estan|quedo|quedaron)\\s+' + HECHO_PAL + '$'));
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+  m = R(new RegExp('^(?:ya\\s+)(?:esta|estan|quedo|quedaron)\\s+' + HECHO_PAL + '\\s+(.+)$'));
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:true }, objetivo:m[1] };
+
+  // ─── Desmarcar hecho ───
+  m = R(/^(?:desmarca|despalomea|destacha)(?:me|lo|la|los|las)?\s+(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:false }, objetivo:m[1] };
+  m = R(/^(?:quita|borra)(?:le|les)?\s+(?:la\s+)?palomita\s+(?:a|al|de|del|a\s+la)?\s*(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:false }, objetivo:m[1] };
+  m = R(/^(?:marca|pon|deja)(?:me|lo|la|los|las|le)?\s+(?:como\s+)?(?:pendientes?|sin\s+hacer|no\s+hech[oa]s?)\s+(?:a\s+|al\s+)?(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:false }, objetivo:m[1] };
+  m = R(/^(?:marca|pon|deja)(?:me|lo|la|los|las|le)?\s+(.+?)\s+como\s+(?:pendientes?|sin\s+hacer|no\s+hech[oa]s?)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:false }, objetivo:m[1] };
+  m = R(new RegExp('^(.+?)\\s+(?:todavia|aun)?\\s*no\\s+(?:esta|estan|quedo)\\s+' + HECHO_PAL + '$'));
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:false }, objetivo:m[1] };
+  m = R(/^(?:todavia|aun)\s+no\s+(?:hago|hice|termino|termine|entrego|entregue|acabo|acabe)\s+(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'hecho', valor:false }, objetivo:m[1] };
+
+  // ─── Poner estrella ───
+  m = R(new RegExp('^(?:marca|pon|dale|agrega|anade|mete|haz|deja|destaca|resalta)' + OBJ_PRONOMBRE + '\\s+(?:una\\s+|la\\s+|su\\s+)?(?:como\\s+)?(?:muy\\s+|super\\s+)?' + FAV_PAL + '\\s*(?:a|al|en|para|a\\s+la|a\\s+las|a\\s+los)?\\s+(.+)$'));
+  if(m) return { es:true, accion:{ tipo:'fav', valor:true }, objetivo:m[1] };
+  m = R(new RegExp('^(?:marca|pon|deja|haz|destaca|resalta)' + OBJ_PRONOMBRE + '\\s+(.+?)\\s+(?:como\\s+)?(?:muy\\s+|super\\s+)?' + FAV_PAL + '$'));
+  if(m) return { es:true, accion:{ tipo:'fav', valor:true }, objetivo:m[1] };
+  m = R(/^(?:destaca|resalta|prioriza|estrella)(?:me|lo|la|los|las)?\s+(?:a\s+|al\s+)?(.+)$/);
+  if(m) return { es:true, accion:{ tipo:'fav', valor:true }, objetivo:m[1] };
+  // "el examen del 15 es importante": solo si ya existe
+  m = R(new RegExp('^(.+?)\\s+(?:es|son|sera|seran)\\s+(?:muy\\s+|super\\s+|bien\\s+)?(?:importantes?|importantisim[oa]s?|prioridad|prioritari[oa]s?|urgentes?)$'));
+  if(m) return { es:true, accion:{ tipo:'fav', valor:true }, objetivo:m[1], soloExistentes:true, siNoAgregar:true };
+
+  // ─── Poner / sumar recordatorios ───
+  m = R(new RegExp('^(?:pon|agrega|anade|mete|activa|programa|dale|crea)' + OBJ_PRONOMBRE + '\\s+(?:un\\s+|una\\s+|el\\s+|los\\s+|unos\\s+|otro\\s+|otra\\s+)?' + TRIG_NOMBRE_RX + '\\b(.*)$'));
+  if(m){
+    const ex = separarExtras(m[1], { forzarAviso:true });
+    const obj = normalize(ex.texto).replace(/^(?:de|a|al|para|en|del)\s+/,'');
+    return { es:true, accion:{ tipo:'rems', modo:'sumar', rems:ex.rems || [0], diario:ex.diario }, objetivo:obj, siNoAgregar:true };
+  }
+  m = R(new RegExp('^' + TRIG_VERBO_RX + '\\s+(?:de\\s+|del\\s+|sobre\\s+|que\\s+(?:tengo\\s+)?|lo\\s+de\\s+)?(.+)$'));
+  if(m){
+    const ex = separarExtras(s);
+    const obj = normalize(ex.texto).replace(/^(?:de|del|sobre|que\s+tengo|que|lo\s+de)\s+/,'');
+    return { es:true, accion:{ tipo:'rems', modo:'sumar', rems:ex.rems || [0], diario:ex.diario }, objetivo:obj, siNoAgregar:true };
+  }
+
+  return { es:false };
+}
+
+// Busca los eventos a los que va dirigida la orden.
+// Sin fecha explícita: estrella y avisos solo en lo que viene
+// (a lo pasado no le sirven); "hecho" solo al más cercano.
+async function eventosDeOrden(orden){
+  let objetivo = (orden.objetivo || '').trim()
+    .replace(/^(?:a|al|de|del|para|en|sobre|lo\s+de|todo\s+lo\s+de|todo\s+lo)\s+/, '')
+    .replace(/^(?:todos\s+los|todas\s+las|todo)\s+/, '')
+    .trim();
+  if(!objetivo) return { lista:[], vago:true };
+
+  const fechas = objetivo ? await interpretar(objetivo) : [];
+  const mes = mesCompleto(objetivo);
+  let { lista, vago, consulta } = buscarEventos(fechas, objetivo);
+  // Para estas órdenes el nombre tiene que coincidir completo:
+  // "ponle estrella al examen de química" no debe tocar otro examen.
+  if(!vago && lista.length && consulta){
+    lista = soloExactos(lista, consulta);
+  }
+
+  // Nombró una categoría ("los exámenes", "mis entregas")
+  if(!vago && lista.length === 0 && !fechas.length){
+    const consulta = cleanTitle(objetivo, []);
+    const k = buscarCategoria(consulta) || buscarCategoria(consulta.replace(/e?s$/i,''));
+    if(k) lista = EVENTS.filter(ev => ev.type === k.id);
+  }
+  if(vago || !lista.length) return { lista, vago };
+
+  const conFecha = fechas.length > 0 || !!mes;
+  const hoy = todayISO();
+  const t = orden.accion.tipo;
+
+  if(t === 'rems' && orden.accion.modo !== 'quitar'){
+    lista = lista.filter(ev => ev.date >= hoy);
+  }else if(t === 'fav' && orden.accion.valor && !conFecha){
+    const futuros = lista.filter(ev => ev.date >= hoy);
+    if(futuros.length) lista = futuros;
+  }else if(t === 'hecho' && !conFecha && lista.length > 1){
+    // "ya fui al gym" → el que toca hoy o el más reciente sin marcar
+    const quiero = orden.accion.valor;
+    const cand = lista.filter(ev => COMPLETED.has(evId(ev)) !== quiero);
+    const base = cand.length ? cand : lista;
+    const pasados = base.filter(ev => ev.date <= hoy).sort((a,b) => b.date.localeCompare(a.date));
+    const futuros = base.filter(ev => ev.date > hoy).sort((a,b) => a.date.localeCompare(b.date));
+    lista = [pasados[0] || futuros[0]].filter(Boolean);
+  }
+  return { lista, vago:false };
+}
+
+// ---------- Vista previa y aplicar ----------
+let pendingExtras = null;
+
+function describirAccion(a){
+  if(a.tipo === 'fav') return a.valor ? '★ Marcar como importante' : 'Quitar la estrella';
+  if(a.tipo === 'hecho') return a.valor ? '✓ Marcar como hecho' : 'Marcar como pendiente';
+  if(a.modo === 'quitar') return '🔕 Quitar recordatorios';
+  const txt = remsLabel(a.rems) + (a.diario && a.rems.some(r => r > 1) ? ', y diario' : '');
+  return (a.modo === 'poner' ? '🔔 Dejar aviso: ' : '🔔 Avisar: ') + txt;
+}
+
+function remsTrasAccion(ev, a){
+  const antes = sanitizeRems(ev);
+  if(a.modo === 'quitar') return { rems:[], diario:false };
+  if(a.modo === 'poner') return { rems: sanitizeRems({ rems:a.rems }), diario: !!a.diario };
+  // sumar: los nuevos mandan; si no caben, se quedan los nuevos
+  const juntos = a.rems.slice();
+  antes.forEach(r => { if(!juntos.includes(r)) juntos.push(r); });
+  return { rems: sanitizeRems({ rems: juntos.slice(0, MAX_REMS) }), diario: a.diario || diarioLimpio(ev, antes) };
+}
+
+function showPreviewExtras(lista, accion){
+  pendingExtras = { lista, accion };
+  const shown = lista.slice(0, 6);
+  const filas = shown.map(ev => {
+    let cambio = '';
+    if(accion.tipo === 'rems'){
+      const antes = remsTexto(ev) || 'sin aviso';
+      const d = remsTrasAccion(ev, accion);
+      const despues = remsTexto({ rems:d.rems, remDiario:d.diario }) || 'sin aviso';
+      cambio = `<span class="mod-antes">${esc(antes)}</span><span class="flecha">→</span><span class="mod-despues">${esc(despues)}</span>`;
+    }else if(accion.tipo === 'hecho'){
+      cambio = COMPLETED.has(evId(ev)) === accion.valor ? '<span class="mod-antes">ya estaba así</span>' : '';
+    }
+    return `
+      <div class="prev-row">
+        <i class="dot" style="background:${safeColor(catColor(ev.type))}"></i>
+        <span class="when">${shortDate(ev.date)}</span>
+        <span>${titEv(ev)}</span>
+      </div>
+      ${cambio ? `<div class="prev-row prev-sub">${cambio}</div>` : ''}`;
+  }).join('');
+  const extra = lista.length > 6 ? `<div class="agent-msg">…y ${lista.length - 6} más</div>` : '';
+  const nota = (accion.tipo === 'rems' && accion.modo !== 'quitar')
+    ? `<div class="conf-nota">Para que suenen, después exporta desde ⚙︎ → Exportar eventos.</div>` : '';
+  agentSetResult(`
+    <div class="prev-card">
+      <div class="prev-head">${esc(describirAccion(accion))} · ${lista.length === 1 ? '1 evento' : lista.length + ' eventos'}</div>
+      ${filas}${extra}${nota}
+      <div class="prev-actions">
+        <button class="btn" onclick="cancelarExtras()">Cancelar</button>
+        <button class="btn primary" onclick="confirmarExtras()">Aplicar</button>
+      </div>
+    </div>
+  `);
+}
+
+function cancelarExtras(){
+  pendingExtras = null;
+  agentSetResult('');
+}
+
+async function confirmarExtras(){
+  if(!pendingExtras) return;
+  const { lista, accion } = pendingExtras;
+  lista.forEach(ev => {
+    const id = evId(ev);
+    if(accion.tipo === 'hecho'){
+      if(accion.valor) COMPLETED.add(id); else COMPLETED.delete(id);
+      return;
+    }
+    const u = mioOCrear(ev);
+    if(accion.tipo === 'fav') u.fav = accion.valor === true;
+    else{
+      const d = remsTrasAccion(u, accion);
+      u.rems = d.rems;
+      u.remDiario = diarioLimpio({ rems:d.rems, remDiario:d.diario }, d.rems);
+      u.rem = remCompat(u.rems);
+    }
+  });
+  const n = lista.length;
+  pendingExtras = null;
+  rebuildEvents();
+  renderLegend();
+  refrescarVista();
+  renderPanelBody();
+  await markChanged();
+  const que = accion.tipo === 'fav' ? (accion.valor ? 'marcaron como importantes' : 'les quitó la estrella')
+            : accion.tipo === 'hecho' ? (accion.valor ? 'marcaron como hechos' : 'marcaron como pendientes')
+            : (accion.modo === 'quitar' ? 'les quitaron los avisos' : 'actualizaron los avisos');
+  const uno = accion.tipo === 'fav' ? (accion.valor ? 'marcó como importante' : 'le quitó la estrella')
+            : accion.tipo === 'hecho' ? (accion.valor ? 'marcó como hecho' : 'marcó como pendiente')
+            : (accion.modo === 'quitar' ? 'le quitaron los avisos' : 'actualizaron los avisos');
+  agentSetResult(`<div class="agent-msg ok">Listo — ${n === 1 ? 'se ' + uno + ' 1 evento' : 'se ' + que + ' ' + n + ' eventos'}.${accion.tipo === 'rems' && accion.modo !== 'quitar' ? ' Recuerda exportar desde ⚙︎ para que suenen.' : ''}</div>`);
+  document.getElementById('agentInput').value = '';
+}
+
+// ---------- Acciones de pantalla: buscar, filtrar, ayuda ----------
+function intentoPantalla(texto){
+  const s = normalize(String(texto || '')).trim().replace(/[¿?¡!.]+/g, ' ').trim().replace(CORTESIA_RX, '');
+  let m = s.match(/^(?:busca(?:me)?|buscar|encuentra(?:me)?|encontrar|localiza(?:me)?|donde\s+(?:esta|estan|quedo|quedaron|puse|tengo|anote))\s+(?:el\s+|la\s+|los\s+|las\s+|mi\s+|mis\s+)?(.+)$/);
+  if(m) return { tipo:'buscar', q:m[1].trim() };
+  if(new RegExp('^(?:filtra(?:me)?(?:\\s+por)?|ver\\s+solo|veo\\s+solo|muestra(?:me)?\\s+solo|ensena(?:me)?\\s+solo|solo\\s+(?:muestra(?:me)?|ver|ensena(?:me)?|dejame)|dejame\\s+solo)\\s+(?:los\\s+|las\\s+|mis\\s+|lo\\s+)?(?:que\\s+(?:son|tienen)\\s+)?(?:con\\s+)?' + FAV_PAL).test(s)){
+    return { tipo:'filtroFav' };
+  }
+  if(new RegExp('^solo\\s+(?:los\\s+|las\\s+|mis\\s+|lo\\s+)?' + FAV_PAL + '$').test(s)) return { tipo:'filtroFav' };
+  if(/^(?:quita(?:r)?\s+(?:el\s+|los\s+)?filtros?|ver\s+todo|muestra(?:me)?\s+todo|ensename\s+todo|sin\s+filtros?|todo)$/.test(s)) return { tipo:'sinFiltro' };
+  if(/^(?:ayuda|help|que\s+(?:puedes|sabes)\s+hacer|que\s+(?:te\s+)?puedo\s+(?:decir|pedir|escribir)|como\s+(?:te\s+uso|funcionas|se\s+usa|le\s+hago)|comandos|ejemplos|instrucciones)$/.test(s)) return { tipo:'ayuda' };
+  return null;
+}
+
+function ayudaAgente(){
+  return `
+    <div class="prev-card ayuda-agente">
+      <div class="prev-head">Esto es lo que entiendo</div>
+      <div class="agent-msg"><b>Agregar</b>: “examen el 15 de octubre a las 2 pm”, “gym lunes y miércoles”, “vacaciones del 23 de diciembre al 8 de enero”.</div>
+      <div class="agent-msg"><b>Con aviso</b>: “entrega el 20, recuérdame una semana y un día antes”, “cita el 5, avísame 3 días antes y diario hasta el día”.</div>
+      <div class="agent-msg"><b>Importante</b>: “examen final el 2 de diciembre, es importante”, “ponle estrella al examen del 15”, “quítale la estrella a la junta”.</div>
+      <div class="agent-msg"><b>Avisos a lo que ya tienes</b>: “recuérdame el examen del 15 una semana antes”, “ponle aviso de un día antes a las entregas de octubre”, “quítale los avisos al gym”.</div>
+      <div class="agent-msg"><b>Marcar hecho</b>: “ya hice la entrega de láminas”, “palomea el gym de hoy”, “desmarca la tarea del 3”.</div>
+      <div class="agent-msg"><b>Editar</b>: “cambia la hora del gym a las 7 am”, “mueve el examen del 15 al 20”, “recorre las prácticas una semana”, “cambia los partidos a Deporte”.</div>
+      <div class="agent-msg"><b>Quitar</b>: “quítame la creatina”, “borra todo del 20 de octubre”.</div>
+      <div class="agent-msg"><b>Preguntar</b>: “¿qué tengo esta semana?”, “¿cuándo es el examen de estructuras?”, “¿qué es importante este mes?”, “¿de qué me vas a avisar?”.</div>
+      <div class="agent-msg"><b>Pantalla</b>: “busca láminas”, “muéstrame solo los importantes”, “quita los filtros”.</div>
+    </div>`;
+}
+
+function ejecutarPantalla(p){
+  if(p.tipo === 'ayuda'){ agentSetResult(ayudaAgente()); return; }
+  if(p.tipo === 'sinFiltro'){
+    limpiarFiltros();
+    agentSetResult('<div class="agent-msg ok">Listo — ya se ve todo.</div>');
+    document.getElementById('agentInput').value = '';
+    return;
+  }
+  if(p.tipo === 'filtroFav'){
+    const hay = EVENTS.some(ev => ev.fav === true);
+    if(!hay){
+      agentSetResult('<div class="agent-msg">Todavía no tienes nada marcado como importante. Toca la ☆ de un evento, o dime “ponle estrella al examen del 15”.</div>');
+      return;
+    }
+    document.getElementById('agentInput').value = '';
+    closeAgent();
+    if(!soloFav) toggleFiltroFav();
+    return;
+  }
+  if(p.tipo === 'buscar'){
+    document.getElementById('agentInput').value = '';
+    closeAgent();
+    abrirBuscar();
+    const inp = document.getElementById('buscarInput');
+    if(inp){ inp.value = limpiarTexto(p.q, 60); renderBusqueda(); }
+  }
+}
+
 async function interpretar(texto){
   let list = null;
   if(!apiBroken){
@@ -7478,6 +8199,33 @@ async function agentSubmit(){
   const sendBtn = document.getElementById('agentSend');
   sendBtn.disabled = true;
   agentSetResult('<div class="thinking"><i></i><i></i><i></i> Leyendo…</div>');
+
+  // ── Acciones de pantalla: buscar, filtrar, ayuda ──
+  const pant = intentoPantalla(text);
+  if(pant){
+    sendBtn.disabled = false;
+    ejecutarPantalla(pant);
+    return;
+  }
+
+  // ── Estrella, avisos o "hecho" sobre lo que ya existe ──
+  const orden = intentoExtras(text);
+  if(orden.es){
+    const { lista, vago } = await eventosDeOrden(orden);
+    if(lista.length){
+      sendBtn.disabled = false;
+      showPreviewExtras(lista, orden.accion);
+      return;
+    }
+    if(!orden.siNoAgregar){
+      sendBtn.disabled = false;
+      agentSetResult(vago
+        ? '<div class="agent-msg err">Dime a qué evento. Por ejemplo “ponle estrella al examen del 15” o “ya hice la entrega de láminas”.</div>'
+        : '<div class="agent-msg err">No encontré ese evento en tu calendario. Revisa el nombre o dime la fecha, por ejemplo “… del 15 de octubre”.</div>');
+      return;
+    }
+    // Si no existe, se sigue como evento nuevo con su estrella / aviso
+  }
 
   // ── Camino de pregunta ──
   if(esPregunta(text)){
@@ -7578,7 +8326,15 @@ async function agentSubmit(){
   }
 
   // ── Camino de agregar ──
-  const list = await interpretar(text);
+  // Primero se separa lo de estrella y avisos, para que no se cuele
+  // en el título ni se confunda con fechas ("una semana antes").
+  let extras = separarExtras(text);
+  let list = await interpretar(extras.texto || text);
+  if((!list || !list.length) && extras.diario){
+    // "diario" era la repetición del evento, no del aviso
+    extras = separarExtras(text, { sinDiario:true });
+    list = await interpretar(extras.texto || text);
+  }
   sendBtn.disabled = false;
 
   if(!list || list.length === 0){
@@ -7591,7 +8347,11 @@ async function agentSubmit(){
       Para <b>cambiar de categoría</b>: “cambia los partidos a deporte”.<br>
       Para <b>editar</b>: “cambia la hora del gym a las 7 am”, “renombra gimnasio a gym”, “mueve el examen del 15 al 20 de octubre”, “recorre las prácticas una semana”.<br>
       Para <b>quitar</b>: “quítame la creatina”.<br>
-      Para <b>preguntar</b>: “¿qué entrego la próxima semana?”.</div>
+      Con <b>aviso</b>: “…recuérdame una semana y un día antes”.<br>
+      <b>Importante</b>: “…es importante”, “ponle estrella al examen del 15”.<br>
+      <b>Hecho</b>: “ya hice la entrega de láminas”.<br>
+      Para <b>preguntar</b>: “¿qué entrego la próxima semana?”.<br>
+      Escribe <b>ayuda</b> para ver todo lo que entiendo.</div>
     `);
     return;
   }
@@ -7600,7 +8360,7 @@ async function agentSubmit(){
     agentSetResult('<div class="agent-msg err">Esa fecha queda fuera del rango (2026–2050).</div>');
     return;
   }
-  showPreview(valid);
+  showPreview(ponerExtras(valid, extras));
 }
 
 // ---------- Abrir / cerrar el asistente ----------
@@ -7618,6 +8378,7 @@ function closeAgent(){
   pendingDelete = [];
   pendingCambio = null;
   pendingMod = null;
+  pendingExtras = null;
 }
 
 document.getElementById('fab').addEventListener('click', openAgent);
@@ -7906,7 +8667,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.25';
+const VERSION = '2026.09.25b';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -8210,6 +8971,29 @@ const TUTO_PASOS = [
     texto: `
       <p>Si tienes 39 días de gimnasio, cambiarles la hora es <b>una sola frase</b>.</p>
       <p>Todo pasa por vista previa con el antes y el después. Lo que borres se puede <b>deshacer</b>.</p>`
+  },
+  {
+    titulo: 'Avisos, estrella y palomita, hablando',
+    sub: 'Lo mismo que harías con los botones, en una frase.',
+    visual: `
+      <div class="mk-cap">Al agregar, en la misma frase</div>
+      <span class="tuto-frase">Entrega el 20, recuérdame una semana y un día antes</span>
+      <span class="tuto-frase">Examen final el 2 de diciembre, es importante</span>
+      <div class="mk-cap">A lo que ya tienes</div>
+      <span class="tuto-frase">Ponle estrella al examen del 15</span>
+      <span class="tuto-frase">Recuérdame las entregas de octubre un día antes</span>
+      <span class="tuto-frase">Quítale los avisos al gym</span>
+      <div class="mk-cap">Marcar hecho</div>
+      <span class="tuto-frase">Ya hice la entrega de láminas</span>
+      <span class="tuto-frase">Palomea el gym de hoy</span>
+      <div class="mk-cap">Preguntar y buscar</div>
+      <span class="tuto-frase">¿Cuándo es el examen de estructuras?</span>
+      <span class="tuto-frase">¿De qué me vas a avisar esta semana?</span>
+      <span class="tuto-frase">Muéstrame solo los importantes</span>`,
+    texto: `
+      <p>Entiende muchas formas de decirlo: «avísame», «recuérdamelo», «con aviso», «la víspera», «3, 2 y 1 días antes», «con 5 días de anticipación», «diario hasta el día».</p>
+      <p>Para la estrella: «importante», «que no se me olvide», «prioridad alta», o un ⭐. Y lo quita del nombre: «Junta importante» queda como <b>★ Junta</b>.</p>
+      <p>Si no sabes cómo pedir algo, escribe <b>ayuda</b>.</p>`
   },
   {
     titulo: 'Categorías y colores',
