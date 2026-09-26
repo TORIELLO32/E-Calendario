@@ -15,7 +15,7 @@
 // app "bajaba de versión" sola.
 // ══════════════════════════════════════════════════════════════
 
-const VERSION  = 'cal-2026-09-25d';
+const VERSION  = 'cal-2026-09-26';
 const CACHE    = 'calendario-' + VERSION;
 const ARCHIVOS = ['./', './index.html', './app.html', './icon.png', './icon-192.png', './icon-512.png', './manifest.json'];
 const ESPERA   = 4000;
@@ -133,16 +133,27 @@ self.addEventListener('push', e => {
   try{ d = e.data ? e.data.json() : {}; }
   catch(err){ d = { t:'Recordatorio', b: e.data ? String(e.data.text()).slice(0, 140) : '' }; }
   const titulo = String(d.t || 'Recordatorio').slice(0, 90);
+  const ev = typeof d.e === 'string' ? d.e.slice(0, 120) : '';
   const opciones = {
     body: String(d.b || '').slice(0, 160),
     tag: String(d.g || 'aviso').slice(0, 120),
-    data: { url: urlSegura(d.u) },
+    data: { url: urlSegura(d.u), ev },
     icon: './icon-192.png',
     badge: './icon-192.png',
     timestamp: Date.now(),
   };
-  // El iPhone exige mostrar SIEMPRE algo por cada aviso que llega
-  e.waitUntil(self.registration.showNotification(titulo, opciones));
+  e.waitUntil((async () => {
+    // Los avisos de cada hora de un mismo evento no se amontonan:
+    // el nuevo reemplaza al anterior (y sí suena, por tener otra etiqueta)
+    if(ev){
+      try{
+        const previas = await self.registration.getNotifications();
+        previas.forEach(n => { if(n.data && n.data.ev === ev) n.close(); });
+      }catch(err){}
+    }
+    // El iPhone exige mostrar SIEMPRE algo por cada aviso que llega
+    await self.registration.showNotification(titulo, opciones);
+  })());
 });
 
 self.addEventListener('notificationclick', e => {

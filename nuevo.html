@@ -3655,7 +3655,7 @@ function showStorageNotice(){
 
 async function toggleDone(id){
   if(COMPLETED.has(id)) COMPLETED.delete(id);
-  else COMPLETED.add(id);
+  else{ COMPLETED.add(id); cerrarAvisosDe(id); }
   renderPanelBody();
   refrescarVista();
   await markChanged();
@@ -8118,7 +8118,7 @@ async function confirmarExtras(){
   lista.forEach(ev => {
     const id = evId(ev);
     if(accion.tipo === 'hecho'){
-      if(accion.valor) COMPLETED.add(id); else COMPLETED.delete(id);
+      if(accion.valor){ COMPLETED.add(id); cerrarAvisosDe(id); } else COMPLETED.delete(id);
       return;
     }
     const u = mioOCrear(ev);
@@ -8695,7 +8695,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.25d';
+const VERSION = '2026.09.26';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -9157,7 +9157,7 @@ const TUTO_PASOS = [
     texto: `
       <p>Los eliges con la <b>campana</b> del evento, o desde que lo <b>agregas o editas</b>. Debajo del nombre se ve cuáles tiene: «🔔 1 semana antes · 1 día antes».</p>
       <p>Para que suenen, activa una vez las <b>notificaciones</b> en ⚙︎ (el paso siguiente te dice cómo). Desde ahí te llegan solas.</p>
-      <p>Si el evento tiene hora, el aviso llega a esa hora; si no, a las 9:00 de la mañana. Tus recordatorios de antes siguen igual.</p>`
+      <p>Si el evento tiene hora, llega a esa hora y también una hora antes. Si es de todo el día, el mismo día te llega cada hora de 9 AM a 9 PM hasta que lo palomees.</p>`
   },
   {
     titulo: 'Notificaciones en el teléfono',
@@ -9168,7 +9168,7 @@ const TUTO_PASOS = [
           <span style="width:16px;height:16px;border-radius:4px;background:var(--accent);display:inline-block"></span>SEMESTRE<span style="margin-left:auto">ahora</span>
         </div>
         <div style="font-weight:600;font-size:0.9rem">★ Examen de estructuras</div>
-        <div style="font-size:0.82rem;color:var(--ink-soft)">Mañana a las 10:00 AM · Salón 204</div>
+        <div style="font-size:0.82rem;color:var(--ink-soft)">En 1 hora · 10:00 AM · Salón 204</div>
       </div>
       <div class="mk-cap">Para activarlas (una sola vez)</div>
       <ol class="tuto-lista" style="margin:0;padding-left:0">
@@ -9177,8 +9177,10 @@ const TUTO_PASOS = [
         <li>Acepta el permiso del iPhone</li>
       </ol>`,
     texto: `
-      <p>Llegan a la hora de cada recordatorio, <b>con la app cerrada</b>. Al tocarla se abre ese día.</p>
-      <p>Si ya lo palomeaste, <b>no te avisa</b>. Si cambias la fecha o los avisos, se ajusta solo: ya no hay que exportar nada.</p>
+      <p>Llegan <b>con la app cerrada</b>, y al tocarla se abre ese día.</p>
+      <p><b>Con hora</b> (ej. 4:00 PM): a las 4:00 de cada día que elegiste, y además <b>una hora antes</b>, a las 3:00.</p>
+      <p><b>De todo el día</b>: el mismo día te llega <b>cada hora de 9 AM a 9 PM</b>. Los de días antes («1 día antes», «1 semana antes») llegan una vez a las 9 AM.</p>
+      <p>En cuanto lo <b>palomeas</b>, dejan de llegar. Si cambias la fecha o los avisos, se ajusta solo.</p>
       <p>En iPhone solo funcionan desde el ícono de la pantalla de inicio (no desde Safari) y con iOS 16.4 o más nuevo. Actívalas en cada teléfono o iPad donde las quieras.</p>`
   },
   {
@@ -9778,7 +9780,7 @@ async function pintarPush(){
   const sub = await suscripcionActual();
   if(sub && Notification.permission === 'granted'){
     marcarPush(true);
-    poner('<b>Activadas en este dispositivo.</b> Te llegan a la hora de cada recordatorio, aunque la app esté cerrada. Si ya lo palomeaste, no te avisa.',
+    poner('<b>Activadas en este dispositivo.</b> Te llegan aunque la app esté cerrada. Con hora: a esa hora y una hora antes. De todo el día: cada hora de 9 AM a 9 PM, hasta que lo palomees.',
       `<button class="btn" onclick="probarPush()">Mandar una de prueba</button>
        <button class="btn" onclick="desactivarPush()">Desactivar</button>`, 'ok');
     return;
@@ -9868,6 +9870,17 @@ async function sincronizarPush(){
   }
   marcarPush(true);
   try{ await llamarAvisos({ accion:'suscribir', sub: sub.toJSON(), tz: zonaHoraria(), equipo: nombreEquipo() }); }catch(e){}
+}
+
+// Al palomear algo, se quitan de la pantalla sus avisos pendientes
+async function cerrarAvisosDe(id){
+  try{
+    if(!pushPosible()) return;
+    const reg = await navigator.serviceWorker.getRegistration();
+    if(!reg || !reg.getNotifications) return;
+    const lista = await reg.getNotifications();
+    lista.forEach(n => { if(n.data && n.data.ev === id) n.close(); });
+  }catch(e){}
 }
 
 // Al cerrar sesión, este teléfono deja de recibir los avisos de esa cuenta
