@@ -97,6 +97,7 @@
     font-family:var(--font-body);
     -webkit-font-smoothing:antialiased;
     padding-bottom:40px;
+    overflow-x:hidden;   /* al deslizar de lado no aparece barra horizontal */
   }
   .wrap{
     max-width:980px;
@@ -300,6 +301,11 @@
   }
   .cell.today{outline:2px solid var(--accent);outline-offset:-2px;border-radius:4px;z-index:1;}
   .cell.today .daynum{color:var(--accent);font-weight:700;}
+  .cell.today.latido{animation:latido 0.6s ease-in-out 3;}
+  @keyframes latido{
+    0%,100%{transform:scale(1);box-shadow:0 0 0 0 var(--accent);}
+    50%{transform:scale(1.25);box-shadow:0 0 0 4px var(--accent-soft);}
+  }
   .cell.has-events{cursor:pointer;}
   .cell.has-events:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .cell.has-events:active{background:var(--accent-soft);}
@@ -1171,6 +1177,7 @@
 
   /* ---------- Vista de semana ---------- */
   #semanaVista{padding-bottom:24px;}
+  #mesVista,#semanaVista,#diaVista{touch-action:pan-y;}
   .sv-esq{flex:none;width:26px;}
   .sv-cabecera{
     display:flex;
@@ -1208,56 +1215,78 @@
     color:var(--ink);
   }
   .sv-dia.hoy .sv-dia-n{color:var(--accent);}
-  .sv-franja{
-    display:flex;
-    gap:1px;
-    align-items:stretch;
-    margin-bottom:3px;
-  }
-  .sv-todo-lbl{
-    font-family:var(--font-mono);
-    font-size:0.5rem;
-    color:var(--ink-soft);
-    display:flex;
-    align-items:center;
-    justify-content:flex-end;
-    padding-right:3px;
-  }
-  .sv-todo{display:flex;gap:1px;flex:1;}
-  .sv-todo-c{
-    flex:1;
-    min-width:0;
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-    padding:2px 1px;
-  }
-  .sv-tira{
-    height:5px;
-    border:none;
-    border-radius:3px;
-    padding:0;
-    cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
-  }
-  .sv-tira.hecho{opacity:0.45;}
-  .sv-tira.fav{height:7px;box-shadow:0 0 0 1.5px var(--estrella, #C0901A);}
   .sv-cuerpo{display:flex;gap:0;}
   .sv-horas{flex:none;width:26px;}
   .sv-hora{
     position:relative;
+    display:block;
+    width:100%;
+    border:none;
     border-top:1px solid var(--line-soft);
     box-sizing:border-box;
+    background:none;
+    padding:0;
+    margin:0;
+    font:inherit;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
   }
   .sv-hora span{
     position:absolute;
-    top:-6px; right:3px;
+    top:-7px; right:3px;
     font-family:var(--font-mono);
-    font-size:0.5rem;
+    font-size:0.6rem;
+    font-weight:600;
     color:var(--ink-soft);
     background:var(--paper);
-    padding:0 1px;
+    padding:0 2px;
+    border-radius:4px;
   }
+  .sv-hora.on span{background:var(--accent);color:var(--paper-card);}
+  .sv-banda{
+    position:absolute;left:0;right:0;
+    background:var(--accent);opacity:0.13;
+    pointer-events:none;
+  }
+  .sv-col{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  /* Todo el día: tiras verticales dentro de cada columna */
+  .sv-tiraV{
+    position:absolute;
+    top:0; bottom:0;
+    width:10px;
+    border:none;
+    border-radius:4px;
+    padding:6px 0;
+    margin:0;
+    cursor:pointer;
+    overflow:hidden;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    z-index:1;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .sv-tiraV.hecho{opacity:0.6;}
+  .sv-tiraV.fav{box-shadow:inset 0 0 0 1.5px var(--estrella, #C0901A);}
+  .sv-tiraV.mas{background:var(--line);}
+  .sv-tiraV-txt{
+    writing-mode:vertical-rl;
+    text-orientation:mixed;
+    max-height:100%;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    font-family:var(--font-body);
+    font-size:0.5rem;
+    font-weight:600;
+    line-height:10px;
+    color:var(--paper-card);
+    text-shadow:0 0 2px rgba(0,0,0,0.3);
+    pointer-events:none;
+  }
+  .sv-tiraV.mas .sv-tiraV-txt{color:var(--ink);text-shadow:none;}
+  .sv-tiraV.hecho .sv-tiraV-txt{text-decoration:line-through;}
+  [data-tema="oscuro"] .sv-tiraV-txt{color:var(--ink);text-shadow:0 0 3px rgba(0,0,0,0.6);}
   .sv-rejilla{
     flex:1;
     display:flex;
@@ -1281,6 +1310,7 @@
   .sv-col.hoy{background-color:var(--accent-soft);}
   .sv-ev{
     position:absolute;
+    z-index:2;
     border:none;
     border-left:2px solid;
     border-radius:3px;
@@ -1305,6 +1335,7 @@
   }
   @media (min-width:520px){
     .sv-ev{font-size:0.6rem;}
+    .sv-tiraV-txt{font-size:0.56rem;}
     .sv-esq, .sv-horas{width:34px;}
   }
 
@@ -1358,7 +1389,10 @@
     position:relative;
     border-top:1px solid var(--line-soft);
     box-sizing:border-box;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
   }
+  .dv-hora:active{background:var(--accent-soft);}
   .dv-hora:last-child{border-bottom:1px solid var(--line-soft);}
   .dv-hlbl{
     position:absolute;
@@ -2301,38 +2335,86 @@
   .barra.en-listas .barra-hoy,
   .barra.en-listas #filtroVacio{display:none;}
   #listasVista{padding:4px 0 90px;}
-  .ls-nueva{width:100%;margin:4px 0 12px;}
-  .ls-grid{display:flex;flex-direction:column;gap:9px;}
-  .ls-card{
-    display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;font:inherit;color:var(--ink);
-    background:var(--paper-card);border:1px solid var(--line-soft);border-radius:12px;padding:12px 13px;cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
+  /* Encabezado del índice */
+  .ls-top{display:flex;align-items:center;gap:8px;margin:6px 2px 10px;min-height:36px;}
+  .ls-top-tit{flex:1;min-width:0;font-family:var(--font-display);font-weight:700;font-size:1.35rem;color:var(--ink);}
+  .ls-top-tit.centro{text-align:center;font-size:0.98rem;font-family:inherit;}
+  .ls-top-btn{
+    flex:none;font:inherit;font-size:0.9rem;color:var(--accent);background:none;border:none;
+    padding:8px 4px;cursor:pointer;-webkit-tap-highlight-color:transparent;
   }
-  .ls-card:active{transform:scale(0.99);}
-  .ls-card.completa{opacity:0.62;}
-  .ls-emoji{font-size:1.6rem;line-height:1;flex:none;margin-top:1px;}
-  .ls-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
-  .ls-nombre{font-weight:700;font-size:0.98rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .ls-cuenta{font-size:0.74rem;color:var(--ink-soft);}
-  .ls-barra{display:block;height:5px;border-radius:3px;background:var(--line-soft);overflow:hidden;}
-  .ls-barra i{display:block;height:100%;background:var(--accent);border-radius:3px;}
-  .ls-chips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 4px;}
+  .ls-top-btn.fuerte{font-weight:700;}
+  /* Un solo bloque con renglones, como una lista del teléfono */
+  .ls-grupo{
+    background:var(--paper-card);border:1px solid var(--line-soft);border-radius:14px;overflow:hidden;
+  }
+  .ls-fila{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:var(--ink);
+    background:none;border:none;border-bottom:1px solid var(--line-soft);padding:12px 12px 12px 14px;
+    cursor:pointer;min-height:58px;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+  }
+  .ls-fila:last-child{border-bottom:none;}
+  .ls-fila:active{background:var(--paper-alt);}
+  .ls-fila.completa .ls-nombre{color:var(--ink-soft);}
+  .ls-fila.marcada{background:var(--accent-soft);}
+  .ls-emoji{font-size:1.45rem;line-height:1;flex:none;width:30px;text-align:center;}
+  .ls-fila-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .ls-nombre{font-weight:600;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ls-cuenta{font-size:0.74rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ls-num{flex:none;font-family:var(--font-mono);font-size:0.74rem;color:var(--ink-soft);}
+  .ls-chev{flex:none;width:16px;height:16px;color:var(--line);display:flex;}
+  .ls-chev svg{width:16px;height:16px;}
+  .ls-mas{
+    flex:none;width:30px;text-align:center;font-size:1.25rem;line-height:1;color:var(--accent);font-weight:600;
+  }
+  .ls-fila-nueva .ls-nombre{color:var(--accent);font-weight:600;}
+  /* Circulito para seleccionar */
+  .ls-sel{flex:none;display:flex;}
+  .ls-sel .checkbox,.ls-item .checkbox{border-radius:50%;}
+  .ls-fila.marcada .checkbox{background:var(--accent);border-color:var(--accent);}
+  .ls-fila.marcada .checkbox svg{opacity:1;}
+  .ls-borrar-barra{
+    position:sticky;bottom:calc(14px + env(safe-area-inset-bottom, 0px));z-index:5;margin-top:14px;
+  }
+  .ls-borrar-barra > .btn{width:100%;padding:13px;font-size:0.95rem;box-shadow:0 6px 18px rgba(0,0,0,0.12);}
+  .ls-borrar-barra > .btn:disabled{opacity:0.45;}
+  .ls-borrar-barra.conf{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:14px;padding:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.16);
+  }
+  /* Nueva lista */
+  .ls-nueva-form{cursor:default;gap:8px;padding:9px 10px 9px 14px;}
+  .ls-nueva-form input{
+    flex:1;min-width:0;margin:0 !important;font:inherit;font-size:16px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:9px 10px;outline:none;
+  }
+  .ls-nueva-form input:focus{border-color:var(--accent);}
+  .ls-nueva-form .btn{flex:none;padding:9px 13px;}
+  .ls-nueva-tpl{padding:4px 14px 12px;border-bottom:1px solid var(--line-soft);}
+  .ls-nueva-tpl:last-child{border-bottom:none;}
+  .ls-nueva-lbl{font-size:0.74rem;color:var(--ink-soft);}
+  .ls-x{
+    flex:none;width:34px;height:34px;border:none;background:none;color:var(--ink-soft);opacity:0.55;
+    font-size:1.35rem;line-height:1;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;
+  }
+  .ls-x:active{opacity:1;}
+  .ls-chips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 8px;}
   .ls-chip{
-    font:inherit;font-size:0.7rem;color:var(--ink-soft);background:var(--paper-alt);border:none;border-radius:10px;
-    padding:3px 8px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font:inherit;font-size:0.72rem;color:var(--ink-soft);background:var(--paper-alt);border:none;border-radius:10px;
+    padding:4px 9px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
   button.ls-chip{cursor:pointer;color:var(--accent);}
   .ls-chip.grande{font-size:0.78rem;padding:5px 10px;border:1px solid var(--line-soft);background:var(--paper-card);}
   .ls-en-dia{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 10px 40px;}
-  .ls-vacio{text-align:center;color:var(--ink-soft);font-size:0.86rem;line-height:1.55;padding:18px 6px;}
-  .ls-vacio-tit{font-weight:700;color:var(--ink);font-size:1.02rem;margin-bottom:4px;}
+  .ls-vacio{text-align:center;color:var(--ink-soft);font-size:0.86rem;line-height:1.55;padding:10px 6px 18px;}
+  .ls-vacio-tit{font-weight:700;color:var(--ink);font-size:1.02rem;margin-bottom:2px;}
   .ls-vacio-nota{font-size:0.78rem;color:var(--ink-soft);margin-top:14px;text-align:center;}
-  .ls-plantillas{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0 4px;}
-  .ls-form .ls-plantillas{justify-content:flex-start;margin:4px 0 10px;}
+  .ls-plantillas{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;}
   .ls-tpl{
     font:inherit;font-size:0.8rem;padding:7px 11px;border-radius:16px;cursor:pointer;
-    border:1px solid var(--line-soft);background:var(--paper-card);color:var(--ink);
+    border:1px solid var(--line-soft);background:var(--paper);color:var(--ink);
   }
+  .ls-grupo + .ls-sec + .ls-plantillas .ls-tpl{background:var(--paper-card);}
   .ls-tpl b{font-weight:600;color:var(--ink-soft);font-size:0.72rem;margin-left:2px;}
   .ls-tpl.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600;}
   .ls-emojis{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 10px;}
@@ -2341,34 +2423,52 @@
     background:var(--paper-card);cursor:pointer;padding:0;line-height:1;
   }
   .ls-emo.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent);}
-  .ls-cabeza{display:flex;align-items:center;gap:8px;margin:2px 0 8px;}
-  .ls-titulo{flex:1;min-width:0;font-weight:700;font-size:1.12rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  /* Dentro de una lista */
+  .ls-cabeza{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 6px;}
+  .ls-volver{
+    display:flex;align-items:center;gap:2px;font:inherit;font-size:0.95rem;color:var(--accent);
+    background:none;border:none;padding:8px 6px 8px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .ls-volver svg{width:20px;height:20px;}
   .ls-cabeza .icon-btn{width:36px;height:36px;flex:none;}
   .ls-cabeza .icon-btn.active{color:var(--accent) !important;border-color:var(--accent) !important;background:var(--accent-soft) !important;}
-  .ls-progreso{display:flex;flex-direction:column;gap:5px;font-size:0.76rem;color:var(--ink-soft);margin-bottom:10px;}
-  .ls-agregar{display:flex;gap:7px;margin:4px 0 10px;}
-  .ls-agregar input{
-    flex:1;min-width:0;margin:0 !important;font:inherit;font-size:16px;color:var(--ink);
-    background:var(--paper-card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;
+  .ls-h1{font-family:var(--font-display);font-weight:700;font-size:1.5rem;line-height:1.2;color:var(--ink);overflow-wrap:anywhere;margin:0 2px;}
+  .ls-sub{font-size:0.8rem;color:var(--ink-soft);margin:3px 2px 10px;}
+  .ls-tipico{width:100%;margin:10px 0 4px;}
+  .ls-items{
+    display:flex;flex-direction:column;background:var(--paper-card);border:1px solid var(--line-soft);
+    border-radius:14px;overflow:hidden;
   }
-  .ls-agregar input:focus{border-color:var(--accent);}
-  .ls-agregar .btn{flex:none;width:46px;font-size:1.2rem;padding:0;}
-  .ls-tipico{width:100%;margin-bottom:10px;}
-  .ls-items{display:flex;flex-direction:column;}
-  .ls-item{display:flex;align-items:stretch;border-bottom:1px solid var(--line-soft);}
+  .ls-item{display:flex;align-items:center;border-bottom:1px solid var(--line-soft);padding-right:4px;}
+  .ls-item:last-child{border-bottom:none;}
   .ls-check{
-    flex:1;min-width:0;display:flex;align-items:center;gap:11px;text-align:left;font:inherit;font-size:0.95rem;
-    background:none;border:none;color:var(--ink);padding:11px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+    flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;font:inherit;font-size:1rem;
+    background:none;border:none;color:var(--ink);padding:13px 4px 13px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;
   }
   .ls-txt{flex:1;min-width:0;overflow-wrap:anywhere;}
   .ls-item.hecho .ls-txt{text-decoration:line-through;color:var(--ink-soft);}
   .ls-item.hecho .checkbox{background:var(--accent);border-color:var(--accent);}
   .ls-item.hecho .checkbox svg{opacity:1;}
-  .ls-sec{font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);margin:16px 2px 2px;}
-  .ls-acciones{margin-top:12px;}
+  .ls-add .ls-check{cursor:text;padding-top:6px;padding-bottom:6px;}
+  .ls-add .ls-mas{width:22px;}
+  .ls-add input{
+    flex:1;min-width:0;margin:0 !important;font:inherit;font-size:16px;color:var(--ink);
+    background:none;border:none;padding:8px 0;outline:none;
+  }
+  .ls-add-ok{display:none;flex:none;padding:7px 12px;margin-right:6px;font-size:0.85rem;}
+  .ls-add-ok.ver{display:block;}
+  .ls-sec{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    font-size:0.78rem;font-weight:600;color:var(--ink-soft);margin:18px 4px 6px;
+  }
+  .ls-sec-acc{display:flex;gap:4px;}
+  .ls-sec-acc button{font:inherit;font-weight:500;font-size:0.8rem;color:var(--accent);background:none;border:none;padding:4px 6px;cursor:pointer;}
+  .ls-sec + .ls-items .ls-item{opacity:0.8;}
   .ls-repetir{display:flex;align-items:center;gap:8px;font-size:0.84rem;margin:2px 0 6px;}
   .ls-repetir input{width:18px;height:18px;margin:0;}
   .ls-borrar{width:100%;margin-top:12px;color:var(--examen);}
+  .ls-form{margin-bottom:12px;}
+  #listasVista .deshacer{margin:0 0 10px;}
 
   /* ══════════ Notificaciones ══════════ */
   #pushBtns:empty,#pushMsg:empty{display:none;}
@@ -4584,6 +4684,35 @@ function irAlMesDeHoy(inmediato){
   });
 }
 
+// En la vista de puntos: baja hasta el mes de hoy y hace
+// "latir" el cuadrito de hoy para que lo encuentres al instante.
+function irAlDiaDeHoy(suave){
+  if(vista !== 'anio') return;
+  if(vistaTipo !== 'puntos'){ window.scrollTo({ top:0, behavior:'instant' }); return; }
+  irAlMesDeHoy(!suave);
+  requestAnimationFrame(() => {
+    const c = document.querySelector('.cell.today');
+    if(!c || !c.classList) return;
+    c.classList.remove('latido');
+    void c.offsetWidth;
+    c.classList.add('latido');
+    setTimeout(() => { if(c.classList) c.classList.remove('latido'); }, 1800);
+  });
+}
+
+// En semana y día: si la hora actual queda abajo, baja la pantalla
+// para que se vea la línea roja de "ahora".
+function bajarAHoraActual(v){
+  const sel = v === 'semana' ? '.sv-ahora' : '.dv-ahora';
+  const l = document.querySelector(sel);
+  if(!l || !l.getBoundingClientRect) return;
+  const r = l.getBoundingClientRect();
+  const alto = window.innerHeight || 700;
+  if(r.top > alto * 0.7){
+    window.scrollTo({ top: Math.max(0, r.top + window.scrollY - alto * 0.35), behavior:'smooth' });
+  }
+}
+
 function volverAnios(){
   vista = 'anios';
   if(selectMode) toggleSelectMode();
@@ -4716,7 +4845,12 @@ function irAHoy(){
     window.scrollTo({ top:0, behavior:'smooth' });
     return;
   }
-  irAlMesDeHoy();
+  if(vistaTipo === 'listas'){
+    listaAbierta = null; listaConfig = false; renderListas();
+    window.scrollTo({ top:0, behavior:'smooth' });
+    return;
+  }
+  irAlDiaDeHoy(true);
 }
 
 // Escribe en la barra el mes que queda más arriba en pantalla
@@ -5049,7 +5183,7 @@ function forzarRepintado(){
   repintando = true;
   ['barra','years','months','mesVista','semanaVista','diaVista','listaVista','listasVista'].forEach(id => {
     const el = document.getElementById(id);
-    if(!el || el.style.display === 'none') return;
+    if(!el || el.style.display === 'none' || el.dataset.anim) return;
     // Leer una medida obliga al navegador a recalcular ya
     void el.offsetHeight;
     el.style.transform = 'translateZ(0)';
@@ -5057,7 +5191,7 @@ function forzarRepintado(){
   requestAnimationFrame(() => {
     ['barra','years','months','mesVista','semanaVista','diaVista','listaVista','listasVista'].forEach(id => {
       const el = document.getElementById(id);
-      if(el) el.style.transform = '';
+      if(el && !el.dataset.anim) el.style.transform = '';
     });
     repintando = false;
   });
@@ -5076,11 +5210,19 @@ function repintarBloque(id){
 
 async function elegirVista(v){
   if(!VISTAS_OK.includes(v)) return;
-  if(v === vistaTipo){ pintarVistas(); return; }
+  const misma = v === vistaTipo;
   vistaTipo = v;
-  if(v === 'mes') mesActual = mesPorOmision();
-  if(v === 'dia') diaActual = diaPorOmision();
-  if(v === 'semana') semanaLunes = semanaPorOmision();
+  // Cualquier pestaña que toques te lleva a HOY (año, mes, semana
+  // y día de hoy), aunque ya estuvieras en ella.
+  const a = Math.min(Math.max(new Date().getFullYear(), ANIO_MIN), ANIO_MAX);
+  if(ANIO !== a) ANIO = a;
+  vista = 'anio';
+  mesActual = mesPorOmision();
+  diaActual = diaPorOmision();
+  semanaLunes = semanaPorOmision();
+  semHoraSel = null;
+  if(v === 'listas'){ listaAbierta = null; listaConfig = false; borrandoLista = false; selListas = false; listasSel = new Set(); pidiendoBorrarListas = false; creandoLista = false; }
+  if(v === 'lista') listaPasados = false;
 
   // Se sube primero: si te quedas abajo, la vista nueva empieza
   // fuera de la pantalla y parece que no cambió nada.
@@ -5093,7 +5235,10 @@ async function elegirVista(v){
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     repintarBloque(destino);
+    if(v === 'puntos') irAlDiaDeHoy();
+    if(v === 'semana' || v === 'dia') bajarAHoraActual(v);
   });
+  if(misma) return;
 
   try{ await writeKey(KEY_VISTA, v); }catch(e){ console.warn('vista:', e); }
 }
@@ -5155,6 +5300,46 @@ function cambiarSemana(n){
   renderSemana();
 }
 
+const ANCHO_TIRA_SEM = 12;   // ancho de cada tira de todo el día
+const TIRAS_SEM = 2;         // cuántas caben por columna antes del "+n"
+let semHoraSel = null;       // hora que tocaste en la columna de la izquierda
+
+function etiquetaHora(h){
+  h = +h;
+  return h === 0 ? '12 am' : (h < 12 ? h + ' am' : (h === 12 ? '12 pm' : (h - 12) + ' pm'));
+}
+
+// Tocar un número de la izquierda resalta esa hora en toda la semana;
+// tocarlo otra vez lo quita.
+function elegirHoraSem(h){
+  semHoraSel = (semHoraSel === h) ? null : h;
+  renderSemana();
+}
+
+// Tocar un espacio vacío de la semana abre "agregar" con día y hora puestos.
+function tocarHuecoSem(e, iso, ini){
+  if(!e || e.target !== e.currentTarget) return;   // tocaste un evento
+  if(selectMode){ dayTap(iso); return; }
+  let h;
+  if(semHoraSel !== null) h = semHoraSel;
+  else{
+    const r = e.currentTarget.getBoundingClientRect();
+    h = ini + Math.floor((e.clientY - r.top) / ALTO_HORA_SEM);
+  }
+  semHoraSel = null;
+  agregarEnHora(iso, Math.max(0, Math.min(23, h)));
+}
+
+// Abre el día con el formulario de agregar y la hora ya escrita
+function agregarEnHora(iso, h){
+  if(!clampToSemester(iso)) return;
+  openPanel(iso);
+  startAddHere();
+  const i = document.getElementById('adHora');
+  if(i) i.value = pad(h) + ':00';
+  if(vistaTipo === 'semana') renderSemana();
+}
+
 function renderSemana(){
   const el = document.getElementById('semanaVista');
   if(!el) return;
@@ -5195,40 +5380,44 @@ function renderSemana(){
       </button>`;
   }).join('');
 
-  // Franja de los de todo el día
-  const hayTodoDia = dias.some(d => porDia[d].some(e => !safeHora(e.hora)));
-  const franja = hayTodoDia ? `
-    <div class="sv-todo">
-      ${dias.map(d => `
-        <div class="sv-todo-c">
-          ${porDia[d].filter(e => !safeHora(e.hora)).slice(0,3).map(ev => {
-            const col = safeColor(catColor(ev.type));
-            const hecho = COMPLETED.has(evId(ev));
-            return `<button class="sv-tira${hecho ? ' hecho' : ''}${ev.fav ? ' fav' : ''}" style="background:${col}" onclick="dayTap('${d}')" aria-label="${ev.fav ? 'Importante: ' : ''}${esc(ev.title)}"></button>`;
-          }).join('')}
-        </div>`).join('')}
-    </div>` : '';
-
   // Horas
   let horas = '';
   for(let h = ini; h < fin; h++){
     const et = h === 0 ? '12a' : (h < 12 ? h + 'a' : (h === 12 ? '12p' : (h - 12) + 'p'));
-    horas += `<div class="sv-hora" style="height:${ALTO_HORA_SEM}px"><span>${et}</span></div>`;
+    horas += `<button class="sv-hora${semHoraSel === h ? ' on' : ''}" style="height:${ALTO_HORA_SEM}px" onclick="elegirHoraSem(${h})" aria-label="${esc(etiquetaHora(h))}"><span>${et}</span></button>`;
   }
+  // Franja resaltada de la hora que tocaste a la izquierda
+  const banda = (semHoraSel !== null && semHoraSel >= ini && semHoraSel < fin)
+    ? `<div class="sv-banda" style="top:${(semHoraSel - ini) * ALTO_HORA_SEM}px;height:${ALTO_HORA_SEM}px"></div>` : '';
 
   // Columnas con los eventos
   const columnas = dias.map(d => {
     const conHora = porDia[d].filter(e => safeHora(e.hora))
       .sort((a,b) => safeHora(a.hora).localeCompare(safeHora(b.hora)));
+    // Los de todo el día: tiras verticales pegadas a la izquierda de
+    // la columna, de arriba a abajo, igual que en la vista de día.
+    // Los importantes primero, para que no se escondan en el "+n"
+    const todoDia = porDia[d].filter(e => !safeHora(e.hora)).sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0));
+    const caben = todoDia.length > TIRAS_SEM ? TIRAS_SEM - 1 : TIRAS_SEM;
+    let tiras = todoDia.slice(0, caben).map((ev, k) => {
+      const col = safeColor(catColor(ev.type));
+      const hecho = COMPLETED.has(evId(ev));
+      return `<button class="sv-tiraV${hecho ? ' hecho' : ''}${ev.fav ? ' fav' : ''}" style="left:${k * ANCHO_TIRA_SEM}px;background:${col}${hecho ? '40' : ''}"
+        onclick="dayTap('${d}')" aria-label="${ev.fav ? 'Importante: ' : ''}Todo el día: ${esc(ev.title)}"><span class="sv-tiraV-txt">${esc(ev.title)}</span></button>`;
+    }).join('');
+    if(todoDia.length > caben){
+      tiras += `<button class="sv-tiraV mas" style="left:${caben * ANCHO_TIRA_SEM}px" onclick="dayTap('${d}')" aria-label="${todoDia.length - caben} más de todo el día"><span class="sv-tiraV-txt">+${todoDia.length - caben}</span></button>`;
+    }
+    const off = Math.min(todoDia.length, TIRAS_SEM) * ANCHO_TIRA_SEM;
+
     const { puestos, total } = carriles(conHora);
     const bloques = puestos.map(({ ev, hora, carril }) => {
       const hh = +hora.slice(0,2), mm = +hora.slice(3,5);
       const top = ((hh - ini) + mm/60) * ALTO_HORA_SEM;
-      const ancho = 100 / total;
       const hecho = COMPLETED.has(evId(ev));
       const col = safeColor(catColor(ev.type));
       return `<button class="sv-ev${hecho ? ' hecho' : ''}"
-        style="top:${top}px;height:${ALTO_HORA_SEM - 2}px;left:${carril*ancho}%;width:calc(${ancho}% - 2px);background:${col}2E;border-left-color:${col}"
+        style="top:${top}px;height:${ALTO_HORA_SEM - 2}px;left:calc(${off}px + (100% - ${off}px) * ${carril} / ${total});width:calc((100% - ${off}px) / ${total} - 2px);background:${col}2E;border-left-color:${col}"
         onclick="dayTap('${d}')">${titEv(ev)}</button>`;
     }).join('');
 
@@ -5238,7 +5427,7 @@ function renderSemana(){
       const pos = ((n.getHours() - ini) + n.getMinutes()/60) * ALTO_HORA_SEM;
       if(pos >= 0 && pos <= altoTotal) linea = `<div class="sv-ahora" style="top:${pos}px"></div>`;
     }
-    return `<div class="sv-col${d === hoy ? ' hoy' : ''}" style="height:${altoTotal}px">${bloques}${linea}</div>`;
+    return `<div class="sv-col${d === hoy ? ' hoy' : ''}" style="height:${altoTotal}px" onclick="tocarHuecoSem(event,'${d}',${ini})">${banda}${tiras}${bloques}${linea}</div>`;
   }).join('');
 
   const a = parseISO(semanaLunes), b = parseISO(dias[6]);
@@ -5248,17 +5437,18 @@ function renderSemana(){
 
   el.innerHTML = `
     <div class="mg-head">
-      <button class="mg-nav" onclick="cambiarSemana(-1)" aria-label="Semana anterior">‹</button>
+      <button class="mg-nav" onclick="pasoVista('semana',-1)" aria-label="Semana anterior">‹</button>
       <span class="mg-titulo">${esc(rango)}</span>
-      <button class="mg-nav" onclick="cambiarSemana(1)" aria-label="Semana siguiente">›</button>
+      <button class="mg-nav" onclick="pasoVista('semana',1)" aria-label="Semana siguiente">›</button>
     </div>
     <div class="sv-cabecera"><span class="sv-esq"></span>${cabecera}</div>
-    ${hayTodoDia ? `<div class="sv-franja"><span class="sv-esq sv-todo-lbl">día</span>${franja}</div>` : ''}
     <div class="sv-cuerpo">
       <div class="sv-horas">${horas}</div>
       <div class="sv-rejilla">${columnas}</div>
     </div>
-    ${yaDeslizo ? '' : '<div class="mg-pie">Toca un día para verlo completo · desliza para cambiar de semana</div>'}
+    <div class="mg-pie">${semHoraSel !== null
+      ? `Toca el día en que quieres algo a las <b>${esc(etiquetaHora(semHoraSel))}</b>`
+      : 'Toca un espacio vacío para agregar algo a esa hora'}${yaDeslizo ? '' : ' · desliza para cambiar de semana'}</div>
   `;
 }
 
@@ -5339,7 +5529,7 @@ function renderDia(){
   let lineas = '';
   for(let h = ini; h < fin; h++){
     const et = h === 0 ? '12 am' : (h < 12 ? h + ' am' : (h === 12 ? '12 pm' : (h - 12) + ' pm'));
-    lineas += `<div class="dv-hora" style="height:${ALTO_HORA}px"><span class="dv-hlbl">${et}</span></div>`;
+    lineas += `<div class="dv-hora" style="height:${ALTO_HORA}px" onclick="agregarEnHora('${iso}',${h})"><span class="dv-hlbl">${et}</span></div>`;
   }
 
   // Bloques de eventos
@@ -5406,9 +5596,9 @@ function renderDia(){
 
   el.innerHTML = `
     <div class="mg-head">
-      <button class="mg-nav" onclick="cambiarDia(-1)" ${puedeAnt ? '' : 'disabled'} aria-label="Día anterior">‹</button>
+      <button class="mg-nav" onclick="pasoVista('dia',-1)" ${puedeAnt ? '' : 'disabled'} aria-label="Día anterior">‹</button>
       <span class="mg-titulo ${esHoy ? 'es-hoy' : ''}">${esc(fechaLarga(iso))}</span>
-      <button class="mg-nav" onclick="cambiarDia(1)" ${puedeSig ? '' : 'disabled'} aria-label="Día siguiente">›</button>
+      <button class="mg-nav" onclick="pasoVista('dia',1)" ${puedeSig ? '' : 'disabled'} aria-label="Día siguiente">›</button>
     </div>
     ${rotulo}
     <div class="dv-cuerpo" style="--tiras:${anchoTiras}px">
@@ -5418,7 +5608,7 @@ function renderDia(){
     </div>
     ${todos.length ? '' : '<div class="lista-vacia">No hay nada este día.</div>'}
     <button class="btn add-here" onclick="dayTap('${iso}')">＋ Agregar en este día</button>
-    ${yaDeslizo ? '' : '<div class="mg-pie">Desliza de lado para cambiar de día</div>'}
+    <div class="mg-pie">Toca una hora para agregar algo${yaDeslizo ? '' : ' · desliza de lado para cambiar de día'}</div>
   `;
 }
 
@@ -5498,9 +5688,9 @@ function renderMes(){
 
   el.innerHTML = `
     <div class="mg-head">
-      <button class="mg-nav" onclick="cambiarMes(-1)" ${antes ? '' : 'disabled'} aria-label="Mes anterior">‹</button>
+      <button class="mg-nav" onclick="pasoVista('mes',-1)" ${antes ? '' : 'disabled'} aria-label="Mes anterior">‹</button>
       <span class="mg-titulo">${esc(MONTHS_ES[mo-1])} <b>${y}</b></span>
-      <button class="mg-nav" onclick="cambiarMes(1)" ${desp ? '' : 'disabled'} aria-label="Mes siguiente">›</button>
+      <button class="mg-nav" onclick="pasoVista('mes',1)" ${desp ? '' : 'disabled'} aria-label="Mes siguiente">›</button>
     </div>
     <div class="mg-dias">${WEEKDAYS_SHORT.map(w => `<span>${w}</span>`).join('')}</div>
     <div class="mg-grid">${celdas}</div>
@@ -5508,33 +5698,132 @@ function renderMes(){
   `;
 }
 
-// Deslizar de lado para cambiar de mes o de día
-let tocX = 0, tocY = 0, tocando = false;
-function activarDeslizarEn(id, alCambiar){
-  const el = document.getElementById(id);
+// ---------- Deslizar de lado para cambiar de mes, semana o día ----------
+// La pantalla sigue a tu dedo mientras deslizas. Al soltar, si fue
+// suficiente, lo de ahora se va de lado y lo nuevo entra del otro
+// lado; si no, regresa a su lugar con un rebote suave.
+
+// ¿Se puede avanzar n (−1 o 1) en esa vista, o ya es el tope?
+function puedeMes(n){
+  const m = mesActual + n;
+  if(m < 1) return ANIO > ANIO_MIN;
+  if(m > 12) return ANIO < ANIO_MAX;
+  return true;
+}
+function puedeDia(n){
+  const d = parseISO(diaActual || diaPorOmision());
+  d.setDate(d.getDate() + n);
+  return !!clampToSemester(toISO(d.getFullYear(), d.getMonth()+1, d.getDate()));
+}
+function puedeSemana(n){
+  const d = parseISO(semanaLunes || semanaPorOmision());
+  d.setDate(d.getDate() + n * 7);
+  const iso = toISO(d.getFullYear(), d.getMonth()+1, d.getDate());
+  return !!(clampToSemester(iso) || clampToSemester(masDias(iso, 6)));
+}
+
+const VISTAS_DESLIZ = {
+  mes:    { id:'mesVista',    puede:puedeMes,    cambiar:n => cambiarMes(n) },
+  semana: { id:'semanaVista', puede:puedeSemana, cambiar:n => cambiarSemana(n) },
+  dia:    { id:'diaVista',    puede:puedeDia,    cambiar:n => cambiarDia(n) },
+};
+
+let animandoVista = false;
+function sinMovimiento(){
+  try{ return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  catch(e){ return false; }
+}
+function ponerMov(el, x, trans, opac){
+  el.style.transition = trans || 'none';
+  el.style.transform = x ? `translate3d(${x}px,0,0)` : '';
+  el.style.opacity = (opac === undefined || opac === 1) ? '' : String(opac);
+}
+
+// Cambia de mes/semana/día con la animación de lado.
+// La usan tanto el dedo como las flechitas ‹ ›.
+function pasoVista(tipo, n, desdeX){
+  const cfg = VISTAS_DESLIZ[tipo];
+  if(!cfg) return;
+  const el = document.getElementById(cfg.id);
+  if(!el || animandoVista) return;
+  if(!cfg.puede(n)){
+    // Tope: rebota y regresa
+    if(el.style){ el.dataset.anim = ''; ponerMov(el, 0, 'transform .25s cubic-bezier(.3,1.4,.5,1)'); }
+    return;
+  }
+  if(sinMovimiento()){
+    cfg.cambiar(n);
+    return;
+  }
+  const W = el.offsetWidth || 360;
+  const sale = n > 0 ? -W : W;          // lo de ahora se va hacia acá
+  animandoVista = true;
+  el.dataset.anim = '1';
+  ponerMov(el, sale * 0.55, 'transform .16s ease-in, opacity .16s ease-in', 0);
+  setTimeout(() => {
+    try{ cfg.cambiar(n); }catch(e){ console.error(e); }
+    const el2 = document.getElementById(cfg.id) || el;
+    ponerMov(el2, -sale * 0.55, 'none', 0);
+    void el2.offsetWidth;               // que tome la posición de salida
+    ponerMov(el2, 0, 'transform .26s cubic-bezier(.2,.8,.25,1), opacity .2s ease-out', 1);
+    setTimeout(() => {
+      el2.style.transition = '';
+      el2.dataset.anim = '';
+      animandoVista = false;
+    }, 280);
+  }, 160);
+}
+
+let tocX = 0, tocY = 0, tocT = 0, tocando = false, tocEje = '';
+function activarDeslizarEn(tipo){
+  const cfg = VISTAS_DESLIZ[tipo];
+  const el = cfg && document.getElementById(cfg.id);
   if(!el) return;
   el.addEventListener('touchstart', e => {
-    if(e.touches.length !== 1) return;
+    if(e.touches.length !== 1 || animandoVista) return;
     tocX = e.touches[0].clientX;
     tocY = e.touches[0].clientY;
+    tocT = Date.now();
     tocando = true;
+    tocEje = '';
   }, { passive:true });
-  el.addEventListener('touchend', e => {
+  el.addEventListener('touchmove', e => {
+    if(!tocando || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - tocX;
+    const dy = e.touches[0].clientY - tocY;
+    if(!tocEje){
+      if(Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      tocEje = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+    }
+    if(tocEje !== 'x') return;
+    // En el tope se estira menos, para que se sienta que ya no hay más
+    const tope = !cfg.puede(dx < 0 ? 1 : -1);
+    const x = tope ? dx * 0.25 : dx;
+    el.dataset.anim = '1';
+    ponerMov(el, x, 'none', 1 - Math.min(Math.abs(x) / (el.offsetWidth || 360), 1) * 0.35);
+  }, { passive:true });
+  const soltar = e => {
     if(!tocando) return;
     tocando = false;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - tocX;
-    const dy = t.clientY - tocY;
-    // Solo si el gesto fue claramente horizontal
-    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8){
+    const t = e.changedTouches && e.changedTouches[0];
+    const dx = t ? t.clientX - tocX : 0;
+    const dy = t ? t.clientY - tocY : 0;
+    const rapido = Date.now() - tocT < 260 && Math.abs(dx) > 45;
+    if(tocEje === 'x' && (Math.abs(dx) > 70 || rapido) && Math.abs(dx) > Math.abs(dy)){
       yaDeslizo = true;
-      alCambiar(dx < 0 ? 1 : -1);
+      pasoVista(tipo, dx < 0 ? 1 : -1, dx);
+    }else if(el.dataset.anim){
+      ponerMov(el, 0, 'transform .22s cubic-bezier(.3,1.3,.5,1), opacity .2s', 1);
+      setTimeout(() => { if(!animandoVista){ el.style.transition = ''; el.dataset.anim = ''; } }, 240);
     }
-  }, { passive:true });
+    tocEje = '';
+  };
+  el.addEventListener('touchend', soltar, { passive:true });
+  el.addEventListener('touchcancel', soltar, { passive:true });
 }
-activarDeslizarEn('mesVista', n => cambiarMes(n));
-activarDeslizarEn('diaVista', n => cambiarDia(n));
-activarDeslizarEn('semanaVista', n => cambiarSemana(n));
+activarDeslizarEn('mes');
+activarDeslizarEn('dia');
+activarDeslizarEn('semana');
 
 // ---------- Vista de lista ----------
 let listaPasados = false;
@@ -9200,7 +9489,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.26c';
+const VERSION = '2026.09.26d';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -9371,38 +9660,36 @@ const TUTO_PASOS = [
       </div>`,
     texto: `
       <ul class="tuto-lista">
-        <li><b>Mes</b> — un mes a la vez con los nombres de los eventos. Deslizas de lado para cambiar.</li>
-        <li><b>Semana</b> — siete columnas con las horas. Tocas un día y lo abres completo.</li>
+        <li><b>Mes</b> — un mes a la vez con los nombres de los eventos. Deslizas de lado y la pantalla se mueve con tu dedo.</li>
+        <li><b>Semana</b> — siete columnas con las horas. Tocas un espacio vacío y agregas algo a esa hora.</li>
         <li><b>Día</b> — las horas del día con la línea de «ahora».</li>
         <li><b>Agenda</b> — lo que viene, en orden, con cuánto falta para cada cosa.</li>
         <li><b>Puntos</b> — el año entero en una pantalla, compacto.</li>
         <li><b>Listas</b> — súper, maleta, útiles… (el siguiente paso te las explica).</li>
-      </ul>`
+      </ul>
+      <p>Cada vez que tocas una de estas pestañas te lleva directo a <b>hoy</b>.</p>`
   },
   {
     titulo: 'Listas: súper, maleta y lo que quieras',
     sub: 'Para las cosas que no son de un día: lo que hay que comprar, empacar o llevar.',
     visual: `
-      <div class="ls-card" style="pointer-events:none;margin-bottom:9px">
-        <span class="ls-emoji">🛒</span>
-        <span class="ls-info"><span class="ls-nombre">Súper</span><span class="ls-cuenta">5 de 12</span>
-          <span class="ls-barra"><i style="width:42%"></i></span>
-          <span class="ls-chips"><span class="ls-chip">🔔 cada sábado, 10:00 am</span></span></span>
-      </div>
-      <div class="ls-card" style="pointer-events:none;margin-bottom:12px">
-        <span class="ls-emoji">🧳</span>
-        <span class="ls-info"><span class="ls-nombre">Maleta Orlando</span><span class="ls-cuenta">1 de 18</span>
-          <span class="ls-barra"><i style="width:6%"></i></span>
-          <span class="ls-chips"><span class="ls-chip">📅 Viaje a Orlando · 23 dic</span></span></span>
+      <div class="ls-grupo" style="pointer-events:none;margin-bottom:12px">
+        <div class="ls-fila"><span class="ls-emoji">🛒</span>
+          <span class="ls-fila-txt"><span class="ls-nombre">Súper</span><span class="ls-cuenta">7 pendientes · 🔔 cada sábado, 10:00 am</span></span>
+          <span class="ls-num">5/12</span></div>
+        <div class="ls-fila"><span class="ls-emoji">🧳</span>
+          <span class="ls-fila-txt"><span class="ls-nombre">Maleta Orlando</span><span class="ls-cuenta">17 pendientes · 📅 Viaje a Orlando · 23 dic</span></span>
+          <span class="ls-num">1/18</span></div>
       </div>
       <div class="mk-cap">O dícelo al asistente</div>
       <span class="tuto-frase">Agrega leche y huevos al súper</span>
       <span class="tuto-frase">Ya compré el pan</span>
       <span class="tuto-frase">¿Qué me falta de la maleta?</span>`,
     texto: `
-      <p>En <b>Listas</b> tocas <b>＋ Nueva lista</b> y eliges una plantilla (Súper, Maleta, Útiles de arquitectura, Mochila del gym, Mudanza, Fiesta) o una en blanco. Para agregar varias cosas de un jalón, sepáralas con comas.</p>
-      <p>Lo tachado baja a su sección. Con <b>Desmarcar todo</b> la vuelves a usar el próximo viaje.</p>
-      <p>En sus ajustes la puedes <b>ligar a un evento</b> (aparece ese día) y ponerle un <b>recordatorio</b>, una vez o cada semana, que solo suena si quedan cosas sin tachar.</p>`
+      <p>Tocas <b>＋ Nueva lista</b>, le pones nombre y listo; o tocas una de las ideas (Súper, Maleta, Útiles…) y ya viene con lo típico. Adentro escribes en el renglón <b>＋ Agregar</b>; para varias cosas de un jalón, sepáralas con comas.</p>
+      <p>Lo tachado baja a su sección. Con <b>Desmarcar</b> la vuelves a usar el próximo viaje.</p>
+      <p>Para borrar listas que ya no usas: <b>Seleccionar</b> arriba, marcas las que quieras y <b>Borrar</b>. Te pregunta antes, y si te equivocas tienes <b>Deshacer</b>.</p>
+      <p>En los <b>⋯</b> de cada lista la puedes <b>ligar a un evento</b> y ponerle un <b>recordatorio</b> que solo suena si quedan cosas sin tachar.</p>`
   },
   {
     titulo: 'Semana y día, con horas',
@@ -9429,7 +9716,8 @@ const TUTO_PASOS = [
         </div>
       </div>`,
     texto: `
-      <p>Lo que <b>dura todo el día</b> se dibuja como una tira vertical de lado a lado de la jornada. Lo que tiene hora cae en su lugar exacto.</p>
+      <p>Lo que <b>dura todo el día</b> se dibuja como una tira vertical de arriba a abajo, en el día y en la semana. Lo que tiene hora cae en su lugar exacto.</p>
+      <p>Las <b>horas de la izquierda</b> sirven: toca un espacio vacío (o una hora) y se abre «agregar» con esa hora ya puesta. En la semana, tocas una hora de la izquierda, se pinta esa franja, y luego tocas el día.</p>
       <p>La <b>línea roja</b> marca la hora actual, y solo sale si estás viendo hoy.</p>
       <p>Si dos cosas coinciden a la misma hora, se parten a la mitad para que veas ambas.</p>`
   },
@@ -10164,62 +10452,154 @@ function renderListas(){
   el.innerHTML = l ? detalleListaHTML(l) : indiceListasHTML();
 }
 
+// Chevron ›
+const CHEV_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+
+// ---------- Seleccionar varias listas para borrarlas ----------
+let selListas = false;            // modo seleccionar
+let listasSel = new Set();        // ids marcados
+let pidiendoBorrarListas = false; // mostrando "¿seguro?"
+let listasBorradas = null;        // para deshacer: { listas:[...], nombres }
+
+function toggleSelListas(){
+  selListas = !selListas;
+  listasSel = new Set();
+  pidiendoBorrarListas = false;
+  creandoLista = false;
+  renderListas();
+}
+function tocarListaSel(id){
+  if(!listaPorId(id)) return;
+  if(listasSel.has(id)) listasSel.delete(id); else listasSel.add(id);
+  pidiendoBorrarListas = false;
+  renderListas();
+}
+function selTodasListas(){
+  const todas = listasSel.size === LISTAS.length;
+  listasSel = new Set(todas ? [] : LISTAS.map(l => l.id));
+  pidiendoBorrarListas = false;
+  renderListas();
+}
+function pedirBorrarListas(){
+  if(!listasSel.size) return;
+  pidiendoBorrarListas = true;
+  renderListas();
+}
+function cancelarBorrarListas(){ pidiendoBorrarListas = false; renderListas(); }
+async function borrarListasSel(){
+  const ids = [...listasSel].filter(id => listaPorId(id));
+  if(!ids.length){ pidiendoBorrarListas = false; renderListas(); return; }
+  listasBorradas = { antes: JSON.stringify(LISTAS), cuantas: ids.length };
+  LISTAS = LISTAS.filter(l => !ids.includes(l.id));
+  ids.forEach(id => cerrarAvisosDe('lista|' + id));
+  selListas = false; listasSel = new Set(); pidiendoBorrarListas = false;
+  await guardarListas();
+}
+async function deshacerBorrarListas(){
+  if(!listasBorradas) return;
+  try{ LISTAS = sanitizeListas(JSON.parse(listasBorradas.antes)); }catch(e){ console.warn(e); }
+  listasBorradas = null;
+  await guardarListas();
+}
+
+// Lo que se ve debajo del nombre en el índice
+function subListaTxt(l){
+  const total = l.items.length, pend = pendientesDe(l).length;
+  const partes = [total ? (pend ? `${pend} pendiente${pend === 1 ? '' : 's'}` : '✓ Todo listo') : 'Vacía'];
+  if(l.evento) partes.push('📅 ' + textoEventoLista(l));
+  if(l.aviso) partes.push('🔔 ' + textoAvisoLista(l.aviso));
+  return partes.join(' · ');
+}
+
 function indiceListasHTML(){
-  const form = creandoLista ? formNuevaListaHTML() : `
-    <button class="btn primary ls-nueva" onclick="nuevaListaForm()">＋ Nueva lista</button>`;
+  const aviso = listasBorradas ? `
+    <div class="deshacer">
+      <span>Se ${listasBorradas.cuantas === 1 ? 'borró 1 lista' : 'borraron ' + listasBorradas.cuantas + ' listas'}</span>
+      <button class="btn" onclick="deshacerBorrarListas()">Deshacer</button>
+    </div>` : '';
+
   if(!LISTAS.length && !creandoLista){
+    selListas = false;
     return `
-      ${form}
+      ${aviso}
+      <div class="ls-top"><span class="ls-top-tit">Mis listas</span></div>
       <div class="ls-vacio">
-        <div class="ls-vacio-tit">Tus listas viven aquí</div>
-        <div>Súper, maleta, útiles, lo que quieras. Empieza con una de estas:</div>
-        <div class="ls-plantillas">
-          ${PLANTILLAS_LISTA.filter(p => p.id !== 'vacia').map(p =>
-            `<button class="ls-tpl" onclick="crearDesdePlantilla('${p.id}')">${p.emoji} ${esc(p.nombre)}</button>`).join('')}
-        </div>
-        <div class="ls-vacio-nota">También puedes decirle al asistente: «agrega leche y huevos al súper».</div>
-      </div>`;
+        <div class="ls-vacio-tit">Aquí van tus listas</div>
+        <div>Súper, maleta, útiles, lo que quieras.</div>
+      </div>
+      <div class="ls-grupo">
+        <button class="ls-fila ls-fila-nueva" onclick="nuevaListaForm()"><span class="ls-mas">＋</span><span class="ls-fila-txt"><span class="ls-nombre">Nueva lista</span></span></button>
+      </div>
+      <div class="ls-sec"><span>O empieza con una de estas</span></div>
+      <div class="ls-plantillas">
+        ${PLANTILLAS_LISTA.filter(p => p.id !== 'vacia').map(p =>
+          `<button class="ls-tpl" onclick="crearDesdePlantilla('${p.id}')">${p.emoji} ${esc(p.nombre)}</button>`).join('')}
+      </div>
+      <div class="ls-vacio-nota">También puedes decirle al asistente: «agrega leche y huevos al súper».</div>`;
   }
+
   const orden = LISTAS.slice().sort((a, b) => (pendientesDe(b).length > 0) - (pendientesDe(a).length > 0) || b.creada - a.creada);
-  const tarjetas = orden.map(l => {
-    const total = l.items.length, hechas = total - pendientesDe(l).length;
-    const pct = total ? Math.round(hechas / total * 100) : 0;
-    const chips = [
-      l.evento ? `<span class="ls-chip">📅 ${esc(textoEventoLista(l))}</span>` : '',
-      l.aviso ? `<span class="ls-chip">🔔 ${esc(textoAvisoLista(l.aviso))}</span>` : '',
-    ].join('');
+  const n = listasSel.size;
+  const cabeza = selListas ? `
+    <div class="ls-top">
+      <button class="ls-top-btn" onclick="selTodasListas()">${n === LISTAS.length ? 'Ninguna' : 'Todas'}</button>
+      <span class="ls-top-tit centro">${n ? (n === 1 ? '1 seleccionada' : n + ' seleccionadas') : 'Elige listas'}</span>
+      <button class="ls-top-btn fuerte" onclick="toggleSelListas()">Listo</button>
+    </div>` : `
+    <div class="ls-top">
+      <span class="ls-top-tit">Mis listas</span>
+      <button class="ls-top-btn" onclick="toggleSelListas()">Seleccionar</button>
+    </div>`;
+
+  const filas = orden.map(l => {
+    const total = l.items.length, pend = pendientesDe(l).length;
+    const marcada = listasSel.has(l.id);
+    const accion = selListas ? `tocarListaSel('${l.id}')` : `abrirLista('${l.id}')`;
     return `
-      <button class="ls-card${total && hechas === total ? ' completa' : ''}" onclick="abrirLista('${l.id}')">
+      <button class="ls-fila${total && !pend ? ' completa' : ''}${marcada ? ' marcada' : ''}" onclick="${accion}" ${selListas ? `aria-pressed="${marcada}"` : ''}>
+        ${selListas ? `<span class="ls-sel"><span class="checkbox">${CHECK_SVG}</span></span>` : ''}
         <span class="ls-emoji">${l.emoji}</span>
-        <span class="ls-info">
+        <span class="ls-fila-txt">
           <span class="ls-nombre">${esc(l.nombre)}</span>
-          <span class="ls-cuenta">${total ? (hechas === total ? '✓ Todo listo' : `${hechas} de ${total}`) : 'Vacía'}</span>
-          <span class="ls-barra"><i style="width:${pct}%"></i></span>
-          ${chips ? `<span class="ls-chips">${chips}</span>` : ''}
+          <span class="ls-cuenta">${esc(subListaTxt(l))}</span>
         </span>
+        ${selListas ? '' : `${total ? `<span class="ls-num">${total - pend}/${total}</span>` : ''}<span class="ls-chev">${CHEV_SVG}</span>`}
       </button>`;
   }).join('');
-  return form + `<div class="ls-grid">${tarjetas}</div>`;
+
+  const nueva = selListas ? '' : (creandoLista ? formNuevaListaHTML() : `
+    <button class="ls-fila ls-fila-nueva" onclick="nuevaListaForm()"><span class="ls-mas">＋</span><span class="ls-fila-txt"><span class="ls-nombre">Nueva lista</span></span></button>`);
+
+  const nombresSel = orden.filter(l => listasSel.has(l.id)).map(l => l.nombre);
+  const barraSel = selListas ? (pidiendoBorrarListas ? `
+    <div class="ls-borrar-barra conf">
+      <div class="conf-txt">¿Borrar ${n === 1 ? 'la lista' : 'estas ' + n + ' listas'} <b>${esc(nombresSel.slice(0, 4).join(', '))}${nombresSel.length > 4 ? '…' : ''}</b>? Se borran con todo lo que tienen.</div>
+      <div class="prev-actions">
+        <button class="btn" onclick="cancelarBorrarListas()">Cancelar</button>
+        <button class="btn peligro" onclick="borrarListasSel()">Sí, borrar</button>
+      </div>
+    </div>` : `
+    <div class="ls-borrar-barra">
+      <button class="btn peligro" onclick="pedirBorrarListas()" ${n ? '' : 'disabled'}>🗑 Borrar${n ? ' (' + n + ')' : ''}</button>
+    </div>`) : '';
+
+  return `${aviso}${cabeza}<div class="ls-grupo${selListas ? ' sel' : ''}">${filas}${nueva}</div>${barraSel}`;
 }
 
 function formNuevaListaHTML(){
   const f = formLista;
   return `
-    <div class="edit-form ls-form">
-      <div class="campo-lbl">Empezar con</div>
+    <div class="ls-fila ls-nueva-form">
+      <span class="ls-emoji">${f.emoji}</span>
+      <input type="text" id="lsNombre" maxlength="${MAX_NOMBRE_LISTA}" value="${esc(f.nombre)}" placeholder="Nombre de la lista" enterkeyhint="done"
+        oninput="formLista.nombre = this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();crearListaUI()}">
+      <button class="btn primary" onclick="crearListaUI()">Crear</button>
+      <button class="ls-x" onclick="cancelarNuevaLista()" aria-label="Cancelar">&times;</button>
+    </div>
+    <div class="ls-nueva-tpl">
+      <span class="ls-nueva-lbl">O con lo típico ya puesto:</span>
       <div class="ls-plantillas">
-        ${PLANTILLAS_LISTA.map(p => `<button type="button" class="ls-tpl${f.tpl === p.id ? ' on' : ''}" onclick="elegirPlantilla('${p.id}')">${p.emoji} ${esc(p.nombre)}${p.items.length ? ` <b>${p.items.length}</b>` : ''}</button>`).join('')}
-      </div>
-      <label class="campo">
-        <span class="campo-lbl">Nombre</span>
-        <input type="text" id="lsNombre" maxlength="${MAX_NOMBRE_LISTA}" value="${esc(f.nombre)}" placeholder="Súper, Viaje a Orlando, Útiles…"
-          oninput="formLista.nombre = this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();crearListaUI()}">
-      </label>
-      <div class="campo-lbl">Ícono</div>
-      <div class="ls-emojis">${EMOJIS_LISTA.map(e => `<button type="button" class="ls-emo${f.emoji === e ? ' on' : ''}" onclick="elegirEmojiNueva('${e}')">${e}</button>`).join('')}</div>
-      <div class="prev-actions">
-        <button class="btn" onclick="cancelarNuevaLista()">Cancelar</button>
-        <button class="btn primary" onclick="crearListaUI()">Crear lista</button>
+        ${PLANTILLAS_LISTA.filter(p => p.id !== 'vacia').map(p => `<button type="button" class="ls-tpl" onclick="crearDesdePlantilla('${p.id}')">${p.emoji} ${esc(p.nombre)} <b>${p.items.length}</b></button>`).join('')}
       </div>
     </div>`;
 }
@@ -10231,39 +10611,50 @@ function detalleListaHTML(l){
       <button class="ls-check" onclick="tacharItem('${l.id}','${x.id}')" aria-label="${x.d ? 'Desmarcar' : 'Tachar'}">
         <span class="checkbox">${CHECK_SVG}</span><span class="ls-txt">${esc(x.t)}</span>
       </button>
-      <button class="del-btn" onclick="quitarItem('${l.id}','${x.id}')" aria-label="Quitar">&times;</button>
+      <button class="ls-x" onclick="quitarItem('${l.id}','${x.id}')" aria-label="Quitar">&times;</button>
     </div>`;
   const total = l.items.length;
-  const pct = total ? Math.round(hechas.length / total * 100) : 0;
   const tpl = PLANTILLAS_LISTA.find(p => p.id === l.tpl);
   const sugerir = (!total && tpl && tpl.items.length)
-    ? `<button class="btn ls-tipico" onclick="agregarTipico('${l.id}')">＋ Agregar lo típico (${tpl.items.length})</button>` : '';
+    ? `<button class="btn ls-tipico" onclick="agregarTipico('${l.id}')">＋ Agregar lo típico de ${esc(tpl.nombre.toLowerCase())} (${tpl.items.length})</button>` : '';
+  const sub = total
+    ? (pend.length ? `${pend.length} pendiente${pend.length === 1 ? '' : 's'}${hechas.length ? ` · ${hechas.length} tachada${hechas.length === 1 ? '' : 's'}` : ''}` : '✓ Todo tachado')
+    : 'Todavía no tiene nada';
   return `
     <div class="ls-cabeza">
-      <button class="icon-btn" onclick="cerrarLista()" aria-label="Volver a las listas">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      <button class="ls-volver" onclick="cerrarLista()" aria-label="Volver a las listas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        Listas
       </button>
-      <span class="ls-titulo">${l.emoji} ${esc(l.nombre)}</span>
       <button class="icon-btn${listaConfig ? ' active' : ''}" onclick="toggleConfigLista()" aria-label="Ajustes de la lista">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
       </button>
     </div>
-    <div class="ls-progreso"><span>${total ? `${hechas.length} de ${total} tachadas` : 'Todavía no tiene nada'}</span><span class="ls-barra"><i style="width:${pct}%"></i></span></div>
+    <div class="ls-h1"><span>${l.emoji}</span> ${esc(l.nombre)}</div>
+    <div class="ls-sub">${sub}</div>
     ${(l.evento || l.aviso) && !listaConfig ? `<div class="ls-chips">${l.evento ? `<button class="ls-chip" onclick="irAEventoDeLista('${l.id}')">📅 ${esc(textoEventoLista(l))}</button>` : ''}${l.aviso ? `<span class="ls-chip">🔔 ${esc(textoAvisoLista(l.aviso))}</span>` : ''}</div>` : ''}
     ${listaConfig ? configListaHTML(l) : ''}
-    <div class="ls-agregar">
-      <input type="text" id="lsNuevo" maxlength="400" placeholder="Agregar… (ej: leche, pan)" enterkeyhint="done"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();agregarItemsUI('${l.id}')}">
-      <button class="btn primary" onclick="agregarItemsUI('${l.id}')" aria-label="Agregar">＋</button>
+    <div class="ls-items">
+      ${pend.map(fila).join('')}
+      <div class="ls-item ls-add">
+        <label class="ls-check" for="lsNuevo"><span class="ls-mas">＋</span>
+          <input type="text" id="lsNuevo" maxlength="400" placeholder="Agregar… (ej: leche, pan)" enterkeyhint="done" autocomplete="off"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();agregarItemsUI('${l.id}')}"
+            oninput="var b=document.getElementById('lsAddOk');if(b)b.classList.toggle('ver', !!this.value.trim())">
+        </label>
+        <button class="btn primary ls-add-ok" id="lsAddOk" onclick="agregarItemsUI('${l.id}')">Agregar</button>
+      </div>
     </div>
     ${sugerir}
-    <div class="ls-items">${pend.map(fila).join('')}</div>
-    ${hechas.length ? `<div class="ls-sec">Tachadas</div><div class="ls-items">${hechas.map(fila).join('')}</div>
-      <div class="opt-actions ls-acciones">
-        <button class="btn" onclick="borrarTachadas('${l.id}')">Quitar tachadas (${hechas.length})</button>
-        <button class="btn" onclick="desmarcarTodo('${l.id}')">Desmarcar todo</button>
-      </div>` : ''}
-    ${!total && !sugerir ? '<div class="ls-vacio-nota">Escribe arriba lo que necesitas y dale ＋.</div>' : ''}`;
+    ${hechas.length ? `
+      <div class="ls-sec">
+        <span>Tachadas · ${hechas.length}</span>
+        <span class="ls-sec-acc">
+          <button onclick="desmarcarTodo('${l.id}')">Desmarcar</button>
+          <button onclick="borrarTachadas('${l.id}')">Quitar</button>
+        </span>
+      </div>
+      <div class="ls-items">${hechas.map(fila).join('')}</div>` : ''}`;
 }
 
 function configListaHTML(l){
@@ -10320,6 +10711,7 @@ async function guardarListas(){
 }
 function nuevaListaForm(){
   creandoLista = true;
+  listasBorradas = null;
   formLista = { nombre:'', emoji:'📝', tpl:'vacia' };
   renderListas();
   setTimeout(() => { const i = document.getElementById('lsNombre'); if(i) i.focus(); }, 60);
@@ -10361,7 +10753,15 @@ async function crearListaUI(){
   const nombre = limpiarTexto((inp ? inp.value : formLista.nombre) || '', MAX_NOMBRE_LISTA);
   if(!nombre){ if(inp) inp.focus(); return; }
   const p = PLANTILLAS_LISTA.find(x => x.id === formLista.tpl) || PLANTILLAS_LISTA[0];
-  const l = crearLista(nombre, formLista.emoji, p.id === 'vacia' ? null : p.id, p.items);
+  // Lista en blanco: si el nombre se parece a una plantilla, toma su
+  // ícono (y ofrecerá "agregar lo típico"), pero empieza vacía.
+  let emoji = formLista.emoji, tpl = p.id === 'vacia' ? null : p.id;
+  if(!tpl){
+    const n = normalize(nombre);
+    const hit = PLANTILLAS_LISTA.find(x => (x.alias || []).some(a => n.split(/\s+/).includes(normalize(a)) || n === normalize(a)));
+    if(hit){ tpl = hit.id; if(emoji === '📝') emoji = hit.emoji; }
+  }
+  const l = crearLista(nombre, emoji, tpl, p.items);
   if(!l){ alert('Ya tienes el máximo de listas (' + MAX_LISTAS + ').'); return; }
   creandoLista = false;
   listaAbierta = l.id;
@@ -10379,6 +10779,7 @@ async function crearDesdePlantilla(id){
 function abrirLista(id){
   if(!listaPorId(id)) return;
   listaAbierta = id; listaConfig = false; borrandoLista = false; creandoLista = false;
+  selListas = false; listasSel = new Set(); listasBorradas = null;
   renderListas();
   window.scrollTo({ top:0, behavior:'instant' });
 }
