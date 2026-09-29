@@ -2543,6 +2543,46 @@
   .ls-form{margin-bottom:12px;}
   #listasVista .deshacer{margin:0 0 10px;}
 
+  /* ══════════ Claude con tu llave ══════════ */
+  .agent-modo{display:flex;gap:6px;margin:0 0 10px;}
+  .agent-modo:empty{display:none;}
+  .am-btn{
+    flex:1;font:inherit;font-size:0.86rem;font-weight:600;padding:8px 10px;border-radius:10px;cursor:pointer;
+    border:1px solid var(--line-soft);background:var(--paper-card);color:var(--ink-soft);
+  }
+  .am-btn.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+  .am-link{font:inherit;font-size:0.8rem;color:var(--accent);background:none;border:none;padding:2px 0;cursor:pointer;text-align:left;}
+  .cl-vacio{font-size:0.86rem;line-height:1.5;color:var(--ink-soft);padding:6px 2px 4px;}
+  .cl-vacio-tit{font-family:var(--font-display);font-weight:700;font-size:1.1rem;color:var(--ink);margin-bottom:4px;}
+  .cl-ideas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .cl-chat{display:flex;flex-direction:column;gap:8px;}
+  .cl-yo{
+    align-self:flex-end;max-width:85%;background:var(--accent);color:var(--paper-card);
+    border-radius:14px 14px 4px 14px;padding:8px 12px;font-size:0.9rem;line-height:1.4;overflow-wrap:anywhere;white-space:pre-wrap;
+  }
+  .cl-claude{
+    align-self:flex-start;max-width:92%;background:var(--paper-card);border:1px solid var(--line-soft);
+    border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:0.9rem;line-height:1.45;overflow-wrap:anywhere;
+  }
+  .cl-hechos{display:flex;flex-direction:column;gap:3px;margin-bottom:5px;}
+  .cl-hechos:last-child{margin-bottom:0;}
+  .cl-hecho{font-size:0.78rem;color:var(--accent);font-weight:600;}
+  .cl-vin{display:block;padding-left:4px;}
+  .cl-lin{display:block;}
+  .cl-sep{display:block;height:6px;}
+  .cl-acc{margin-top:8px;display:flex;gap:6px;}
+  .cl-acc .btn{padding:6px 12px;font-size:0.8rem;}
+  .cl-nota{margin-top:6px;font-size:0.76rem;color:var(--ink-soft);}
+  .cl-err{
+    align-self:stretch;background:var(--paper-alt);border-left:3px solid var(--examen);border-radius:8px;
+    padding:9px 12px;font-size:0.85rem;line-height:1.4;color:var(--ink);
+  }
+  .cl-nueva{align-self:center;font:inherit;font-size:0.78rem;color:var(--ink-soft);background:none;border:none;padding:6px;cursor:pointer;text-decoration:underline;}
+  #claudeCfg input[type=password]{
+    width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--paper-card);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0 0;box-sizing:border-box;
+  }
+
   /* ══════════ Notificaciones ══════════ */
   #pushBtns:empty,#pushMsg:empty{display:none;}
   #pushTxt b{color:var(--ink);}
@@ -2678,9 +2718,10 @@
 <div class="overlay" id="agentOverlay"></div>
 <div class="agent" id="agent" role="dialog" aria-modal="true">
   <div class="panel-head">
-    <span class="panel-date">Agregar al calendario</span>
+    <span class="panel-date" id="agentTitulo">Agregar al calendario</span>
     <button class="panel-close" id="agentClose">Cerrar</button>
   </div>
+  <div class="agent-modo" id="agentModo"></div>
 
   <div class="agent-examples" id="agentExamples">
     <button class="ex-chip">Examen de estructuras el 15 de octubre</button>
@@ -2751,6 +2792,12 @@
     <div class="opt-desc" id="pushTxt">Revisando…</div>
     <div class="opt-actions" id="pushBtns"></div>
     <div class="opt-msg" id="pushMsg"></div>
+  </div>
+
+  <div class="opt-block" id="claudeBlock">
+    <div class="opt-title">✦ Claude con tu llave</div>
+    <div class="opt-desc">Pega tu llave de API de Claude para que el asistente sea Claude de verdad. Se guarda <b>solo en este dispositivo</b> (no se sube a la nube ni al respaldo) y los tokens se cobran a <b>tu</b> cuenta. La sacas en <b>platform.claude.com → API Keys</b> y el saldo se recarga en <b>Settings → Billing</b>. Al usarlo, lo que le pidas y los eventos que necesite ver se mandan a Anthropic.</div>
+    <div id="claudeCfg"></div>
   </div>
 
   <div class="opt-block">
@@ -7156,26 +7203,14 @@ Reglas:
 
 Texto: ${text}`;
 
-  // Corta a los 15 s para que nunca se quede colgado esperando
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 15000);
-  let response;
-  try{
-    response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-      signal: ctrl.signal,
-    });
-  }finally{
-    clearTimeout(t);
-  }
-  if(!response.ok) throw new Error('API ' + response.status);
-  const data = await response.json();
+  // Solo con TU llave de Claude; sin llave se usa el lector local
+  // (antes se intentaba sin llave y siempre fallaba tras esperar).
+  if(!llaveClaude()) throw new Error('sin llave');
+  const data = await pedirAClaude({
+    model: modeloClaude(),
+    max_tokens: 4000,
+    messages: [{ role: 'user', content: prompt }],
+  }, 20000);
   const txt = data.content
     .filter(b => b.type === 'text')
     .map(b => b.text)
@@ -7185,6 +7220,579 @@ Texto: ${text}`;
   const parsed = JSON.parse(txt);
   if(!Array.isArray(parsed)) throw new Error('formato inesperado');
   return parsed;
+}
+
+// ══════════════════════════════════════════════════════════════
+// CLAUDE CON TU PROPIA LLAVE
+// Cada persona pega SU llave de API (Claude Console) en Ajustes.
+// · La llave se guarda solo en ESTE dispositivo: no se sube a la
+//   nube, no va en el respaldo y no está en los archivos de GitHub.
+// · El teléfono le habla directo a Anthropic con esa llave, así que
+//   los tokens se cobran a la cuenta de quien la puso.
+// · Sin llave, el asistente básico (gratis, sin internet) sigue igual.
+// ══════════════════════════════════════════════════════════════
+const KEY_CLAUDE_LLAVE  = 'ecal:claude-llave';
+const KEY_CLAUDE_MODELO = 'ecal:claude-modelo';
+const KEY_CLAUDE_MODO   = 'ecal:claude-modo';
+const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
+const MODELOS_CLAUDE = [
+  { id:'claude-sonnet-5-5',          nombre:'Sonnet 5.5', nota:'Recomendado: listo y barato' },
+  { id:'claude-haiku-4-5-20251001',  nombre:'Haiku 4.5',  nota:'El más rápido y el más barato' },
+  { id:'claude-opus-5-5',            nombre:'Opus 5.5',   nota:'El más listo, cuesta el doble' },
+];
+const MAX_TEXTO_CLAUDE = 2000;
+const MAX_VUELTAS_CLAUDE = 8;       // herramientas seguidas por mensaje
+const MAX_MENSAJES_CLAUDE = 30;     // lo que se recuerda de la conversación
+
+function lsGet(k){ try{ return window.localStorage ? window.localStorage.getItem(k) : null; }catch(e){ return null; } }
+function lsSet(k, v){ try{ if(window.localStorage){ if(v === null) window.localStorage.removeItem(k); else window.localStorage.setItem(k, v); } }catch(e){} }
+
+function llaveValida(k){ return typeof k === 'string' && /^sk-ant-[A-Za-z0-9_\-]{20,300}$/.test(k); }
+function llaveClaude(){ const k = lsGet(KEY_CLAUDE_LLAVE); return llaveValida(k) ? k : null; }
+function modeloClaude(){
+  const m = lsGet(KEY_CLAUDE_MODELO);
+  return MODELOS_CLAUDE.some(x => x.id === m) ? m : MODELOS_CLAUDE[0].id;
+}
+function modoClaude(){ return !!llaveClaude() && lsGet(KEY_CLAUDE_MODO) !== 'basico'; }
+function llaveCorta(k){ return k ? k.slice(0, 10) + '…' + k.slice(-4) : ''; }
+
+// ---------- Llamada a la API ----------
+class ErrorClaude extends Error{ constructor(msg, tipo){ super(msg); this.tipo = tipo; } }
+
+async function pedirAClaude(cuerpo, ms){
+  const k = llaveClaude();
+  if(!k) throw new ErrorClaude('No hay llave guardada.', 'sin-llave');
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms || 60000);
+  let r;
+  try{
+    r = await fetch(CLAUDE_API, {
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key': k,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true',
+      },
+      body: JSON.stringify(cuerpo),
+      signal: ctrl.signal,
+    });
+  }catch(e){
+    throw new ErrorClaude(e && e.name === 'AbortError' ? 'Claude tardó demasiado en contestar.' : 'No hay conexión a internet.', 'red');
+  }finally{
+    clearTimeout(t);
+  }
+  if(r.ok) return await r.json();
+  let det = '';
+  try{ const j = await r.json(); det = (j && j.error && j.error.message) || ''; }catch(e){}
+  const d = String(det).toLowerCase();
+  if(r.status === 401) throw new ErrorClaude('Esa llave no es válida o ya la borraste en la Claude Console.', 'llave');
+  if(r.status === 403) throw new ErrorClaude('Esa llave no tiene permiso para usar este modelo.', 'llave');
+  if(/credit|balance|billing/.test(d)) throw new ErrorClaude('Se acabó tu saldo. Recarga en platform.claude.com → Settings → Billing.', 'saldo');
+  if(r.status === 429) throw new ErrorClaude('Muchos mensajes seguidos. Espera un minuto y vuelve a intentar.', 'limite');
+  if(r.status === 529 || r.status >= 500) throw new ErrorClaude('Claude está saturado en este momento. Intenta en un ratito.', 'servidor');
+  if(r.status === 404 || /model/.test(d)) throw new ErrorClaude('Ese modelo no está disponible para tu llave. Cambia el modelo en Ajustes.', 'modelo');
+  throw new ErrorClaude('Claude no pudo contestar (' + r.status + ').', 'otro');
+}
+
+// ---------- Herramientas: lo que Claude puede hacer en tu calendario ----------
+const HERRAMIENTAS_CLAUDE = [
+  { name:'buscar_eventos',
+    description:'Busca eventos del calendario. Úsala antes de cambiar, borrar o palomear algo para obtener su id exacto, y para contestar preguntas sobre la agenda. Sin fechas busca de hoy a 60 días.',
+    input_schema:{ type:'object', properties:{
+      desde:{ type:'string', description:'Fecha inicial AAAA-MM-DD' },
+      hasta:{ type:'string', description:'Fecha final AAAA-MM-DD' },
+      texto:{ type:'string', description:'Palabras a buscar en título, lugar, notas o categoría' },
+      incluir_hechos:{ type:'boolean', description:'Incluir los ya palomeados (por omisión sí)' },
+    } } },
+  { name:'agregar_eventos',
+    description:'Agrega uno o varios eventos. Para repeticiones (todos los lunes, diario…) manda un evento por cada fecha.',
+    input_schema:{ type:'object', required:['eventos'], properties:{
+      eventos:{ type:'array', items:{ type:'object', required:['fecha','titulo'], properties:{
+        fecha:{ type:'string', description:'AAAA-MM-DD' },
+        titulo:{ type:'string', description:'Corto, sin la fecha' },
+        categoria:{ type:'string', description:'Id o nombre de una categoría existente' },
+        hora:{ type:'string', description:'HH:MM 24 h; omite si es de todo el día' },
+        lugar:{ type:'string' }, notas:{ type:'string' },
+        importante:{ type:'boolean', description:'Estrella' },
+        avisos:{ type:'array', items:{ type:'integer' }, description:'Días antes para avisar: 0 = ese día, 1 = un día antes, 7 = una semana antes. Máximo 4.' },
+      } } },
+    } } },
+  { name:'cambiar_evento',
+    description:'Cambia un evento existente (fecha, nombre, hora, categoría, lugar, notas, estrella o avisos). Pasa solo lo que cambia.',
+    input_schema:{ type:'object', required:['id'], properties:{
+      id:{ type:'string', description:'El id que regresa buscar_eventos' },
+      fecha:{ type:'string' }, titulo:{ type:'string' }, categoria:{ type:'string' },
+      hora:{ type:'string', description:'HH:MM, o "" para dejarlo de todo el día' },
+      lugar:{ type:'string' }, notas:{ type:'string' }, importante:{ type:'boolean' },
+      avisos:{ type:'array', items:{ type:'integer' } },
+    } } },
+  { name:'borrar_eventos',
+    description:'Borra eventos por id. Solo si la persona lo pidió claramente.',
+    input_schema:{ type:'object', required:['ids'], properties:{ ids:{ type:'array', items:{ type:'string' } } } } },
+  { name:'palomear_eventos',
+    description:'Marca eventos como hechos (hecho=true) o los desmarca (hecho=false).',
+    input_schema:{ type:'object', required:['ids','hecho'], properties:{ ids:{ type:'array', items:{ type:'string' } }, hecho:{ type:'boolean' } } } },
+  { name:'ver_listas',
+    description:'Muestra las listas (súper, maleta…) con lo pendiente y lo tachado.',
+    input_schema:{ type:'object', properties:{} } },
+  { name:'cambiar_lista',
+    description:'Crea o modifica una lista: agregar, tachar, destachar o quitar cosas, renombrar, cambiar ícono o poner recordatorio.',
+    input_schema:{ type:'object', required:['lista'], properties:{
+      lista:{ type:'string', description:'Id o nombre de la lista' },
+      crear_si_no_existe:{ type:'boolean' },
+      nuevo_nombre:{ type:'string' },
+      emoji:{ type:'string', description:'Un emoji: 🛒 🧳 ✈️ 🏋️ 🎒 📐 🏠 🎉 🍳 💊 🎁 📚 🧹 🐶 🚗 📝 ⚽ 💼' },
+      agregar:{ type:'array', items:{ type:'string' } },
+      tachar:{ type:'array', items:{ type:'string' } },
+      destachar:{ type:'array', items:{ type:'string' } },
+      quitar:{ type:'array', items:{ type:'string' } },
+      recordatorio:{ type:['object','null'], description:'null para quitarlo', properties:{
+        fecha:{ type:'string' }, hora:{ type:'string' }, todo_el_dia:{ type:'boolean' } } },
+    } } },
+  { name:'borrar_lista',
+    description:'Borra una lista completa. Solo si la persona lo pidió claramente.',
+    input_schema:{ type:'object', required:['lista'], properties:{ lista:{ type:'string' } } } },
+  { name:'mostrar',
+    description:'Cambia lo que se ve en pantalla: una vista del calendario en cierta fecha, o una lista.',
+    input_schema:{ type:'object', required:['vista'], properties:{
+      vista:{ type:'string', enum:['mes','semana','dia','agenda','puntos','listas'] },
+      fecha:{ type:'string', description:'AAAA-MM-DD' },
+      lista:{ type:'string', description:'Id o nombre de lista (con vista=listas)' },
+    } } },
+];
+// La lista de herramientas no cambia: se guarda en caché y cuesta menos
+HERRAMIENTAS_CLAUDE[HERRAMIENTAS_CLAUDE.length - 1].cache_control = { type:'ephemeral' };
+
+function instruccionesClaude(){
+  const hoy = todayISO();
+  const d = parseISO(hoy);
+  const ahora = new Date();
+  const cats = categorias().map(c => `${c.id} (${c.label})`).join(', ');
+  const listas = LISTAS.map(l => `${l.emoji} ${l.nombre}`).join(', ') || 'ninguna';
+  return `Eres el asistente dentro de E-Calendario, la app de calendario de la persona. Hablas español de México, cálido y breve (1 a 3 frases; listas cortas si ayudan). No uses tablas ni encabezados.
+Hoy es ${WEEKDAYS_FULL[(d.getDay() + 6) % 7]} ${hoy}, son las ${pad(ahora.getHours())}:${pad(ahora.getMinutes())}. Zona: ${Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Mexico_City'}.
+El calendario acepta fechas de ${SEM_START} a ${SEM_END}. Semanas empiezan en lunes.
+Categorías: ${cats}. Si ninguna encaja usa "otro".
+Listas actuales: ${listas}.
+Reglas:
+- Usa las herramientas para leer y cambiar el calendario; no inventes eventos. Para cambiar, borrar o palomear, primero busca el id.
+- Si piden algo claro, hazlo sin preguntar. Pregunta solo si falta algo indispensable (por ejemplo, la fecha).
+- Borrar: solo lo que pidieron explícitamente. Si son más de 10 eventos, confirma antes.
+- Al terminar, di en una frase qué hiciste. La app ya muestra un botón de Deshacer, no lo menciones.
+- Horas en formato de 12 h al hablar (3:00 pm).`;
+}
+
+// Categoría por id o por nombre
+function catDeTexto(t){
+  if(typeof t !== 'string' || !t.trim()) return 'otro';
+  const cs = categorias();
+  const porId = cs.find(c => c.id === t);
+  if(porId) return porId.id;
+  const n = normalize(t.trim());
+  const porNombre = cs.find(c => normalize(c.label) === n) || cs.find(c => normalize(c.label).startsWith(n) || n.startsWith(normalize(c.label)));
+  return porNombre ? porNombre.id : 'otro';
+}
+function avisosDe(a){
+  if(!Array.isArray(a)) return undefined;
+  return a.filter(n => Number.isInteger(n) && n >= 0 && n <= 30).slice(0, 4);
+}
+function eventoParaClaude(ev){
+  const o = { id: evId(ev), fecha: ev.date, titulo: ev.title, categoria: catLabel(ev.type) };
+  if(safeHora(ev.hora)) o.hora = safeHora(ev.hora);
+  if(COMPLETED.has(evId(ev))) o.hecho = true;
+  if(ev.fav) o.importante = true;
+  if(ev.lugar) o.lugar = ev.lugar;
+  if(ev.notas) o.notas = String(ev.notas).slice(0, 200);
+  const r = sanitizeRems(ev);
+  if(r.length) o.avisos = r;
+  const subs = subsDe(ev);
+  if(subs.length) o.pasos = `${subsHechas(ev)}/${subs.length}`;
+  return o;
+}
+function listaPorTextoClaude(t){
+  if(typeof t !== 'string') return null;
+  return listaPorId(t) || LISTAS.find(l => normalize(l.nombre) === normalize(t.trim())) || buscarListaPorTexto(t);
+}
+function isoValido(s){ return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); }
+
+// Hace lo que Claude pidió y regresa { resultado para Claude, texto para ti }
+async function ejecutarHerramienta(nombre, e){
+  e = (e && typeof e === 'object') ? e : {};
+  const hoy = todayISO();
+  if(nombre === 'buscar_eventos'){
+    const desde = isoValido(e.desde) ? e.desde : (e.texto ? SEM_START : hoy);
+    const hasta = isoValido(e.hasta) ? e.hasta : (e.texto ? SEM_END : masDias(hoy, 60));
+    let evs = EVENTS.filter(ev => ev.date >= desde && ev.date <= hasta);
+    if(e.incluir_hechos === false) evs = evs.filter(ev => !COMPLETED.has(evId(ev)));
+    if(e.texto && String(e.texto).trim()){
+      const pals = normalizar(e.texto).split(' ').filter(Boolean);
+      evs = evs.filter(ev => { const t = normalizar(textoBuscable(ev)); return pals.every(p => t.includes(p)); });
+    }
+    const total = evs.length;
+    return { r: { total, eventos: evs.slice(0, 150).map(eventoParaClaude), recortado: total > 150 }, ver: null };
+  }
+  if(nombre === 'agregar_eventos'){
+    const lista = (Array.isArray(e.eventos) ? e.eventos : []).slice(0, 400).map(x => ({
+      date: x && x.fecha, title: x && x.titulo, type: catDeTexto(x && x.categoria),
+      hora: x && x.hora, lugar: x && x.lugar, notas: x && x.notas, fav: !!(x && x.importante),
+      rems: avisosDe(x && x.avisos) || [], subs: [],
+    }));
+    const n = await addEvents(lista);
+    const rech = lista.length - n;
+    return { r: { agregados: n, omitidos: rech, nota: rech ? 'Los omitidos ya existían o tenían fecha inválida.' : undefined },
+             ver: n ? `Agregué ${n} evento${n === 1 ? '' : 's'}` : null };
+  }
+  if(nombre === 'cambiar_evento'){
+    const previo = EVENTS.find(ev => evId(ev) === e.id);
+    if(!previo) return { r: { error:'No existe ese id. Búscalo primero con buscar_eventos.' }, ver:null };
+    const c = {};
+    if(isoValido(e.fecha)) c.date = e.fecha;
+    if(typeof e.titulo === 'string' && limpiarTexto(e.titulo, MAX_TITULO)) c.title = limpiarTexto(e.titulo, MAX_TITULO);
+    if(typeof e.categoria === 'string') c.type = catDeTexto(e.categoria);
+    if(typeof e.hora === 'string') c.hora = safeHora(e.hora);
+    if(typeof e.lugar === 'string') c.lugar = limpiarTexto(e.lugar, MAX_LUGAR);
+    if(typeof e.notas === 'string') c.notas = limpiarTexto(e.notas, MAX_NOTAS);
+    if(typeof e.importante === 'boolean') c.fav = e.importante;
+    const av = avisosDe(e.avisos);
+    if(av) c.rems = av;
+    const nuevo = sanitizeEvent(copiaEvento(previo, c));
+    if(!nuevo) return { r: { error:'Ese cambio deja una fecha o nombre inválido.' }, ver:null };
+    const oldId = evId(previo), newId = evId(nuevo);
+    if(newId !== oldId && EVENTS.some(ev => evId(ev) === newId)) return { r: { error:'Ya hay otro evento igual en esa fecha.' }, ver:null };
+    const hecho = COMPLETED.has(oldId);
+    DELETED.add(oldId); COMPLETED.delete(oldId);
+    USER_EVENTS = USER_EVENTS.filter(ev => evId(ev) !== oldId);
+    DELETED.delete(newId);
+    USER_EVENTS.push(nuevo);
+    if(hecho) COMPLETED.add(newId);
+    rebuildEvents(); renderAll();
+    await markChanged();
+    return { r: { ok:true, id:newId }, ver: `Cambié «${nuevo.title}»` };
+  }
+  if(nombre === 'borrar_eventos'){
+    const ids = (Array.isArray(e.ids) ? e.ids : []).filter(id => typeof id === 'string' && EVENTS.some(ev => evId(ev) === id)).slice(0, 500);
+    ids.forEach(id => { DELETED.add(id); COMPLETED.delete(id); cerrarAvisosDe(id); });
+    USER_EVENTS = USER_EVENTS.filter(ev => !ids.includes(evId(ev)));
+    if(ids.length){ rebuildEvents(); renderAll(); await markChanged(); }
+    return { r: { borrados: ids.length }, ver: ids.length ? `Borré ${ids.length} evento${ids.length === 1 ? '' : 's'}` : null };
+  }
+  if(nombre === 'palomear_eventos'){
+    const ids = (Array.isArray(e.ids) ? e.ids : []).filter(id => typeof id === 'string' && EVENTS.some(ev => evId(ev) === id)).slice(0, 500);
+    ids.forEach(id => { if(e.hecho === false) COMPLETED.delete(id); else { COMPLETED.add(id); cerrarAvisosDe(id); } });
+    if(ids.length){ renderAll(); await markChanged(); }
+    return { r: { cambiados: ids.length }, ver: ids.length ? `${e.hecho === false ? 'Desmarqué' : 'Palomeé'} ${ids.length}` : null };
+  }
+  if(nombre === 'ver_listas'){
+    return { r: { listas: LISTAS.map(l => ({
+      id:l.id, nombre:l.nombre, emoji:l.emoji,
+      pendientes: pendientesDe(l).map(i => i.t), tachadas: l.items.filter(i => i.d).map(i => i.t),
+      recordatorio: l.aviso ? textoAvisoLista(l.aviso) : null, fotos: l.fotos.length,
+    })) }, ver:null };
+  }
+  if(nombre === 'cambiar_lista'){
+    let l = listaPorTextoClaude(e.lista);
+    let creada = false;
+    if(!l){
+      if(!e.crear_si_no_existe) return { r: { error:'No existe esa lista. Usa crear_si_no_existe:true para crearla.' }, ver:null };
+      const nom = limpiarTexto(String(e.lista || ''), MAX_NOMBRE_LISTA);
+      const tpl = PLANTILLAS_LISTA.find(p => (p.alias || []).some(a => normalize(nom).includes(normalize(a))));
+      l = crearLista(nom, EMOJIS_LISTA.includes(e.emoji) ? e.emoji : (tpl ? tpl.emoji : '📝'), tpl ? tpl.id : null, []);
+      if(!l) return { r: { error:'No se pudo crear (nombre vacío o ya hay demasiadas listas).' }, ver:null };
+      creada = true;
+    }
+    const busca = t => { const n = normalize(String(t || '').trim()); return l.items.find(i => normalize(i.t) === n) || l.items.find(i => normalize(i.t).includes(n) && n.length > 2); };
+    let ag = 0, ta = 0, de = 0, qu = 0;
+    if(Array.isArray(e.agregar)) ag = agregarALista(l, e.agregar.slice(0, 100).map(String));
+    (Array.isArray(e.tachar) ? e.tachar : []).forEach(t => { const i = busca(t); if(i && !i.d){ i.d = true; ta++; } });
+    (Array.isArray(e.destachar) ? e.destachar : []).forEach(t => { const i = busca(t); if(i && i.d){ i.d = false; de++; } });
+    (Array.isArray(e.quitar) ? e.quitar : []).forEach(t => { const i = busca(t); if(i){ l.items = l.items.filter(x => x !== i); qu++; } });
+    if(typeof e.nuevo_nombre === 'string' && limpiarTexto(e.nuevo_nombre, MAX_NOMBRE_LISTA)) l.nombre = limpiarTexto(e.nuevo_nombre, MAX_NOMBRE_LISTA);
+    if(EMOJIS_LISTA.includes(e.emoji)) l.emoji = e.emoji;
+    if(e.recordatorio === null) l.aviso = null;
+    else if(e.recordatorio && typeof e.recordatorio === 'object'){
+      const todo = e.recordatorio.todo_el_dia === true;
+      l.aviso = sanitizeAvisoLista({ fecha: isoValido(e.recordatorio.fecha) ? e.recordatorio.fecha : hoy, hora: e.recordatorio.hora, todoDia: todo });
+    }
+    if(!pendientesDe(l).length) cerrarAvisosDe('lista|' + l.id);
+    await guardarListas();
+    const partes = [];
+    if(creada) partes.push('creé la lista');
+    if(ag) partes.push(`agregué ${ag}`);
+    if(ta) partes.push(`taché ${ta}`);
+    if(de) partes.push(`destaché ${de}`);
+    if(qu) partes.push(`quité ${qu}`);
+    const txt = partes.length ? `${l.emoji} ${l.nombre}: ${partes.join(', ')}` : `${l.emoji} ${l.nombre} actualizada`;
+    return { r: { ok:true, id:l.id, pendientes: pendientesDe(l).map(i => i.t) }, ver: txt.charAt(0).toUpperCase() + txt.slice(1) };
+  }
+  if(nombre === 'borrar_lista'){
+    const l = listaPorTextoClaude(e.lista);
+    if(!l) return { r: { error:'No existe esa lista.' }, ver:null };
+    LISTAS = LISTAS.filter(x => x !== l);
+    if(listaAbierta === l.id) listaAbierta = null;
+    cerrarAvisosDe('lista|' + l.id);
+    await guardarListas();
+    return { r: { ok:true }, ver: `Borré la lista ${l.nombre}` };
+  }
+  if(nombre === 'mostrar'){
+    const mapa = { mes:'mes', semana:'semana', dia:'dia', agenda:'lista', puntos:'puntos', listas:'listas' };
+    const v = mapa[e.vista];
+    if(!v) return { r: { error:'Vista desconocida.' }, ver:null };
+    if(v === 'listas'){
+      const l = e.lista ? listaPorTextoClaude(e.lista) : null;
+      if(l) irALista(l.id); else { vista = 'anio'; vistaTipo = 'listas'; listaAbierta = null; renderVista(); }
+      return { r: { ok:true }, ver:null };
+    }
+    const f = isoValido(e.fecha) && clampToSemester(e.fecha) ? e.fecha : hoy;
+    vista = 'anio'; vistaTipo = v; ANIO = +f.slice(0, 4);
+    diaActual = f; semanaLunes = lunesDe(f); mesActual = +f.slice(5, 7);
+    renderVista();
+    if(v === 'puntos') irAlMesDeHoy(true);
+    return { r: { ok:true }, ver:null };
+  }
+  return { r: { error:'Herramienta desconocida.' }, ver:null };
+}
+
+// ---------- Conversación ----------
+let chatClaude = [];        // mensajes en formato de la API
+let chatVista = [];         // lo que se pinta: { quien:'yo'|'claude'|'error', html, deshacer? }
+let deshacerClaude = null;  // foto de antes del último mensaje con cambios
+let hablandoClaude = false;
+
+function fotoDatos(){
+  return JSON.stringify({ u: USER_EVENTS, d: [...DELETED], c: [...COMPLETED], l: LISTAS });
+}
+async function deshacerCambiosClaude(){
+  if(!deshacerClaude) return;
+  try{
+    const f = JSON.parse(deshacerClaude.foto);
+    USER_EVENTS = sanitizeList(f.u);
+    DELETED = new Set(Array.isArray(f.d) ? f.d.filter(x => typeof x === 'string') : []);
+    COMPLETED = new Set(Array.isArray(f.c) ? f.c.filter(x => typeof x === 'string') : []);
+    LISTAS = sanitizeListas(f.l);
+  }catch(e){ console.warn(e); return; }
+  const m = chatVista[deshacerClaude.indice];
+  if(m){ m.deshacer = false; m.deshecho = true; }
+  deshacerClaude = null;
+  chatClaude.push({ role:'user', content:'(Nota de la app: la persona tocó Deshacer y se revirtieron los cambios de tu respuesta anterior.)' });
+  chatClaude.push({ role:'assistant', content:'Entendido.' });
+  rebuildEvents(); renderAll(); renderListas();
+  await markChanged();
+  pintarChatClaude();
+}
+
+// Texto de Claude → HTML seguro (negritas y viñetas simples)
+function textoClaudeHTML(t){
+  const lineas = esc(String(t || '').trim())
+    .replace(/\*\*([^*\n]{1,200})\*\*/g, '<b>$1</b>')
+    .split('\n');
+  let out = '', vacias = 0;
+  lineas.forEach((l, i) => {
+    if(/^\s*[-•*]\s+/.test(l)){ out += '<span class="cl-vin">• ' + l.replace(/^\s*[-•*]\s+/, '') + '</span>'; vacias = 0; return; }
+    if(!l.trim()){ if(++vacias === 1 && out) out += '<span class="cl-sep"></span>'; return; }
+    vacias = 0;
+    out += '<span class="cl-lin">' + l + '</span>';
+  });
+  return out;
+}
+
+function pintarChatClaude(){
+  const el = document.getElementById('agentResult');
+  if(!el) return;
+  if(!chatVista.length){
+    el.innerHTML = `<div class="cl-vacio">
+      <div class="cl-vacio-tit">✦ Claude</div>
+      Pídeme lo que quieras de tu calendario y tus listas: agregar, mover, borrar, palomear, o preguntar qué tienes.
+      <div class="cl-ideas">
+        ${['¿Qué tengo esta semana?', 'Pon gym lunes, miércoles y viernes a las 7 am todo octubre', 'Agrega leche, huevos y pan al súper', 'Mueve mi entrega de láminas al viernes'].map(x =>
+          `<button class="ex-chip" onclick="usarIdeaClaude(this)">${esc(x)}</button>`).join('')}
+      </div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = `<div class="cl-chat">${chatVista.map((m, i) => {
+    if(m.quien === 'yo') return `<div class="cl-yo">${esc(m.texto)}</div>`;
+    if(m.quien === 'error') return `<div class="cl-err">${esc(m.texto)}${m.reintento ? `<div class="cl-acc"><button class="btn" onclick="reintentarBasico(${i})">Usar el asistente básico</button></div>` : ''}</div>`;
+    const hechos = (m.hechos || []).map(h => `<span class="cl-hecho">✓ ${esc(h)}</span>`).join('');
+    return `<div class="cl-claude">
+      ${hechos ? `<div class="cl-hechos">${hechos}</div>` : ''}
+      ${m.texto ? `<div class="cl-txt">${textoClaudeHTML(m.texto)}</div>` : ''}
+      ${m.deshacer ? `<div class="cl-acc"><button class="btn" onclick="deshacerCambiosClaude()">Deshacer</button></div>` : ''}
+      ${m.deshecho ? `<div class="cl-nota">Se deshizo.</div>` : ''}
+    </div>`;
+  }).join('')}${hablandoClaude ? '<div class="thinking"><i></i><i></i><i></i> Pensando…</div>' : ''}
+  <button class="cl-nueva" onclick="nuevaConversacionClaude()">Nueva conversación</button></div>`;
+  requestAnimationFrame(() => { try{ el.scrollIntoView && el.lastElementChild; const box = document.getElementById('agent'); if(box) box.scrollTop = box.scrollHeight; }catch(e){} });
+}
+function usarIdeaClaude(b){
+  const i = document.getElementById('agentInput');
+  if(i && b){ i.value = b.textContent; agentSubmit(); }
+}
+function nuevaConversacionClaude(){
+  chatClaude = []; chatVista = []; deshacerClaude = null;
+  pintarChatClaude();
+}
+async function reintentarBasico(i){
+  const previo = chatVista.slice(0, i).reverse().find(m => m.quien === 'yo');
+  if(!previo) return;
+  lsSet(KEY_CLAUDE_MODO, 'basico');
+  pintarModoAgente();
+  document.getElementById('agentInput').value = previo.texto.slice(0, MAX_TEXTO);
+  await agentSubmit();
+}
+
+// Recorta lo viejo sin partir una herramienta de su resultado
+function recortarChat(){
+  while(chatClaude.length > MAX_MENSAJES_CLAUDE){
+    chatClaude.shift();
+    while(chatClaude.length && !(chatClaude[0].role === 'user' && typeof chatClaude[0].content === 'string')) chatClaude.shift();
+  }
+}
+
+async function claudeSubmit(){
+  const input = document.getElementById('agentInput');
+  const texto = limpiarTexto(input.value, MAX_TEXTO_CLAUDE);
+  if(!texto || hablandoClaude) return;
+  input.value = '';
+  const sendBtn = document.getElementById('agentSend');
+  if(sendBtn) sendBtn.disabled = true;
+  hablandoClaude = true;
+  chatVista.push({ quien:'yo', texto });
+  // Solo el último mensaje con cambios se puede deshacer
+  chatVista.forEach(m => { m.deshacer = false; });
+  deshacerClaude = null;
+  pintarChatClaude();
+
+  const antes = fotoDatos();
+  const mensajesAntes = chatClaude.length;
+  chatClaude.push({ role:'user', content: texto });
+  const hechos = [];
+  let textoFinal = '';
+  try{
+    for(let vuelta = 0; vuelta < MAX_VUELTAS_CLAUDE; vuelta++){
+      const resp = await pedirAClaude({
+        model: modeloClaude(),
+        max_tokens: 2048,
+        system: instruccionesClaude(),
+        tools: HERRAMIENTAS_CLAUDE,
+        messages: chatClaude,
+      });
+      const bloques = Array.isArray(resp && resp.content) ? resp.content : [];
+      chatClaude.push({ role:'assistant', content: bloques });
+      const txt = bloques.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+      if(txt) textoFinal = txt;
+      const usos = bloques.filter(b => b.type === 'tool_use');
+      if(!usos.length || resp.stop_reason !== 'tool_use') break;
+      const resultados = [];
+      for(const u of usos){
+        let out;
+        try{ out = await ejecutarHerramienta(u.name, u.input); }
+        catch(e){ console.error(e); out = { r: { error:'Falló al hacerlo: ' + (e && e.message || e) }, ver:null }; }
+        if(out.ver) hechos.push(out.ver);
+        resultados.push({ type:'tool_result', tool_use_id: u.id, content: JSON.stringify(out.r).slice(0, 60000) });
+      }
+      chatClaude.push({ role:'user', content: resultados });
+    }
+    const cambio = fotoDatos() !== antes;
+    chatVista.push({ quien:'claude', texto: textoFinal || (hechos.length ? '' : 'Listo.'), hechos, deshacer: cambio });
+    if(cambio) deshacerClaude = { foto: antes, indice: chatVista.length - 1 };
+    recortarChat();
+  }catch(e){
+    // Si algo ya cambió, se deja deshacer; la conversación regresa a como estaba
+    chatClaude.length = mensajesAntes;
+    const cambio = fotoDatos() !== antes;
+    if(cambio){ chatVista.push({ quien:'claude', texto:'', hechos, deshacer:true }); deshacerClaude = { foto: antes, indice: chatVista.length - 1 }; }
+    chatVista.push({ quien:'error', texto: (e && e.message) || 'Algo falló.', reintento: !(e && e.tipo === 'sin-llave') });
+  }finally{
+    hablandoClaude = false;
+    if(sendBtn) sendBtn.disabled = false;
+    pintarChatClaude();
+  }
+}
+
+// ---------- Cambiar entre Claude y el básico ----------
+function pintarModoAgente(){
+  const barra = document.getElementById('agentModo');
+  const ej = document.getElementById('agentExamples');
+  const inp = document.getElementById('agentInput');
+  const tit = document.getElementById('agentTitulo');
+  const hay = !!llaveClaude();
+  const cl = modoClaude();
+  if(barra){
+    barra.innerHTML = hay ? `
+      <button class="am-btn${cl ? ' on' : ''}" onclick="elegirModoAgente('claude')">✦ Claude</button>
+      <button class="am-btn${cl ? '' : ' on'}" onclick="elegirModoAgente('basico')">Básico</button>` : `
+      <button class="am-link" onclick="abrirAjustesClaude()">✦ ¿Tienes llave de Claude? Actívala en Ajustes</button>`;
+  }
+  if(ej) ej.style.display = cl ? 'none' : '';
+  if(inp){
+    inp.setAttribute('maxlength', cl ? String(MAX_TEXTO_CLAUDE) : String(MAX_TEXTO));
+    inp.setAttribute('placeholder', cl ? 'Pídele algo a Claude…' : 'Escribe qué quieres agregar…');
+  }
+  if(tit) tit.textContent = cl ? 'Asistente · Claude' : 'Agregar al calendario';
+}
+function elegirModoAgente(m){
+  lsSet(KEY_CLAUDE_MODO, m === 'basico' ? 'basico' : null);
+  pintarModoAgente();
+  if(modoClaude()) pintarChatClaude();
+  else agentSetResult('');
+}
+function abrirAjustesClaude(){
+  closeAgent();
+  const b = document.getElementById('optsBtn') || document.querySelector('[aria-label="Opciones"]');
+  if(typeof openOpts === 'function') openOpts(); else if(b) b.click();
+  setTimeout(() => { const x = document.getElementById('claudeBlock'); if(x && x.scrollIntoView) x.scrollIntoView({ behavior:'smooth', block:'start' }); }, 250);
+}
+
+// ---------- Ajustes: pegar, probar y quitar la llave ----------
+function pintarAjustesClaude(msg, cls){
+  const el = document.getElementById('claudeCfg');
+  if(!el) return;
+  const k = llaveClaude();
+  const m = modeloClaude();
+  el.innerHTML = `
+    ${k ? `<div class="opt-desc">Llave guardada en este dispositivo: <b>${esc(llaveCorta(k))}</b></div>` : `
+      <input type="password" id="claudeLlave" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off" spellcheck="false">`}
+    <label class="campo" style="margin-top:8px">
+      <span class="campo-lbl">Modelo</span>
+      <select id="claudeModelo" onchange="guardarModeloClaude(this.value)">
+        ${MODELOS_CLAUDE.map(x => `<option value="${x.id}" ${x.id === m ? 'selected' : ''}>${esc(x.nombre)} · ${esc(x.nota)}</option>`).join('')}
+      </select>
+    </label>
+    <div class="opt-actions">
+      ${k ? `<button class="btn" onclick="probarLlaveClaude()">Probar</button>
+             <button class="btn" onclick="quitarLlaveClaude()">Quitar llave</button>`
+          : `<button class="btn primary" onclick="guardarLlaveClaude()">Guardar y probar</button>`}
+    </div>
+    <div class="opt-msg ${cls || ''}" id="claudeMsg">${msg ? esc(msg) : ''}</div>`;
+}
+function guardarModeloClaude(v){
+  if(MODELOS_CLAUDE.some(x => x.id === v)) lsSet(KEY_CLAUDE_MODELO, v);
+}
+async function guardarLlaveClaude(){
+  const i = document.getElementById('claudeLlave');
+  const k = (i ? i.value : '').replace(/\s+/g, '');
+  if(!llaveValida(k)){ pintarAjustesClaude('Eso no parece una llave de Claude. Debe empezar con sk-ant-', 'err'); return; }
+  lsSet(KEY_CLAUDE_LLAVE, k);
+  lsSet(KEY_CLAUDE_MODO, null);
+  pintarModoAgente();
+  await probarLlaveClaude();
+}
+async function probarLlaveClaude(){
+  pintarAjustesClaude('Probando…');
+  try{
+    await pedirAClaude({ model: modeloClaude(), max_tokens: 8, messages:[{ role:'user', content:'Responde solo: ok' }] }, 20000);
+    pintarAjustesClaude('✓ Funciona. Abre el asistente (＋) y ya estás hablando con Claude.', 'ok');
+  }catch(e){
+    pintarAjustesClaude((e && e.message) || 'No funcionó.', 'err');
+  }
+}
+function quitarLlaveClaude(){
+  lsSet(KEY_CLAUDE_LLAVE, null);
+  lsSet(KEY_CLAUDE_MODO, null);
+  chatClaude = []; chatVista = []; deshacerClaude = null;
+  pintarModoAgente();
+  pintarAjustesClaude('Llave borrada de este dispositivo.', 'ok');
 }
 
 // ---------- Flujo del asistente ----------
@@ -9071,15 +9679,18 @@ async function tipicoDesdeAgente(id){
 
 async function interpretar(texto){
   let list = null;
-  if(!apiBroken){
+  // El básico es gratis: solo usa Claude si el modo Claude está puesto
+  if(modoClaude()){
     try{ list = await aiParse(texto); }
-    catch(e){ apiBroken = true; }
+    catch(e){ list = null; }
   }
   if(list === null) list = localParse(texto);
   return list || [];
 }
 
 async function agentSubmit(){
+  // Con llave de Claude (y el modo Claude puesto), habla Claude
+  if(modoClaude()){ await claudeSubmit(); return; }
   const input = document.getElementById('agentInput');
   const text = limpiarTexto(input.value, MAX_TEXTO);
   if(!text) return;
@@ -9263,6 +9874,8 @@ async function agentSubmit(){
 function openAgent(){
   document.getElementById('agent').classList.add('open');
   document.getElementById('agentOverlay').classList.add('open');
+  pintarModoAgente();
+  if(modoClaude()) pintarChatClaude();
   document.getElementById('agentFoot').textContent = apiBroken
     ? 'Modo sin conexión: entiende fechas escritas de forma simple.'
     : '';
@@ -9516,6 +10129,7 @@ function openOpts(){
   if(v) v.textContent = VERSION;
   renderCatList();
   aplicarTema();
+  pintarAjustesClaude();
   setSyncState(syncEnabled() ? syncState : 'off');
   document.getElementById('pasteZone').style.display = 'none';
   pushMsg('', '');
@@ -9572,7 +10186,7 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
 
 // Sube este número cada vez que cambie el archivo, para poder
 // confirmar de un vistazo qué versión está corriendo el teléfono.
-const VERSION = '2026.09.26e';
+const VERSION = '2026.09.29';
 
 // Fuerza una recarga saltándose lo que el navegador tenga guardado
 function recargarDeCero(){
@@ -9884,6 +10498,19 @@ const TUTO_PASOS = [
     texto: `
       <p>Cada renglón es <b>tocable</b>: le picas y te lleva a ese día con un destello.</p>
       <p>Te dice cuánto falta para cada cosa, y lo que ya palomeaste sale tachado.</p>`
+  },
+  {
+    titulo: '✦ Claude, con tu propia llave',
+    sub: 'Si tienes llave de API de Claude, el asistente se vuelve Claude de verdad.',
+    visual: `
+      <div class="cl-chat" style="pointer-events:none">
+        <div class="cl-yo">Pon gym lunes y miércoles a las 7 todo octubre y agrega pan al súper</div>
+        <div class="cl-claude"><div class="cl-hechos"><span class="cl-hecho">✓ Agregué 9 eventos</span><span class="cl-hecho">✓ 🛒 Súper: agregué 1</span></div><div class="cl-txt"><span class="cl-lin">¡Listo! Gym quedó a las 7:00 am.</span></div></div>
+      </div>`,
+    texto: `
+      <p>En <b>Ajustes → ✦ Claude con tu llave</b> pegas tu llave (la sacas en platform.claude.com). Se queda solo en ese dispositivo y los tokens se cobran a tu cuenta; cada quien usa la suya.</p>
+      <p>Con llave, el asistente entiende cualquier cosa: agrega, mueve, borra, palomea, maneja tus listas y contesta preguntas. Cada respuesta con cambios trae <b>Deshacer</b>.</p>
+      <p>Sin llave (o tocando <b>Básico</b>) sigue el asistente de siempre: gratis y sin internet.</p>`
   },
   {
     titulo: 'Quitar y editar hablando',
