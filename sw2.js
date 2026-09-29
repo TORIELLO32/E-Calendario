@@ -15,7 +15,7 @@
 // app "bajaba de versión" sola.
 // ══════════════════════════════════════════════════════════════
 
-const VERSION  = 'cal-2026-09-29';
+const VERSION  = 'cal-2026-09-29b';
 const CACHE    = 'calendario-' + VERSION;
 const ARCHIVOS = ['./', './index.html', './app.html', './icon.png', './icon-192.png', './icon-512.png', './manifest.json'];
 const ESPERA   = 4000;
